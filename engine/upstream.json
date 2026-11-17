@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/pfalstad/circuitjs1.git",
+  "revision": "0971995d9af13e95c5bd4eb07fb4527fb4696e26",
+  "patches": [
+    "01-older-compatibility.patch",
+    "02-headless.patch",
+    "03-correctness.patch"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "excludedClasses": ["NortonAmpElm"],
+  "labels": {"LatchElm": "Add Latch"}
+}

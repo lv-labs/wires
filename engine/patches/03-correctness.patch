@@ -1,0 +1,44 @@
+--- a/src/com/lushprojects/circuitjs1/client/AnalogSwitch2Elm.java
++++ b/src/com/lushprojects/circuitjs1/client/AnalogSwitch2Elm.java
+@@ -112,6 +112,12 @@
+ 	return true;
+     }
+ 
++    // Either throw may conduct after analysis. Keep both in the same solver
++    // matrix even when pulldowns make getConnection() report only the active one.
++    boolean getMatrixConnection(int n1, int n2) {
++	return n1 != 3 && n2 != 3;
++    }
++
+     boolean hasGroundConnection(int n) {
+ 	return needsPulldown() && n != 3;
+     }
+--- a/src/com/lushprojects/circuitjs1/client/LogicOutputElm.java
++++ b/src/com/lushprojects/circuitjs1/client/LogicOutputElm.java
+@@ -94,6 +94,9 @@
+ 	    if (needsPullDown())
+ 		sim.stampResistor(nodes[0], CircuitNode.ground, 1e6);
+ 	}
++	// The optional pulldown is a real 1 MΩ path to ground; declare it so the
++	// path/closure analyses (e.g. CurrentElm.validate()) can see it.
++	boolean hasGroundConnection(int n1) { return needsPullDown(); }
+ 	double getVoltageDiff() { return volts[0]; }
+ 	void getInfo(String arr[]) {
+ 	    arr[0] = "logic output";
+--- a/src/com/lushprojects/circuitjs1/client/SimulationManager.java
++++ b/src/com/lushprojects/circuitjs1/client/SimulationManager.java
+@@ -1427,8 +1427,13 @@
+ 		timeStepAccum -= maxTimeStep;
+ 		timeStepCount++;
+ 	    }
+-	    for (i = 0; i != elmArr.length; i++)
++	    for (i = 0; i != elmArr.length; i++) {
+ 		elmArr[i].stepFinished();
++		// A model may stop here (for example, a reverse-biased polarized cap).
++		// stop() retires the matrices; do not read them or emit a sample afterward.
++		if (app.stopMessage != null)
++		    return;
++	    }
+ 	    if (!delayWireProcessing)
+ 		calcWireCurrents();
+ 	    app.onTimeStep();

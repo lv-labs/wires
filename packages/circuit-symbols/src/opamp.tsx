@@ -1,0 +1,35 @@
+import { Lead } from "../svg";
+
+export const kind = "opamp";
+export const metadata = {
+  prefix: "U",
+  name: "Op-amp",
+  pins: {
+    plus: [-300, -100],
+    minus: [-300, 100],
+    out: [300, 0],
+  },
+  parameters: {
+    gain: 100000,
+    minOutput: -15,
+    maxOutput: 15,
+  },
+} as const;
+
+export const presets = {
+  opampPlusTop: {
+    name: "Op-amp (+ on top)",
+  },
+};
+
+export function Symbol() {
+  return (
+    <>
+      <Lead from={metadata.pins.plus} to={[-200, -100]} />
+      <Lead from={metadata.pins.minus} to={[-200, 100]} />
+      <Lead from={metadata.pins.out} to={[200, 0]} />
+      <polygon points="-200,200 200,0 -200,-200" />
+      {/* <path d="M-300-100V100L300 0ZM-24-16H-10M-24 16H-10M-14 12V20" /> */}
+    </>
+  );
+}

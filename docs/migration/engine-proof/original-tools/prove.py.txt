@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Reconstruct and verify the engine without changing either working checkout.
+
+Requires cached GWT 2.8.2 jars, Java 8, Node, pnpm and installed wires dependencies.
+The output directory must not already exist. No network access is used.
+"""
+import argparse
+import io
+import json
+import hashlib
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tarfile
+
+ROOT = Path(__file__).resolve().parents[2]
+REFERENCE = 'a9c07a42659b53fc9459bf2f56876e60c604eafc'
+sys.path.insert(0, str(ROOT / 'tools'))
+from prepare_engine import prepare
+
+
+def git(*args):
+    return subprocess.check_output(['git', *args], cwd=ROOT)
+
+
+def export(ref, dest):
+    dest.mkdir()
+    with tarfile.open(fileobj=io.BytesIO(git('archive', ref))) as archive:
+        archive.extractall(dest, filter='data')
+
+
+def run(args, cwd, log, env=None):
+    print('Running:', log.name, flush=True)
+    with log.open('w') as stream:
+        subprocess.run(list(map(str, args)), cwd=cwd, env=env, stdout=stream,
+                       stderr=subprocess.STDOUT, check=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--java-home', type=Path)
+    parser.add_argument('--reference', default=REFERENCE, help='Pre-adoption engine reference revision')
+    parser.add_argument('--cache', type=Path, default=Path.home() / '.gradle/caches/modules-2/files-2.1')
+    args = parser.parse_args()
+    out = args.output.resolve()
+    out.mkdir()  # Deliberately refuse reuse and stale build products.
+    logs = out / 'logs'
+    logs.mkdir()
+    patch_dir = out / 'patches'
+    patch_dir.mkdir()
+    head = git('rev-parse', 'HEAD').decode().strip()
+    config = json.loads((ROOT / 'engine/upstream.json').read_text())
+    for name in config['patches']:
+        shutil.copy2(ROOT / 'engine/patches' / name, patch_dir / name)
+    upstream = out / 'upstream'
+    prepare(upstream)
+    additions = out / 'integration'
+    shutil.copytree(ROOT / 'engine/integration', additions)
+    reference = out / 'reference'
+    project = out / 'project'
+    export(args.reference, reference)
+    export(head, project)
+    # Share installed dependencies only, never compiled engine assets.
+    (project / 'wires/node_modules').symlink_to(ROOT / 'wires/node_modules', target_is_directory=True)
+    java_home = args.java_home or Path(subprocess.check_output(['/usr/libexec/java_home', '-v', '1.8'], text=True).strip())
+    jars = sorted(args.cache.glob('*/*/*/*/*.jar'))
+    for name in ['gwt-dev-2.8.2.jar', 'gwt-user-2.8.2.jar']:
+        if not any(p.name == name for p in jars):
+            raise RuntimeError('Missing cached ' + name)
+    cp = os.pathsep.join(map(str, jars))
+    env = dict(os.environ, JAVA_TOOL_OPTIONS='-Dgwt.jjs.permutationWorkerFactory=com.google.gwt.dev.ThreadedPermutationWorkerFactory')
+    inputs = {'baseline': config['revision'], 'current': head, 'reference': args.reference, 'javaHome': str(java_home),
+              'javaVersion': subprocess.check_output([str(java_home / 'bin/java'), '-version'], stderr=subprocess.STDOUT, text=True).strip(),
+              'dependencies': {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in jars}}
+    (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
+    builds = {}
+    for label, roots in [('reference', [reference / 'src']), ('reconstructed', [upstream / 'src', additions])]:
+        build = out / label / 'build-proof'
+        classes = build / 'classes'
+        classes.mkdir(parents=True)
+        sources = sorted(p for root in roots for p in root.rglob('*.java'))
+        run([java_home / 'bin/javac', '-source', '8', '-target', '8', '-encoding', 'UTF-8',
+             '-cp', cp, '-d', classes, *sources], out, logs / (label + '-javac.log'), env)
+        for module in ['engine', 'worker']:
+            target = build / module
+            run([java_home / 'bin/java', '-Xmx1024m', '-Dgwt.persistentunitcache=false', '-cp',
+                 os.pathsep.join([str(classes), *map(str, roots), cp]), 'com.google.gwt.dev.Compiler',
+                 '-war', target, '-workDir', build / ('work-' + module), '-localWorkers', '2',
+                 '-sourceLevel', '1.8', '-style', 'PRETTY', 'com.lushprojects.circuitjs1.' + module],
+                out, logs / (label + '-' + module + '.log'), env)
+        builds[label] = build
+    subprocess.run(['python3', str(Path(__file__).with_name('verify.py')), str(out)], check=True)
+
+
+if __name__ == '__main__':
+    main()

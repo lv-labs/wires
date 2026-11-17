@@ -1,0 +1,1293 @@
+{
+  "sourceRepository": "https://github.com/lv-labs/circuitjs",
+  "sourceCheckout": "/Users/luke/Documents/lv-labs/circuitjs-new-sim",
+  "sourceCommit": "a9c07a42659b53fc9459bf2f56876e60c604eafc",
+  "legacyBaseline": "c2cd5dc2574480bd3ce90bb98aa782c6956ea1d6",
+  "scope": "Working-tree snapshot, including uncommitted React, symbol, catalog and engine changes. Hashes describe input files before path/documentation adaptation.",
+  "files": {
+    "wires/.gitignore": {
+      "destination": "apps/simulator/.gitignore",
+      "sha256": "fe718e7babb14f3cbad2d97f08889b9ce5215ed3fe0e43b2b8cfbfb3b9b844e8"
+    },
+    "wires/.prettierignore": {
+      "destination": "apps/simulator/.prettierignore",
+      "sha256": "61cdcfa5e23efb23b84bd054a15860c3a49ea24200da10c89ee30332f61c9570"
+    },
+    "wires/.prettierrc": {
+      "destination": "apps/simulator/.prettierrc",
+      "sha256": "d51608bb6a349cb8fe4b9428d719c6f66770b9ce6e23a602bc56fa6055e54188"
+    },
+    "wires/README.md": {
+      "destination": "apps/simulator/README.md",
+      "sha256": "4558cace24d4ab3df3c1e16735ee09ffd1b61fe89aabec8cc48aa3fecb12d465"
+    },
+    "wires/components.json": {
+      "destination": "apps/simulator/components.json",
+      "sha256": "75760e5cf904fbcec93f22892093f1a3da4c36338980214fa4939afc20cff716"
+    },
+    "wires/editor.html": {
+      "destination": "apps/simulator/editor.html",
+      "sha256": "c89596d87bd13d7fb1fad656dfd811d8d1a685af336e65ddcd4f4f1fd839e0d6"
+    },
+    "wires/eslint.config.js": {
+      "destination": "apps/simulator/eslint.config.js",
+      "sha256": "9d707d9f818b7e9e92d43e6a757d6797483bb5041a755af1432be0f9bfbeffed"
+    },
+    "wires/index.html": {
+      "destination": "apps/simulator/index.html",
+      "sha256": "f5ed80cea17c8985d4d40cf5936d0c94aa6f675cade574b7c720264e342589a9"
+    },
+    "wires/package.json": {
+      "destination": "apps/simulator/package.json",
+      "sha256": "f4c6296c2cb5669aedea5512bb5c86f52040b66f92225b1eb697fefe152e9182"
+    },
+    "wires/pnpm-lock.yaml": {
+      "destination": "apps/simulator/pnpm-lock.yaml",
+      "sha256": "d9e730020d6ad8c260a01197ab56af287e75ef0691a33b0cf8b572a3dc1a7203"
+    },
+    "wires/pnpm-workspace.yaml": {
+      "destination": "apps/simulator/pnpm-workspace.yaml",
+      "sha256": "1e831b89d4d46e629c888d0ca10abc161e66a953e0778409facb96bcd828d9a0"
+    },
+    "wires/public/vite.svg": {
+      "destination": "apps/simulator/public/vite.svg",
+      "sha256": "4a748afd443918bb16591c834c401dae33e87861ab5dbad0811c3a3b4a9214fb"
+    },
+    "wires/scripts/engine-assets.ts": {
+      "destination": "apps/simulator/scripts/engine-assets.ts",
+      "sha256": "d6a852a9e6d7118dba6fa0f62912b111d65af5b6d51f610ed86e066b66fb0676"
+    },
+    "wires/scripts/generate-symbols.mjs": {
+      "destination": "apps/simulator/scripts/generate-symbols.mjs",
+      "sha256": "911dcc638c8ea3c586a5dfd8f7987287a59837686b2a697e4ae718c8bb270f3b"
+    },
+    "wires/scripts/test-editor-render.mjs": {
+      "destination": "apps/simulator/scripts/test-editor-render.mjs",
+      "sha256": "c2324bb48ae2bac4f92c8566c51f757bdea873c22881e10800b5885bf47b5d6a"
+    },
+    "wires/scripts/test-worker-assets.mjs": {
+      "destination": "apps/simulator/scripts/test-worker-assets.mjs",
+      "sha256": "3aba72b1c8e9f25c4c1af261b4685856fdeeead08941528a466f73528fbd3205"
+    },
+    "wires/src/App.tsx": {
+      "destination": "apps/simulator/src/App.tsx",
+      "sha256": "365bfbce0e757f934113816e8091236b8ea87e9c33250e26e75b7665f8c15cdc"
+    },
+    "wires/src/assets/react.svg": {
+      "destination": "apps/simulator/src/assets/react.svg",
+      "sha256": "35ef61ed53b323ae94a16a8ec659b3d0af3880698791133f23b084085ab1c2e5"
+    },
+    "wires/src/components/theme-provider.tsx": {
+      "destination": "apps/simulator/src/components/theme-provider.tsx",
+      "sha256": "88c52942808e8f1c5a0e64e3bf86a5d8d700ca5101646c800eca6db6cafc0e3e"
+    },
+    "wires/src/components/ui/button.tsx": {
+      "destination": "apps/simulator/src/components/ui/button.tsx",
+      "sha256": "d6ee890088e8a678f1f7daad150201d67dbee3d26cd4fbf43daef0740e89fa8b"
+    },
+    "wires/src/components/ui/card.tsx": {
+      "destination": "apps/simulator/src/components/ui/card.tsx",
+      "sha256": "07f4f09c602b4f8d4d2f37ca679c6552a913203a7f56389fc5bebc81d90be154"
+    },
+    "wires/src/components/ui/checkbox.tsx": {
+      "destination": "apps/simulator/src/components/ui/checkbox.tsx",
+      "sha256": "c55c4674ee1a91963ef31faffd7eb253f32202b6915cbe7542456795987ca708"
+    },
+    "wires/src/components/ui/collapsible.tsx": {
+      "destination": "apps/simulator/src/components/ui/collapsible.tsx",
+      "sha256": "ead4349ff7b01d696ef89294a81d18ee1d3f732321398896462c834ab9b9e065"
+    },
+    "wires/src/components/ui/dialog.tsx": {
+      "destination": "apps/simulator/src/components/ui/dialog.tsx",
+      "sha256": "e5dc27889167ccdbe19927888441a75c43420057c9e9ed519dc22dfe08f7b78d"
+    },
+    "wires/src/components/ui/dropdown-menu.tsx": {
+      "destination": "apps/simulator/src/components/ui/dropdown-menu.tsx",
+      "sha256": "746bde4510543009ed74c03d7de83512e34c8d570997173c7f943375fb6485a3"
+    },
+    "wires/src/components/ui/input.tsx": {
+      "destination": "apps/simulator/src/components/ui/input.tsx",
+      "sha256": "710a10d2c4a97aaeaa5c3361545a313ce6eea65bf4695c8b242cbe0ac50866d2"
+    },
+    "wires/src/components/ui/menubar.tsx": {
+      "destination": "apps/simulator/src/components/ui/menubar.tsx",
+      "sha256": "9c6c83ddec530eaccb71db32f08157c02c590d79b028ad3482756a853818dbeb"
+    },
+    "wires/src/components/ui/native-select.tsx": {
+      "destination": "apps/simulator/src/components/ui/native-select.tsx",
+      "sha256": "feb5678e66352d38212de025240962a2e16229933c1849277748517b72b27595"
+    },
+    "wires/src/components/ui/navigation-menu.tsx": {
+      "destination": "apps/simulator/src/components/ui/navigation-menu.tsx",
+      "sha256": "5ad5f1b0d9890118b1651267ca0e5582f5eaf16d9043c50cd29882049b844e3a"
+    },
+    "wires/src/components/ui/slider.tsx": {
+      "destination": "apps/simulator/src/components/ui/slider.tsx",
+      "sha256": "513d188dfb2708796c3f25f91926fea69e8679edbd940f8de0c83a59b407c41a"
+    },
+    "wires/src/components/ui/textarea.tsx": {
+      "destination": "apps/simulator/src/components/ui/textarea.tsx",
+      "sha256": "a1615b32d672032b01f4b64c8cd0563eb0306250ce81f1bc8d12ae9a8a092d6c"
+    },
+    "wires/src/editor/CircuitEditor.tsx": {
+      "destination": "apps/simulator/src/editor/CircuitEditor.tsx",
+      "sha256": "9cbdfe2dbc6e951913c972fb46394a59d6c34357647d1a7f62ff875b64b7d3fa"
+    },
+    "wires/src/editor/CircuitSheet.tsx": {
+      "destination": "apps/simulator/src/editor/CircuitSheet.tsx",
+      "sha256": "2eb15434e70b0c8f71be1e04c2f602480f4f911bde7a5d4a1d1c069be4fde01b"
+    },
+    "wires/src/editor/ComponentMenu.tsx": {
+      "destination": "apps/simulator/src/editor/ComponentMenu.tsx",
+      "sha256": "8d8244d0fdb337056d95f2b4465f960e63c6fe2d28e6effb91c6cec87c191aff"
+    },
+    "wires/src/editor/ComponentProperties.tsx": {
+      "destination": "apps/simulator/src/editor/ComponentProperties.tsx",
+      "sha256": "10a031bb712ea3f42346b0e226b674d20612e051115eec8f19869652fb9a8b63"
+    },
+    "wires/src/editor/ComponentSliderPanel.tsx": {
+      "destination": "apps/simulator/src/editor/ComponentSliderPanel.tsx",
+      "sha256": "d43157240196d2e522f7f0ed489a8c17028cf3737bf96c093f786d0b06043ef8"
+    },
+    "wires/src/editor/DiodeModelFields.tsx": {
+      "destination": "apps/simulator/src/editor/DiodeModelFields.tsx",
+      "sha256": "5ea496113d622347f5b329e4607d30020dc112c275ac314ad539a73622e6bc23"
+    },
+    "wires/src/editor/EditorDialog.tsx": {
+      "destination": "apps/simulator/src/editor/EditorDialog.tsx",
+      "sha256": "27aaf96d35c56068ed9ebee506f4f7a3b255d481e1299790862103e383350d48"
+    },
+    "wires/src/editor/PropertySliders.tsx": {
+      "destination": "apps/simulator/src/editor/PropertySliders.tsx",
+      "sha256": "f1c60b544fe9d618400df0b0bd1424a0b65213cf7c55ad383e1a317529ad437e"
+    },
+    "wires/src/editor/README.md": {
+      "destination": "apps/simulator/src/editor/README.md",
+      "sha256": "2347908c1f58c146b2184813c22a223ac44a5c9642ccf270720b180b0d61bc9b"
+    },
+    "wires/src/editor/ScopeContextMenu.tsx": {
+      "destination": "apps/simulator/src/editor/ScopeContextMenu.tsx",
+      "sha256": "029e9c90381135bb9fda336fd60798b5e97dd3c459c2dac09652d62cd14821d5"
+    },
+    "wires/src/editor/ScopePane.tsx": {
+      "destination": "apps/simulator/src/editor/ScopePane.tsx",
+      "sha256": "ef03f84ac4f54c375857b89588df14c7bdd30ccdc16c741512160d1ce750757d"
+    },
+    "wires/src/editor/ScopeWorkspace.tsx": {
+      "destination": "apps/simulator/src/editor/ScopeWorkspace.tsx",
+      "sha256": "eca767d32a8c47aa9cbfffca18e2aa222bbdf68266efb72aa3ded086f8e31c09"
+    },
+    "wires/src/editor/SheetLabel.tsx": {
+      "destination": "apps/simulator/src/editor/SheetLabel.tsx",
+      "sha256": "c4f957e216e457e969d0e16f84a36d3821b24fa5a4152edac88c7ac3fe86e8e7"
+    },
+    "wires/src/editor/SliderList.tsx": {
+      "destination": "apps/simulator/src/editor/SliderList.tsx",
+      "sha256": "16d59275a521d8dae4d236e067345983b23f06e286df05a3f79a0fc6947deea9"
+    },
+    "wires/src/editor/SymbolLayer.tsx": {
+      "destination": "apps/simulator/src/editor/SymbolLayer.tsx",
+      "sha256": "288db456f764f0e4e4bb72b90d45f31bb8744237a3d978ed26ec40a4af001309"
+    },
+    "wires/src/editor/TraceProperties.tsx": {
+      "destination": "apps/simulator/src/editor/TraceProperties.tsx",
+      "sha256": "c21ddd569d3353ae1b4d28db2ee4b80674ade917918c46fb0ac6fe2b7d070768"
+    },
+    "wires/src/editor/TransistorModelFields.tsx": {
+      "destination": "apps/simulator/src/editor/TransistorModelFields.tsx",
+      "sha256": "9bc0a700d8240f24f78c6cfd9f47ddd74b53e6465f5108251444d884d610c954"
+    },
+    "wires/src/editor/WireLayer.tsx": {
+      "destination": "apps/simulator/src/editor/WireLayer.tsx",
+      "sha256": "97f2a3f89f81fac7b3957c08a181102f2a6653370d9bb24a6d3b165ce4c1be0a"
+    },
+    "wires/src/editor/capture.ts": {
+      "destination": "apps/simulator/src/editor/capture.ts",
+      "sha256": "47444cf47254ab20a63be93db246310f2947cef31ad2822ededaeae881c45ed2"
+    },
+    "wires/src/editor/colourPresets.ts": {
+      "destination": "apps/simulator/src/editor/colourPresets.ts",
+      "sha256": "7374c5f591645b1a4b637e3f77c65e19e2be43174bdbc257ccad892fb4e3fe06"
+    },
+    "wires/src/editor/componentSliders.ts": {
+      "destination": "apps/simulator/src/editor/componentSliders.ts",
+      "sha256": "7daf5d9576a43cfede7c3e74ec2b4d3084862280dfc451c204d98914c28282b3"
+    },
+    "wires/src/editor/componentValue.ts": {
+      "destination": "apps/simulator/src/editor/componentValue.ts",
+      "sha256": "26cb31b439786dae2368c76b37e652c43808843a44629b59ef435b7b851b08a1"
+    },
+    "wires/src/editor/core.ts": {
+      "destination": "apps/simulator/src/editor/core.ts",
+      "sha256": "8eb7a6d234f0e1d6f8dc2339816339cb07346227e229894273d4a2a03a8031aa"
+    },
+    "wires/src/editor/ledColour.ts": {
+      "destination": "apps/simulator/src/editor/ledColour.ts",
+      "sha256": "0ca72d3e726b4371d040bcdc9235a75978000f47efb0b53a5d93c33bdd5807a8"
+    },
+    "wires/src/editor/menu/component-menu.js": {
+      "destination": "apps/simulator/src/editor/menu/component-menu.js",
+      "sha256": "83345da232af8bbc31ef253ae87151505c84be0c00cf6b156c6b746a8fbbb3b7"
+    },
+    "wires/src/editor/menu/legacy-component-menu.js": {
+      "destination": "apps/simulator/src/editor/menu/legacy-component-menu.js",
+      "sha256": "a411897c0bdfb06f8ca9962ac779ec34d421aff07885ae0eaa98e2c8cb696c00"
+    },
+    "wires/src/editor/moveAnchor.ts": {
+      "destination": "apps/simulator/src/editor/moveAnchor.ts",
+      "sha256": "25a3233aaf240fb5731b307b912d333df8b665c1b5ad9af3d61f7ddca15eb55f"
+    },
+    "wires/src/editor/scopeDisplay.ts": {
+      "destination": "apps/simulator/src/editor/scopeDisplay.ts",
+      "sha256": "bb79522977e4f1b38545971e4a12fa27c396dc745353e0844863b6e65b72592b"
+    },
+    "wires/src/editor/scopeDock.ts": {
+      "destination": "apps/simulator/src/editor/scopeDock.ts",
+      "sha256": "550733646cb91841dc2465e8b40468d7b8dc011aa6b298eea65350853fe1d4e8"
+    },
+    "wires/src/editor/scopeLayout.ts": {
+      "destination": "apps/simulator/src/editor/scopeLayout.ts",
+      "sha256": "be54753b7443324b02a5d9f48234d8200655cb356531be2f919e17e5d973d930"
+    },
+    "wires/src/editor/scopeSnapping.ts": {
+      "destination": "apps/simulator/src/editor/scopeSnapping.ts",
+      "sha256": "1a70343eb0322894693bd09f47727e8d4f49c5000fdeed96397bf17cb4a3633c"
+    },
+    "wires/src/editor/scopeViewport.ts": {
+      "destination": "apps/simulator/src/editor/scopeViewport.ts",
+      "sha256": "eaa1ab9e5f32f8e64084d837a169eba210641dc64a610c72c13696837b3c9c8c"
+    },
+    "wires/src/editor/symbolHit.ts": {
+      "destination": "apps/simulator/src/editor/symbolHit.ts",
+      "sha256": "89e0cf162c9e7197e6c6c48f3b665689fadbe326e976f2c51ee1c15d6256bcf1"
+    },
+    "wires/src/editor/useCircuitSession.ts": {
+      "destination": "apps/simulator/src/editor/useCircuitSession.ts",
+      "sha256": "9add529f5fd6ea9d05f7c7d57cf021b80b64eb15e35cd4f0b82d68b114407c41"
+    },
+    "wires/src/editor-preview.tsx": {
+      "destination": "apps/simulator/src/editor-preview.tsx",
+      "sha256": "4c769f4cb93f773bd4f5e89dc4b10a6e13dbad5a71a53d0d5062541818da09e6"
+    },
+    "wires/src/index.css": {
+      "destination": "apps/simulator/src/index.css",
+      "sha256": "c2f3e74f6318e528e0fd93842d672d8c89a3030dacce97f872d6f0dbd3e2fa40"
+    },
+    "wires/src/lib/utils.ts": {
+      "destination": "apps/simulator/src/lib/utils.ts",
+      "sha256": "14300d758170c270c75b057f38fedb3793a5920ea872f0477e29fb131185e8a7"
+    },
+    "wires/src/main.tsx": {
+      "destination": "apps/simulator/src/main.tsx",
+      "sha256": "a7ff00c57e8cbce26705d4a4825d5263fb0e0358b9c71efbb03c250efce737f8"
+    },
+    "wires/tsconfig.app.json": {
+      "destination": "apps/simulator/tsconfig.app.json",
+      "sha256": "503e1cd11757310d528e5a0fced5698126b734deaf7b2ce0031a5b786ff59bfd"
+    },
+    "wires/tsconfig.json": {
+      "destination": "apps/simulator/tsconfig.json",
+      "sha256": "23c57da26bcec4996c4168f01187840c8ec08a1d60c2dd0edad6d984f5c33680"
+    },
+    "wires/tsconfig.node.json": {
+      "destination": "apps/simulator/tsconfig.node.json",
+      "sha256": "c7a65fc2be982212721c93c724ebb8f799f2e54a060447f9ad31fa27f3a5631f"
+    },
+    "wires/vite.config.ts": {
+      "destination": "apps/simulator/vite.config.ts",
+      "sha256": "44e5723f73f70df98480ee22d390ba17438a6be68ec8193ca4019ba5572f26ad"
+    },
+    "packages/circuit-core/README.md": {
+      "destination": "packages/circuit-core/README.md",
+      "sha256": "5cc880cee6b4048223b72f6e719238e816844939fabc2dfc9e7b24e9d495039f"
+    },
+    "packages/circuit-core/adapter.js": {
+      "destination": "packages/circuit-core/adapter.js",
+      "sha256": "11a12fbbc794e9c18e0d0e4852fe4b7d5d44bfd78f68adcaa5812409186a7102"
+    },
+    "packages/circuit-core/browser-transport.js": {
+      "destination": "packages/circuit-core/browser-transport.js",
+      "sha256": "fa3fb07051345adb6b4cfd4910651d14800ff002afcb28271c8ec3c0306e4c43"
+    },
+    "packages/circuit-core/catalog.js": {
+      "destination": "packages/circuit-core/catalog.js",
+      "sha256": "acd712b3601ba94d263384508b3544a7297a5f4e3fc3627b501d6e270dfa5118"
+    },
+    "packages/circuit-core/commands.js": {
+      "destination": "packages/circuit-core/commands.js",
+      "sha256": "50dd3e6796adbc6821918a18748f5b23e0763f1354035363730051eab7076534"
+    },
+    "packages/circuit-core/document.js": {
+      "destination": "packages/circuit-core/document.js",
+      "sha256": "df10c2183b90f300907f617a82d3fc7ccd679b7cd77c95d3b01072437232e652"
+    },
+    "packages/circuit-core/drag.js": {
+      "destination": "packages/circuit-core/drag.js",
+      "sha256": "090c2b38374fe1317d4aba44a7dc2f6104159cac9f1e0ae7afd50e10f5d856a9"
+    },
+    "packages/circuit-core/geometry.js": {
+      "destination": "packages/circuit-core/geometry.js",
+      "sha256": "16a76266d1ced4d6c2055c9f7640cde362ed0aa83e11a767c72be29124520d8d"
+    },
+    "packages/circuit-core/history.js": {
+      "destination": "packages/circuit-core/history.js",
+      "sha256": "5e3aad8455ffcf2809a148517ffd415e7027367dd978c72fb8e80aff22c77375"
+    },
+    "packages/circuit-core/index.js": {
+      "destination": "packages/circuit-core/index.js",
+      "sha256": "219fd87dd0a8dd4d24dd6008e0180fa861c7bbc1d17582d5c4c23a07686828cb"
+    },
+    "packages/circuit-core/index.mjs": {
+      "destination": "packages/circuit-core/index.mjs",
+      "sha256": "5d03464722bb4be74a6ff179925720313779119f5c80e20df248ca23b730c5db"
+    },
+    "packages/circuit-core/package.json": {
+      "destination": "packages/circuit-core/package.json",
+      "sha256": "be7769499a861e0eade0060a47cd8cb7bd054160114dc1853a61871da43a192d"
+    },
+    "packages/circuit-core/protocol.js": {
+      "destination": "packages/circuit-core/protocol.js",
+      "sha256": "44d2d0425b8b1e13a42e5a8612c13600e93f91049e5b9b1870b71e3586002b19"
+    },
+    "packages/circuit-core/signals.js": {
+      "destination": "packages/circuit-core/signals.js",
+      "sha256": "821a78eb0e046dd0976970bfebd36afc23ec6c7e80b4e13e36bced937ce0d3f1"
+    },
+    "packages/circuit-core/simulation.js": {
+      "destination": "packages/circuit-core/simulation.js",
+      "sha256": "80a3a21f86d76f01a968a9ed7222499d4fbc13a8d279bf6578824d6cfb0f14af"
+    },
+    "packages/circuit-runtime/README.md": {
+      "destination": "packages/circuit-runtime/README.md",
+      "sha256": "7e7e5518bcb3dcaf759cd44bbdaa03e5a0551a3a0c822ca621315f65dd81b79c"
+    },
+    "packages/circuit-runtime/document-worker.js": {
+      "destination": "packages/circuit-runtime/document-worker.js",
+      "sha256": "9106447cdb5d5bdcc7ab7d63d448f68454665557d6c0e8e17fb318b2b00c2929"
+    },
+    "packages/circuit-runtime/revision-worker.js": {
+      "destination": "packages/circuit-runtime/revision-worker.js",
+      "sha256": "cef8ac97cb33ad4ec98d95555d2968e4b255f023843a341b660c95624c92b5ff"
+    },
+    "packages/circuit-runtime/worker.js": {
+      "destination": "packages/circuit-runtime/worker.js",
+      "sha256": "1e8beec3d6aca272944fbc5ff4f979a5bfb21cf3893a9007351313a0a50d495e"
+    },
+    "packages/circuit-symbols/README.md": {
+      "destination": "packages/circuit-symbols/README.md",
+      "sha256": "26b4ac71daaf5007094b7d7efa0fbdaa6571be2aba5148dfabaef1ee12497384"
+    },
+    "packages/circuit-symbols/index.ts": {
+      "destination": "packages/circuit-symbols/index.ts",
+      "sha256": "20d753b41b0d80d4eaf0bc10a2f09753867963306cc3cbb8beb2edb2f041d7be"
+    },
+    "packages/circuit-symbols/src/amSource.tsx": {
+      "destination": "packages/circuit-symbols/src/amSource.tsx",
+      "sha256": "86ce5c3a5d3424e9049961dd99a358648f603f5d0e1a7b1c3bc56e076df8dc26"
+    },
+    "packages/circuit-symbols/src/ammeter.tsx": {
+      "destination": "packages/circuit-symbols/src/ammeter.tsx",
+      "sha256": "06ef93b548d32e3634a27fcb64d6d9f5db78431064fadb461e6139e67642685f"
+    },
+    "packages/circuit-symbols/src/analogSpdtSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/analogSpdtSwitch.tsx",
+      "sha256": "96f30864f1ebc9f633390d85ea74723114d487d93eb24155a1c036954cfdbbfd"
+    },
+    "packages/circuit-symbols/src/analogSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/analogSwitch.tsx",
+      "sha256": "b4562f2b8196a9c2dc73a3319da15eb1b2fe613017615bf0c11ed893d06aac81"
+    },
+    "packages/circuit-symbols/src/andGate.tsx": {
+      "destination": "packages/circuit-symbols/src/andGate.tsx",
+      "sha256": "98c3f2092acbae45cb631449fab7f003241b21000c7a3d13044cd04698195a32"
+    },
+    "packages/circuit-symbols/src/antennaSource.tsx": {
+      "destination": "packages/circuit-symbols/src/antennaSource.tsx",
+      "sha256": "583fc0059babaf7822820326693d72debfdf321d2cda73cebba889c01952fa24"
+    },
+    "packages/circuit-symbols/src/audioOutput.tsx": {
+      "destination": "packages/circuit-symbols/src/audioOutput.tsx",
+      "sha256": "b6f9eb8d1b577ee3190538d4c7c7e9978a0acaa8e9cb7e05a58c7754616c5244"
+    },
+    "packages/circuit-symbols/src/box.tsx": {
+      "destination": "packages/circuit-symbols/src/box.tsx",
+      "sha256": "7150b88d5566072f6ddb0e01cd4d894e5835f90ee9d5f719821d8cd75004b80a"
+    },
+    "packages/circuit-symbols/src/capacitor.tsx": {
+      "destination": "packages/circuit-symbols/src/capacitor.tsx",
+      "sha256": "7f77e760c48953ecf87af26e2948cf117fb7db7dface5dce0ce1f8bd0a6cb7ac"
+    },
+    "packages/circuit-symbols/src/counter.tsx": {
+      "destination": "packages/circuit-symbols/src/counter.tsx",
+      "sha256": "7db7aa9350ee4d78cc652b02035676841fcb4a56f9e7fb3d153235154439e0b9"
+    },
+    "packages/circuit-symbols/src/currentSource.tsx": {
+      "destination": "packages/circuit-symbols/src/currentSource.tsx",
+      "sha256": "f5cb9420533146e461b69ac1d2567651bcd567d8d1432b3c91faf0fb35da46f6"
+    },
+    "packages/circuit-symbols/src/customTransformer.tsx": {
+      "destination": "packages/circuit-symbols/src/customTransformer.tsx",
+      "sha256": "c2e2d4215f213fd9a2e0208d7fe088256ec7b52e8d55d780fa699268e577096c"
+    },
+    "packages/circuit-symbols/src/dFlipFlop.tsx": {
+      "destination": "packages/circuit-symbols/src/dFlipFlop.tsx",
+      "sha256": "b2b3fde6b8cf19550ffc36d79fd9030fdb983d626840d5cfe116541c9c12de66"
+    },
+    "packages/circuit-symbols/src/dataExport.tsx": {
+      "destination": "packages/circuit-symbols/src/dataExport.tsx",
+      "sha256": "04f73af1c92552de648778412110002a947560c552a4471b13d17cc9503bca58"
+    },
+    "packages/circuit-symbols/src/dcMotor.tsx": {
+      "destination": "packages/circuit-symbols/src/dcMotor.tsx",
+      "sha256": "64a520c47c3759904ec651bcfec1699841ff7cfa52d574a43b1c77d7c979ba08"
+    },
+    "packages/circuit-symbols/src/decimalDisplay.tsx": {
+      "destination": "packages/circuit-symbols/src/decimalDisplay.tsx",
+      "sha256": "63b3891773556d5f5b4d651a89d5b1eef3cf130bfdd0ad3b1cdca365aa21a3e3"
+    },
+    "packages/circuit-symbols/src/diac.tsx": {
+      "destination": "packages/circuit-symbols/src/diac.tsx",
+      "sha256": "8ea97fc934f19111af0e81185f061a9af780dd3aa14250cd55dae09b934eba0a"
+    },
+    "packages/circuit-symbols/src/diode.tsx": {
+      "destination": "packages/circuit-symbols/src/diode.tsx",
+      "sha256": "5168c55bb73af3bdf4d74ff0f4f1d8385e591388fb9a4a7cd428d17c11f98f8a"
+    },
+    "packages/circuit-symbols/src/dpdtSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/dpdtSwitch.tsx",
+      "sha256": "5f47824e82cef5bdddf773176bed03a465cf3203b4038741194f153d88b7a55d"
+    },
+    "packages/circuit-symbols/src/fmSource.tsx": {
+      "destination": "packages/circuit-symbols/src/fmSource.tsx",
+      "sha256": "36f2e1c6a4e56578d6d6ad149a29b21f28e4d837c0f944372a1bd72d57c6a94d"
+    },
+    "packages/circuit-symbols/src/fullAdder.tsx": {
+      "destination": "packages/circuit-symbols/src/fullAdder.tsx",
+      "sha256": "5e568b47c4cc4513e4026365dc6eea4b5d2c07fc615355dc9078bfbd57a3d02c"
+    },
+    "packages/circuit-symbols/src/fuse.tsx": {
+      "destination": "packages/circuit-symbols/src/fuse.tsx",
+      "sha256": "f1999abf3ca33b9e144bd7a047a50313b769090f1bd6e2920c066b2cfd3b51e6"
+    },
+    "packages/circuit-symbols/src/ground.tsx": {
+      "destination": "packages/circuit-symbols/src/ground.tsx",
+      "sha256": "c87630af278c959ee7f8dfbd87c197b416c27a15259ff10b81a8792f14c0df5a"
+    },
+    "packages/circuit-symbols/src/halfAdder.tsx": {
+      "destination": "packages/circuit-symbols/src/halfAdder.tsx",
+      "sha256": "628c4f9029863f9990c1e48ef33e79ff8cc78a25858ec41d974199b192996f5a"
+    },
+    "packages/circuit-symbols/src/inductor.tsx": {
+      "destination": "packages/circuit-symbols/src/inductor.tsx",
+      "sha256": "71b749fd4a36cf206508f8e2ff8b043f8eaa73f721a09f15a269d92892019b30"
+    },
+    "packages/circuit-symbols/src/instructionDisplay.tsx": {
+      "destination": "packages/circuit-symbols/src/instructionDisplay.tsx",
+      "sha256": "bcf50f8a2f0a59ad55bf5874e3b3e468fbc7e76beb716f0efe9e6dddc1a7b28a"
+    },
+    "packages/circuit-symbols/src/inverter.tsx": {
+      "destination": "packages/circuit-symbols/src/inverter.tsx",
+      "sha256": "d7b9283cb016605ce0003f618937c4f1bdd772881705785631e217bb4cd11e03"
+    },
+    "packages/circuit-symbols/src/invertingSchmittTrigger.tsx": {
+      "destination": "packages/circuit-symbols/src/invertingSchmittTrigger.tsx",
+      "sha256": "c6a38c22390618a84767e2d640d60ef6b531296bce13f582c2e40f2a4ff314e8"
+    },
+    "packages/circuit-symbols/src/jkFlipFlop.tsx": {
+      "destination": "packages/circuit-symbols/src/jkFlipFlop.tsx",
+      "sha256": "8d9ee459b5ec62988f59b595d0ff000465096bfabe96435af284671bf0d7a0d6"
+    },
+    "packages/circuit-symbols/src/labeledNode.tsx": {
+      "destination": "packages/circuit-symbols/src/labeledNode.tsx",
+      "sha256": "5864e18e2f7e071978b55c2d674dd48448ed9ee50663f9fcc1e035e4202e6cba"
+    },
+    "packages/circuit-symbols/src/lamp.tsx": {
+      "destination": "packages/circuit-symbols/src/lamp.tsx",
+      "sha256": "0133b534c58eedc393589f8580a843aa04cd237fa97b4ac6db456de9c224d1a5"
+    },
+    "packages/circuit-symbols/src/latch.tsx": {
+      "destination": "packages/circuit-symbols/src/latch.tsx",
+      "sha256": "f4efe0ad0a02be7586dac38e7d478655c63e2608a10eb98b1c1797fef0daa2d7"
+    },
+    "packages/circuit-symbols/src/led.tsx": {
+      "destination": "packages/circuit-symbols/src/led.tsx",
+      "sha256": "24cf257be31556048d84476a1b3dad53286090edc0c80eab6e0c5c6221dd6039"
+    },
+    "packages/circuit-symbols/src/ledArray.tsx": {
+      "destination": "packages/circuit-symbols/src/ledArray.tsx",
+      "sha256": "52b73cd7aba850449d1ffa60f335a003419d726e2fb87289682ee105cfa2aed8"
+    },
+    "packages/circuit-symbols/src/line.tsx": {
+      "destination": "packages/circuit-symbols/src/line.tsx",
+      "sha256": "f65bdf67028e49cdbe5787266b2a073db57c6cf4203ced2787754d37ac6c1b93"
+    },
+    "packages/circuit-symbols/src/logicInput.tsx": {
+      "destination": "packages/circuit-symbols/src/logicInput.tsx",
+      "sha256": "669e9349d7163c2a4d1f266daf6c7a807f0222bc093f04b0064f219c34891b0c"
+    },
+    "packages/circuit-symbols/src/logicOutput.tsx": {
+      "destination": "packages/circuit-symbols/src/logicOutput.tsx",
+      "sha256": "510ae556f0861eab3bc18bce046fdd18003e43e8dc259f5c925cb17cd7a80cfc"
+    },
+    "packages/circuit-symbols/src/mbbSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/mbbSwitch.tsx",
+      "sha256": "467a255c2c3415b65607e43dd2bcee481cbb8d9e6f476387d67a8f999f75d9fb"
+    },
+    "packages/circuit-symbols/src/memristor.tsx": {
+      "destination": "packages/circuit-symbols/src/memristor.tsx",
+      "sha256": "66e95eff4017a77624157df3c1bd0c85048d4636896a37bd0b48037f69fb8e93"
+    },
+    "packages/circuit-symbols/src/nandGate.tsx": {
+      "destination": "packages/circuit-symbols/src/nandGate.tsx",
+      "sha256": "37982c0b7e116fb2a7fa3c37322182e0f1308098676de31c794f9e8d57e548c3"
+    },
+    "packages/circuit-symbols/src/njfet.tsx": {
+      "destination": "packages/circuit-symbols/src/njfet.tsx",
+      "sha256": "def87d9586970c8a6085b1f9e1fa7af4809a195bf0c87f77ec6465474f1b8c39"
+    },
+    "packages/circuit-symbols/src/nmos.tsx": {
+      "destination": "packages/circuit-symbols/src/nmos.tsx",
+      "sha256": "c63045c27582164830f440bce5f931cc8ceab3390148c78c201967a035101939"
+    },
+    "packages/circuit-symbols/src/noiseSource.tsx": {
+      "destination": "packages/circuit-symbols/src/noiseSource.tsx",
+      "sha256": "5b72aa8648762302e089011e4aa570c94c099c4e61d14fa67297ad7bb519e7ca"
+    },
+    "packages/circuit-symbols/src/norGate.tsx": {
+      "destination": "packages/circuit-symbols/src/norGate.tsx",
+      "sha256": "ba4387b83249e1c553bebf31db6694fe7c2e1455d01a0dc930712a2a4daea785"
+    },
+    "packages/circuit-symbols/src/npn.tsx": {
+      "destination": "packages/circuit-symbols/src/npn.tsx",
+      "sha256": "233669f7f81679bed01152e1f9d989184192e797e7bba5cbb14b2bec08fb53b4"
+    },
+    "packages/circuit-symbols/src/ohmmeter.tsx": {
+      "destination": "packages/circuit-symbols/src/ohmmeter.tsx",
+      "sha256": "e12cb56f288d99e7eda4c1c7bf828cc74e4a33af276c139d5f9a224ceef3099f"
+    },
+    "packages/circuit-symbols/src/opamp.tsx": {
+      "destination": "packages/circuit-symbols/src/opamp.tsx",
+      "sha256": "0158b116927ecb80649ef03332da48591a98e8fde159e058179becd6cbde85fb"
+    },
+    "packages/circuit-symbols/src/orGate.tsx": {
+      "destination": "packages/circuit-symbols/src/orGate.tsx",
+      "sha256": "aeec55c239f7c5cf6f27da709424a219e46dd016b62106e8598e80d477fbfff4"
+    },
+    "packages/circuit-symbols/src/output.tsx": {
+      "destination": "packages/circuit-symbols/src/output.tsx",
+      "sha256": "3fd071a046b4e327da1756a7c65239a0f0395306471615d28b78bcb704be4d18"
+    },
+    "packages/circuit-symbols/src/photoresistor.tsx": {
+      "destination": "packages/circuit-symbols/src/photoresistor.tsx",
+      "sha256": "e2d6b34e98e147c3104f237c31b95a20cb1a748351b00b414a340d1a583de47d"
+    },
+    "packages/circuit-symbols/src/pjfet.tsx": {
+      "destination": "packages/circuit-symbols/src/pjfet.tsx",
+      "sha256": "65225203046f32a08acbea41aade2c3e9c9f15898adc97045178a855b367cc5a"
+    },
+    "packages/circuit-symbols/src/pmos.tsx": {
+      "destination": "packages/circuit-symbols/src/pmos.tsx",
+      "sha256": "347234296fc27f2572da0064d060be16c429435e0a271966acc9a8428f199dec"
+    },
+    "packages/circuit-symbols/src/pnp.tsx": {
+      "destination": "packages/circuit-symbols/src/pnp.tsx",
+      "sha256": "1795890f024a7b17d2991627979f24042639c53abf4d04f61c09404be4180e40"
+    },
+    "packages/circuit-symbols/src/polarizedCapacitor.tsx": {
+      "destination": "packages/circuit-symbols/src/polarizedCapacitor.tsx",
+      "sha256": "325d842fac602b297a9ccb8a063337a35dc1c09051fafa81bf6bc8d941fc8f3f"
+    },
+    "packages/circuit-symbols/src/potentiometer.tsx": {
+      "destination": "packages/circuit-symbols/src/potentiometer.tsx",
+      "sha256": "b6d45d13894425278cfa23816e32d9a3daa6d3b4f5ca85575ee53f0233c45a3e"
+    },
+    "packages/circuit-symbols/src/pushSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/pushSwitch.tsx",
+      "sha256": "834ff2ed89819e5055370f8e1a002d26e50f725cc868c5dc17be5f7fa00358fa"
+    },
+    "packages/circuit-symbols/src/resistor.tsx": {
+      "destination": "packages/circuit-symbols/src/resistor.tsx",
+      "sha256": "8a223182289891a7c8d473a63619506c06eb8d94095f2ebd53ac7d9cfdafde90"
+    },
+    "packages/circuit-symbols/src/schmittTrigger.tsx": {
+      "destination": "packages/circuit-symbols/src/schmittTrigger.tsx",
+      "sha256": "e4bbc93c2b3545d314b9346daa3ab7128139f733731615e2be0ae2f1472b3ee0"
+    },
+    "packages/circuit-symbols/src/scr.tsx": {
+      "destination": "packages/circuit-symbols/src/scr.tsx",
+      "sha256": "eca1ebda3a16f84495b8efcddc64a5526725e6dbc9433761f432cafd923b96e4"
+    },
+    "packages/circuit-symbols/src/sparkGap.tsx": {
+      "destination": "packages/circuit-symbols/src/sparkGap.tsx",
+      "sha256": "1e85e1e54cb051ccd50d5fc331b260ea3621607812dff903034e3295335ea3b3"
+    },
+    "packages/circuit-symbols/src/spdtSwitch.tsx": {
+      "destination": "packages/circuit-symbols/src/spdtSwitch.tsx",
+      "sha256": "d9fb31af2c94c761bcc4565b6b3bbeeaf1973f906f94021806430ed64f33559b"
+    },
+    "packages/circuit-symbols/src/stopTrigger.tsx": {
+      "destination": "packages/circuit-symbols/src/stopTrigger.tsx",
+      "sha256": "eb9ceb1f0b3bd948a555ac7acefd99c4c4c51ac5a51e5950021d7b3252e4dc3a"
+    },
+    "packages/circuit-symbols/src/sweepSource.tsx": {
+      "destination": "packages/circuit-symbols/src/sweepSource.tsx",
+      "sha256": "a1804002998abf6cd87826a8a2ec11aed116f56fbbfdddcfd7db3aef38c91ab2"
+    },
+    "packages/circuit-symbols/src/switch.tsx": {
+      "destination": "packages/circuit-symbols/src/switch.tsx",
+      "sha256": "5c3544a227a663a287361d09efacc0a4b20c9a887a6216e6fc41549bc80c0757"
+    },
+    "packages/circuit-symbols/src/tFlipFlop.tsx": {
+      "destination": "packages/circuit-symbols/src/tFlipFlop.tsx",
+      "sha256": "bbfe92dcf20b5a2f81842415f4cd535df1724654998cb6884e3f7397c1aa52f9"
+    },
+    "packages/circuit-symbols/src/tappedTransformer.tsx": {
+      "destination": "packages/circuit-symbols/src/tappedTransformer.tsx",
+      "sha256": "4f7e899c8a3796509794147cbb12ba2b4f24cd1c9ce106be14ad3c8e9cff5d64"
+    },
+    "packages/circuit-symbols/src/testPoint.tsx": {
+      "destination": "packages/circuit-symbols/src/testPoint.tsx",
+      "sha256": "362b665d083752078c9ce9f9398efadc8e63a08a276710ff0c010a442b1d1457"
+    },
+    "packages/circuit-symbols/src/text.tsx": {
+      "destination": "packages/circuit-symbols/src/text.tsx",
+      "sha256": "98f9a82cdd39bafbdce08b01efd2f306c94ea13d7789227d4248c34b9d3fa01d"
+    },
+    "packages/circuit-symbols/src/thermistor.tsx": {
+      "destination": "packages/circuit-symbols/src/thermistor.tsx",
+      "sha256": "09217ca006d2124503e24d387bed56d75ae82c7fbe57ccaac43c123c849842f7"
+    },
+    "packages/circuit-symbols/src/threePhaseMotor.tsx": {
+      "destination": "packages/circuit-symbols/src/threePhaseMotor.tsx",
+      "sha256": "d6095fdfcc421a2aeaa586010dd71405609aad5c2a6792d794fee02b6318f49f"
+    },
+    "packages/circuit-symbols/src/transformer.tsx": {
+      "destination": "packages/circuit-symbols/src/transformer.tsx",
+      "sha256": "6ed213df0ff3be6a623f45229846bcaaccdf85419cd8ffd69c3c41abc3dbfecf"
+    },
+    "packages/circuit-symbols/src/transmissionLine.tsx": {
+      "destination": "packages/circuit-symbols/src/transmissionLine.tsx",
+      "sha256": "910612cd4b8e46680967fff3dda7d9b320663bf7492dc70adbe5bee8d72e5f86"
+    },
+    "packages/circuit-symbols/src/triac.tsx": {
+      "destination": "packages/circuit-symbols/src/triac.tsx",
+      "sha256": "41509ed0d58ba72b6c9b3e69581834188a1eb0d644fe507baceea412295d9388"
+    },
+    "packages/circuit-symbols/src/triode.tsx": {
+      "destination": "packages/circuit-symbols/src/triode.tsx",
+      "sha256": "1ad4f18be8646450d143c78672ec141272769f64ee950eadc320f637b396bec6"
+    },
+    "packages/circuit-symbols/src/tunnelDiode.tsx": {
+      "destination": "packages/circuit-symbols/src/tunnelDiode.tsx",
+      "sha256": "b094248338a8f33a694ae9f2f2eec8dc89035e8d6bfecd875e0b5067f31adfb0"
+    },
+    "packages/circuit-symbols/src/varactor.tsx": {
+      "destination": "packages/circuit-symbols/src/varactor.tsx",
+      "sha256": "481ce096d5e3c9f6f8677c9b7dbe3b42a4b627c2965242bcdd92da729213189c"
+    },
+    "packages/circuit-symbols/src/variableVoltage.tsx": {
+      "destination": "packages/circuit-symbols/src/variableVoltage.tsx",
+      "sha256": "2c12ad59bd3b2ea117f6ee5526a1919fe5dfe902a9a5c4b4c4b37a2a9fbc78c8"
+    },
+    "packages/circuit-symbols/src/voltageRail.tsx": {
+      "destination": "packages/circuit-symbols/src/voltageRail.tsx",
+      "sha256": "cbef10affd235bef052a5b7955a0199e51670eb25621e4474d70f9b844625b21"
+    },
+    "packages/circuit-symbols/src/voltageSource.tsx": {
+      "destination": "packages/circuit-symbols/src/voltageSource.tsx",
+      "sha256": "3fee130615a5906825ed0970e9e7b4eab30bfea4d76edb2a9b4df0512446e77c"
+    },
+    "packages/circuit-symbols/src/voltmeter.tsx": {
+      "destination": "packages/circuit-symbols/src/voltmeter.tsx",
+      "sha256": "84a88abb15fc31882144b0146fe77bfaf0777e24c9584ea54ef952838da7b8b8"
+    },
+    "packages/circuit-symbols/src/wattmeter.tsx": {
+      "destination": "packages/circuit-symbols/src/wattmeter.tsx",
+      "sha256": "afd40b04315aaad834d57a5d7a32cc5fea2e955d6ceacd74c1500abab78637d6"
+    },
+    "packages/circuit-symbols/src/xnorGate.tsx": {
+      "destination": "packages/circuit-symbols/src/xnorGate.tsx",
+      "sha256": "5fe79e5e12ffa9bbd0176a8900f0c1acd209a8f62999e75c346423a7bb0317c7"
+    },
+    "packages/circuit-symbols/src/xorGate.tsx": {
+      "destination": "packages/circuit-symbols/src/xorGate.tsx",
+      "sha256": "69754039330c7112b376971aa60bba838a7b74381670ba12ef847cf385582587"
+    },
+    "packages/circuit-symbols/src/zener.tsx": {
+      "destination": "packages/circuit-symbols/src/zener.tsx",
+      "sha256": "d82120469b49a0a187bc008154d0bde5ded4ebd9b437ce1639c465950764fc9b"
+    },
+    "packages/circuit-symbols/svg.tsx": {
+      "destination": "packages/circuit-symbols/svg.tsx",
+      "sha256": "a0d73d5172a6077240e09630fa4926a4f5bdcdb6a5ed05bc3419333bc603a90e"
+    },
+    "tools/audit_component_properties.mjs": {
+      "destination": "tools/audit_component_properties.mjs",
+      "sha256": "f4a3d5a3288c172f40e63c1f06714a151f407eb30a7ceade2e347edc54db38d2"
+    },
+    "tools/build_engine_cached.py": {
+      "destination": "tools/build_engine_cached.py",
+      "sha256": "eeb4b79d657a0bb9e90be21879ce83a1a47302fd011da2c24f8de937b3a0df12"
+    },
+    "tools/check_core.mjs": {
+      "destination": "tools/check_core.mjs",
+      "sha256": "259cfb4af7b7a6ccda15ba1c9a1f066a8c57406810d0e8fa97368b5863b0a2a5"
+    },
+    "tools/chip_batch_fixtures.mjs": {
+      "destination": "tools/chip_batch_fixtures.mjs",
+      "sha256": "65e185054fa79a324b1bea75e48ea9aca46a223463f1f34c50317b68f25d784e"
+    },
+    "tools/component_expansion_fixtures.mjs": {
+      "destination": "tools/component_expansion_fixtures.mjs",
+      "sha256": "79f4d4d2ada15f7252a50985d7fa5ad6ef3761c1cfc919d0b530322553bda3a7"
+    },
+    "tools/engine-harness/README.md": {
+      "destination": "tools/engine-harness/README.md",
+      "sha256": "e04ce6939026e369a8a3d401aa914bca7f2d91070f121e8f3e7647bf6f8e5f6a"
+    },
+    "tools/engine-harness/cases.js": {
+      "destination": "tools/engine-harness/cases.js",
+      "sha256": "d81319dfd1b62467c9dbeb89cac009748f664a23c64d5775fe75bedf7f6837fc"
+    },
+    "tools/engine-harness/continuous-demo.js": {
+      "destination": "tools/engine-harness/continuous-demo.js",
+      "sha256": "bb7a063353f7ea676c8cf5a5717d016f35480f1c0e25dcfff9bf74a39bebd993"
+    },
+    "tools/engine-harness/continuous-tests.js": {
+      "destination": "tools/engine-harness/continuous-tests.js",
+      "sha256": "d859619653144f655041ee7befd754e4940e78f0daec084f8f345ce45a1c1882"
+    },
+    "tools/engine-harness/continuous.html": {
+      "destination": "tools/engine-harness/continuous.html",
+      "sha256": "ad03e199f6fc7e9e09051def7bf08e2ea83d28e27eac4dc9fc99e34be48efa52"
+    },
+    "tools/engine-harness/coordinator-demo.js": {
+      "destination": "tools/engine-harness/coordinator-demo.js",
+      "sha256": "18ed91d4bda8c231cf7de1c1c753fe6d3f18a5117f3c6f51a8bfdcbc64b364df"
+    },
+    "tools/engine-harness/coordinator-tests.js": {
+      "destination": "tools/engine-harness/coordinator-tests.js",
+      "sha256": "12f1bb7d5f5ab6e2937583f7e93fe42175259be5eb15861e0c31e5f9399b2c0d"
+    },
+    "tools/engine-harness/coordinator.html": {
+      "destination": "tools/engine-harness/coordinator.html",
+      "sha256": "3f88892d9a6a6ccfd55767da187ea6c2edf077f360f9a0c9268f27b6e02294ee"
+    },
+    "tools/engine-harness/document-adapter.js": {
+      "destination": "tools/engine-harness/document-adapter.js",
+      "sha256": "5ff660b387c05755b95b148a6664a65170040f631e283b9b2d17985fb97e76a1"
+    },
+    "tools/engine-harness/document-demo.js": {
+      "destination": "tools/engine-harness/document-demo.js",
+      "sha256": "a00e9de07c3cafc1901b7ea6a395a555b838bc215deb2e77090e2e36067c5bfe"
+    },
+    "tools/engine-harness/document-tests.js": {
+      "destination": "tools/engine-harness/document-tests.js",
+      "sha256": "325e854a0cc15e9fd2a9763448b10c18216e81c517635193ea16a2165348fb41"
+    },
+    "tools/engine-harness/document.html": {
+      "destination": "tools/engine-harness/document.html",
+      "sha256": "cb9d481268c7428560305b4dba071708e3c7b70f51a7c9e532867bbb3c3a1cc2"
+    },
+    "tools/engine-harness/index.html": {
+      "destination": "tools/engine-harness/index.html",
+      "sha256": "8d39cf2e20cdb535bbfdf8f18686cfa236a2782b5c458154aa24671f255cd2df"
+    },
+    "tools/engine-harness/opamp-tests.js": {
+      "destination": "tools/engine-harness/opamp-tests.js",
+      "sha256": "0e8082edfd2b3996689a01cb589641f7b12dc7d594a2842fe9c1de5447104d40"
+    },
+    "tools/engine-harness/reference.json": {
+      "destination": "tools/engine-harness/reference.json",
+      "sha256": "294ca4273269031b4ba186d4615f021bbb1d5897e2e1fff4645ca9274b37e91f"
+    },
+    "tools/engine-harness/revision-client.js": {
+      "destination": "tools/engine-harness/revision-client.js",
+      "sha256": "573b892241c6c1259f8b8fa187665c49c4cae93cba0d136bebfc58e4789131ec"
+    },
+    "tools/engine-harness/scope-tests.js": {
+      "destination": "tools/engine-harness/scope-tests.js",
+      "sha256": "d3277b9729c4e2b387cb04dcfe854dfa32908b8738d0113a559e5e0f7920dcd8"
+    },
+    "tools/engine-harness/simulation-coordinator.js": {
+      "destination": "tools/engine-harness/simulation-coordinator.js",
+      "sha256": "3f5c8ac1df5d5cda6fa6f751318be09ac116f165c11f481cc38448ac2df8dc62"
+    },
+    "tools/engine-harness/sine-tests.js": {
+      "destination": "tools/engine-harness/sine-tests.js",
+      "sha256": "ff3225225398edbffb7ade7bd7f01e9b6479c75915ac48298141cc02e4decb81"
+    },
+    "tools/engine-harness/verify.html": {
+      "destination": "tools/engine-harness/verify.html",
+      "sha256": "b06de7a48442a81bfae036d36cf40173d9f91f0d684e48a34f655ebe135c200d"
+    },
+    "tools/engine-harness/verify.js": {
+      "destination": "tools/engine-harness/verify.js",
+      "sha256": "f0f266d7717edd9958a0e27e1396af23606907cd659cfb2bdd95e7ea08e4f007"
+    },
+    "tools/engine-harness/waveform-tests.js": {
+      "destination": "tools/engine-harness/waveform-tests.js",
+      "sha256": "b85c29c896e856bb581973273bc2eda93e42350e506d940cb20414c0668896ce"
+    },
+    "tools/engine-harness/worker-client.js": {
+      "destination": "tools/engine-harness/worker-client.js",
+      "sha256": "f44da6fd171185f9d3c8678edb7d7baac61f5d758a120839a97c793481b6aeef"
+    },
+    "tools/engine_node_runtime.mjs": {
+      "destination": "tools/engine_node_runtime.mjs",
+      "sha256": "f5d15201fe989f45cb0e94ed4ade8a60f79f48e742168d4d102e0ff0034cc54b"
+    },
+    "tools/falstad_coverage_fixtures.mjs": {
+      "destination": "tools/falstad_coverage_fixtures.mjs",
+      "sha256": "d10e6e7acc73328945130e5464b44c30afc202e918197b6aed72fa915b11458a"
+    },
+    "tools/flip_flop_fixtures.mjs": {
+      "destination": "tools/flip_flop_fixtures.mjs",
+      "sha256": "3e96823af3b888de05bbd77d9b2f0edc06bc2234311a0da8133e82488d234d5c"
+    },
+    "tools/generate_component_menu.py": {
+      "destination": "tools/generate_component_menu.py",
+      "sha256": "e3822f341da37765c69d57d9269808a3e7986a1ec9cab4ac6bb3eb4c062737b7"
+    },
+    "tools/inventory_legacy_catalog.py": {
+      "destination": "tools/inventory_legacy_catalog.py",
+      "sha256": "7f9b9245f7bcfaafeb1f56f3cde8aa3044cfdd533bfb934b7e160d9f81d427eb"
+    },
+    "tools/logic_display_fixtures.mjs": {
+      "destination": "tools/logic_display_fixtures.mjs",
+      "sha256": "8e0fab020dee640edd15dddcd3852f3ebc0c81a7bac4979bf7b04eea0311cd91"
+    },
+    "tools/output_family_fixtures.mjs": {
+      "destination": "tools/output_family_fixtures.mjs",
+      "sha256": "8eef2548a02ddb1c69b5996b10e7f3505733b22d000beed0d26c10fad2a378bf"
+    },
+    "tools/passive_menu_fixtures.mjs": {
+      "destination": "tools/passive_menu_fixtures.mjs",
+      "sha256": "6531116d3a748ad2a4ca52dcc87fc56f2c02a061d2785ded473f4308b921d400"
+    },
+    "tools/passive_switch_fixtures.mjs": {
+      "destination": "tools/passive_switch_fixtures.mjs",
+      "sha256": "77d39acf82cddfeb52c7e18ca7b8062f0c5030eeb7be62a7c9441c3e799b69d6"
+    },
+    "tools/prepare_engine.py": {
+      "destination": "tools/prepare_engine.py",
+      "sha256": "307a5c2747027726204ce6a4ed1c566365c6c22628daaa5d6a945c61b6877cb2"
+    },
+    "tools/run_engine_browser.mjs": {
+      "destination": "tools/run_engine_browser.mjs",
+      "sha256": "ecafeeb802724078bc526baaab219ab33ea0b2e5f436556b84e4854615941d04"
+    },
+    "tools/test_chip_batch_components.mjs": {
+      "destination": "tools/test_chip_batch_components.mjs",
+      "sha256": "a3e4be895f79aa82963fd1004d44085ccf070ad0e768a6e3a77bb9b9e6295cc4"
+    },
+    "tools/test_component_catalog.mjs": {
+      "destination": "tools/test_component_catalog.mjs",
+      "sha256": "b03d362a283911843f928cb3576ebe4d709854b8d6105256c082d166aa8e688a"
+    },
+    "tools/test_component_expansion.mjs": {
+      "destination": "tools/test_component_expansion.mjs",
+      "sha256": "16e1602bff40d66fcbf720aedd80ebc5d5ebfcd44518ea95bd8bacf32169fefa"
+    },
+    "tools/test_component_menu.mjs": {
+      "destination": "tools/test_component_menu.mjs",
+      "sha256": "90abf13b8a086204db2f22941d507f3d1256e21f88145c91efb4fb3c196a4636"
+    },
+    "tools/test_component_worker.mjs": {
+      "destination": "tools/test_component_worker.mjs",
+      "sha256": "8f5e1638629bcdac806afa7eace482f5260cadae3d6fa5afb53ca8e82bd48654"
+    },
+    "tools/test_continuous_simulation.mjs": {
+      "destination": "tools/test_continuous_simulation.mjs",
+      "sha256": "6e6a70461c549fa1f30fd97c5a910abc64edfd211cf23f7b71b9fee3d96ea5b5"
+    },
+    "tools/test_core_package.mjs": {
+      "destination": "tools/test_core_package.mjs",
+      "sha256": "58e148bb0f10bfaf9df8dc05f6db88d9b5d4dd1043aacbb8857429eb42592dda"
+    },
+    "tools/test_diode_models.mjs": {
+      "destination": "tools/test_diode_models.mjs",
+      "sha256": "17e67af8e1bbb915f803d2edc39081aece178c3059f0d98f15b63f0588879d9f"
+    },
+    "tools/test_document_adapter.mjs": {
+      "destination": "tools/test_document_adapter.mjs",
+      "sha256": "38ade16c1ea58cbf74ca28d546019dc87794d9b24ff461969396297351c043c5"
+    },
+    "tools/test_drag_session.mjs": {
+      "destination": "tools/test_drag_session.mjs",
+      "sha256": "791d90c2f993ae24818407a4e3f36c72366f1a77f251d57de512e23189c11890"
+    },
+    "tools/test_editor_model.mjs": {
+      "destination": "tools/test_editor_model.mjs",
+      "sha256": "029890600a3a25be8fee435ab0da1f913c7f728b78e5d923f2095384ce65341f"
+    },
+    "tools/test_engine_preparation.mjs": {
+      "destination": "tools/test_engine_preparation.mjs",
+      "sha256": "dc67ad44893aefc069de38a4016b29427626f6629ced321a72b1cb40c4e2f62b"
+    },
+    "tools/test_engine_preparation.py": {
+      "destination": "tools/test_engine_preparation.py",
+      "sha256": "663e9c08217c6f798cdbe1d81c21b4364d943bfd16f3b20cc6a09b14e68d97a9"
+    },
+    "tools/test_flip_connections.mjs": {
+      "destination": "tools/test_flip_connections.mjs",
+      "sha256": "087725c26db67f74efc9d132d2b2bd00fd95004e37dd61351494e9083b423a3d"
+    },
+    "tools/test_flip_flop_components.mjs": {
+      "destination": "tools/test_flip_flop_components.mjs",
+      "sha256": "7d03949367c5424beae77dc1bdb5dbfb165673ff3823d0cbbab78d908836a429"
+    },
+    "tools/test_live_reanalysis.mjs": {
+      "destination": "tools/test_live_reanalysis.mjs",
+      "sha256": "538d0148546ba0e0ec5eb6783906fbd9174a18e04f2f5ea9d9a3a04525cbcc58"
+    },
+    "tools/test_logic_display_components.mjs": {
+      "destination": "tools/test_logic_display_components.mjs",
+      "sha256": "356a2d1aedc8878ca3fa10b296a0a948f5cbb83abcf4257c78689f52d4f9def5"
+    },
+    "tools/test_output_coordinator.mjs": {
+      "destination": "tools/test_output_coordinator.mjs",
+      "sha256": "8bef0e39201e975709c5b6ddbd050d0a4d3d6cf84e1a3785b1adab2e72cec57b"
+    },
+    "tools/test_output_family.mjs": {
+      "destination": "tools/test_output_family.mjs",
+      "sha256": "97c2fd3bfa9351f79f14e3a4bb24a0409430efe2712e697cd4dbbf7f4020eb63"
+    },
+    "tools/test_passive_menu_components.mjs": {
+      "destination": "tools/test_passive_menu_components.mjs",
+      "sha256": "488fcd5544ee3dad2328b0b6fb5217119ff0551c5d265907b899056a85ba159c"
+    },
+    "tools/test_passive_switch_components.mjs": {
+      "destination": "tools/test_passive_switch_components.mjs",
+      "sha256": "96a7c0c47dd2f311ca67238dd78fc9d81970521bba89b80dad5f0b79c84eaf60"
+    },
+    "tools/test_pin_drag.mjs": {
+      "destination": "tools/test_pin_drag.mjs",
+      "sha256": "ca15e05fdb155ccd2ad7083ae8b0f0704dbff14b0f6f407070cc04824f3c05e3"
+    },
+    "tools/test_probe_move.mjs": {
+      "destination": "tools/test_probe_move.mjs",
+      "sha256": "78483402d94460b772de08fd4db72445d155353b19f889aaa7dab3ac18174b85"
+    },
+    "tools/test_property_parity.mjs": {
+      "destination": "tools/test_property_parity.mjs",
+      "sha256": "44bf5656d7259ceba7fc3a24ef325c39a3cac179b8450e88d13867a0dd14431e"
+    },
+    "tools/test_running_edits.mjs": {
+      "destination": "tools/test_running_edits.mjs",
+      "sha256": "5db5e40a21c80d6962e28c360bbe0f8caf3a29c67d3fa2887222b402ac343051"
+    },
+    "tools/test_scope_continuity.mjs": {
+      "destination": "tools/test_scope_continuity.mjs",
+      "sha256": "45b62aa65485cc6a7ee6b365f2bba3c7dcb0efa3b9574c5a6f19b97700c035eb"
+    },
+    "tools/test_scope_model.mjs": {
+      "destination": "tools/test_scope_model.mjs",
+      "sha256": "dc194f4b7a794557c3b5ded1f52c9b7ae5dfcc45703437ca81eedba81b3171cc"
+    },
+    "tools/test_scope_sampling.mjs": {
+      "destination": "tools/test_scope_sampling.mjs",
+      "sha256": "55ada3bbfed98cdde043f580f7af200ef0b73e67e6ff5d7b14d9ae6193e3b2a7"
+    },
+    "tools/test_simulation_coordinator.mjs": {
+      "destination": "tools/test_simulation_coordinator.mjs",
+      "sha256": "b319cc56e088cfa07036b0bae65be688c7ebbff4e7b1d37152fd03089543f076"
+    },
+    "tools/test_switch_properties.mjs": {
+      "destination": "tools/test_switch_properties.mjs",
+      "sha256": "849ababf5ab4b0dc68847738610afc0fbf2b8d1f6afec91046d4dd86fefeac83"
+    },
+    "tools/test_symbol_authoring.mjs": {
+      "destination": "tools/test_symbol_authoring.mjs",
+      "sha256": "c7ead167cc39d072ce380b712889150127c9190eb21bb81fd92ffeb12ed115f3"
+    },
+    "tools/test_symbol_orientation.mjs": {
+      "destination": "tools/test_symbol_orientation.mjs",
+      "sha256": "498fc87a0e0432d434a778e2238a23ee64cba06709b0fdb5c85374249e08e532"
+    },
+    "tools/test_voltage_slider.mjs": {
+      "destination": "tools/test_voltage_slider.mjs",
+      "sha256": "50a6746cae3512c19690b388bf786d89cdb0b1b9f96487c38babcdaabc1c37aa"
+    },
+    "tools/test_wire_pin_contacts.mjs": {
+      "destination": "tools/test_wire_pin_contacts.mjs",
+      "sha256": "dd89857a254ba1ea5e5b370d134ea3e3a5c5f01689074746281f124f7b0e50fd"
+    },
+    "tools/test_wire_sections.mjs": {
+      "destination": "tools/test_wire_sections.mjs",
+      "sha256": "a6d72ed11830199e660c22053647d69a55b3d6b09110de6d3a57a9d5bd1221d2"
+    },
+    "tools/typescript_module.mjs": {
+      "destination": "tools/typescript_module.mjs",
+      "sha256": "4a0c4acac5ce582f6f4bad61f3b1689ddd7932bae17bd4c7987fc2d5d538bbc3"
+    },
+    "tools/upstream-boundary/README.md": {
+      "destination": "tools/upstream-boundary/README.md",
+      "sha256": "04894654fb09d93ad591560b3c346976b2d65d110de604496e18cb37e4ec1d22"
+    },
+    "tools/upstream-boundary/adoption-2026-11-17.json": {
+      "destination": "docs/migration/engine-proof/adoption-2026-11-17.json",
+      "sha256": "3713541c1b941687a24f34fef6f3c2633d87da08687ead87a28b1b4641f45394"
+    },
+    "tools/upstream-boundary/patches/01-older-compatibility.patch": {
+      "destination": "docs/migration/engine-proof/patches/01-older-compatibility.patch",
+      "sha256": "fb06500ad72b70ae5b30a28db3ebaad11729163f1b38a4fca6ebfc9a236c365f"
+    },
+    "tools/upstream-boundary/patches/02-headless.patch": {
+      "destination": "docs/migration/engine-proof/patches/02-headless.patch",
+      "sha256": "fa00ed935e7f6586f77966b39214e5cb0b563ace876a68bfdf85917f3911ed1b"
+    },
+    "tools/upstream-boundary/patches/03-correctness.patch": {
+      "destination": "docs/migration/engine-proof/patches/03-correctness.patch",
+      "sha256": "24029acad4170e94bd5299a2f3da2d06bf37987a2034408c573e23533f1cc073"
+    },
+    "tools/upstream-boundary/proof-2026-11-17.json": {
+      "destination": "docs/migration/engine-proof/proof-2026-11-17.json",
+      "sha256": "5c40f34c4bc9166a5b6e8e3b69d9cdeaf19a7cb7bc5466d87651b6655ef6e319"
+    },
+    "tools/upstream-boundary/prove.py": {
+      "destination": "docs/migration/engine-proof/original-tools/prove.py.txt",
+      "sha256": "5ac909c26c0a0327330441455f14c731690f8ecbc73cd463a8cb8665009f35a8"
+    },
+    "tools/upstream-boundary/replay.mjs": {
+      "destination": "tools/upstream-boundary/replay.mjs",
+      "sha256": "96bbd81461f206b56506f9b03cd22d5705ccf17e10e7803db89f631da02ccf88"
+    },
+    "tools/upstream-boundary/verify.py": {
+      "destination": "docs/migration/engine-proof/original-tools/verify.py.txt",
+      "sha256": "223a105653cc0f2087580cbdecf79a070d16ffa0f2ddb4075efbb26a0d4f78f8"
+    },
+    "tools/verify_engine.py": {
+      "destination": "tools/verify_engine.py",
+      "sha256": "fe69a535edafceb1212bd1e649f91a3fb4a6054654484e1de420866d366c9e3a"
+    },
+    "docs/new-simulator/COMPONENT-PROPERTY-AUDIT.json": {
+      "destination": "docs/new-simulator/COMPONENT-PROPERTY-AUDIT.json",
+      "sha256": "74d63a552294f5698363166524a01772390d0212eeffa95d01eebb158aa2786d"
+    },
+    "docs/new-simulator/COMPONENT-PROPERTY-AUDIT.md": {
+      "destination": "docs/new-simulator/COMPONENT-PROPERTY-AUDIT.md",
+      "sha256": "a67bbaf59ee165c7e70f81e0ab3f64b2a974ff182e7b6d0ee98f91aecc23ea0c"
+    },
+    "docs/new-simulator/COORDINATOR.md": {
+      "destination": "docs/new-simulator/COORDINATOR.md",
+      "sha256": "b1f8472c3c390f70064c5e441485dc0288342da5556d57a2e865b2583447e695"
+    },
+    "docs/new-simulator/DOCUMENT-ADAPTER.md": {
+      "destination": "docs/new-simulator/DOCUMENT-ADAPTER.md",
+      "sha256": "05c548fb07515fa826883a15b382b8adfe4f6df0495e4ac8a6935aac6c54abfa"
+    },
+    "docs/new-simulator/DRAGGING.md": {
+      "destination": "docs/new-simulator/DRAGGING.md",
+      "sha256": "c57f32f2459a128feee17eb3022a924a5db3894bcfa6b35680cbdef8741b6741"
+    },
+    "docs/new-simulator/EDITOR-CONTRACT.md": {
+      "destination": "docs/new-simulator/EDITOR-CONTRACT.md",
+      "sha256": "32b02f1e3b25dda54753e0e8e9bc42d7e1a509f131b6322b3217d46e7468ab67"
+    },
+    "docs/new-simulator/EDITOR-DESIGN.md": {
+      "destination": "docs/new-simulator/EDITOR-DESIGN.md",
+      "sha256": "209972c1313d8e5ad808f424ea3bb6248acc44b3f86fa230b41615535c124800"
+    },
+    "docs/new-simulator/EDITOR-PROTOTYPE.md": {
+      "destination": "docs/new-simulator/EDITOR-PROTOTYPE.md",
+      "sha256": "8715e9c9ae0f50de1d6caedea3d75e344e8a5a1cf3521aeca495152646cc9aaf"
+    },
+    "docs/new-simulator/HANDOFF-HISTORY.md": {
+      "destination": "docs/new-simulator/HANDOFF-HISTORY.md",
+      "sha256": "6e3ae063b578101a1735955cd4050b3654b9f5e89fab2de308ec274d128c2763"
+    },
+    "docs/new-simulator/HANDOFF.md": {
+      "destination": "docs/new-simulator/HANDOFF.md",
+      "sha256": "2d1aa5f7bf1dd4c611cb4ba134e7de52bca7c969864af0071ebe9fa49885bc73"
+    },
+    "docs/new-simulator/LEGACY-CATALOG.json": {
+      "destination": "docs/new-simulator/LEGACY-CATALOG.json",
+      "sha256": "05710f965cd87d05032cc099c5599a1dbac779bc5c9d134718704d027a2beece"
+    },
+    "docs/new-simulator/LEGACY-CATALOG.md": {
+      "destination": "docs/new-simulator/LEGACY-CATALOG.md",
+      "sha256": "00ffd761d6b46b1e3d6c51431fed5365485796c9d978cfcd7c335556c5299885"
+    },
+    "docs/new-simulator/PHASE-0.md": {
+      "destination": "docs/new-simulator/PHASE-0.md",
+      "sha256": "7f4f2e6d617178056e28c3285452989455558a41a5643e9c422a665acf8fb745"
+    },
+    "docs/new-simulator/PLAN-HISTORY.md": {
+      "destination": "docs/new-simulator/PLAN-HISTORY.md",
+      "sha256": "ffefe118d4deed3ae0f692eb7977fcc5a129127e5464a72ba4e0feeed7b40132"
+    },
+    "docs/new-simulator/PLAN.md": {
+      "destination": "docs/new-simulator/PLAN.md",
+      "sha256": "d8e5cc405b0e24880705bf40c1000e3788d92e30dddacced0df53fbb04e600a2"
+    },
+    "docs/new-simulator/PROPERTY-PARITY.md": {
+      "destination": "docs/new-simulator/PROPERTY-PARITY.md",
+      "sha256": "698daab3a673ab9d492a083b7128e6d96844ecd6536826f5523ef5335a595480"
+    },
+    "docs/new-simulator/REACT-PARITY.md": {
+      "destination": "docs/new-simulator/REACT-PARITY.md",
+      "sha256": "6190f04933df20aa3ce42ca52adf73beb4f46a9e4f81040d6c0cc4630b2e9575"
+    },
+    "docs/new-simulator/RUN-AND-LIVE-EDITS.md": {
+      "destination": "docs/new-simulator/RUN-AND-LIVE-EDITS.md",
+      "sha256": "ba755e609266153f53743155d376f5c820dba6ef9f8bf88eb23ab060ba1cfe80"
+    },
+    "docs/new-simulator/UPSTREAM-ARCHITECTURE.md": {
+      "destination": "docs/new-simulator/UPSTREAM-ARCHITECTURE.md",
+      "sha256": "555f470ee77a730fe58985af08d323d18feea11c6d3b209e161d21d866869c07"
+    },
+    "docs/new-simulator/UPSTREAM-BOUNDARY-AUDIT.md": {
+      "destination": "docs/new-simulator/UPSTREAM-BOUNDARY-AUDIT.md",
+      "sha256": "c0b1314036929d68ee4520ebc7659c0aebebe0c5fe32ae0e4e4d4455c06329d1"
+    },
+    "docs/new-simulator/WORKER-PROTOCOL.md": {
+      "destination": "docs/new-simulator/WORKER-PROTOCOL.md",
+      "sha256": "4bdfb8d62fabab3a709e5510589e798b4da406c6936cac23591d7beedcf91d2d"
+    },
+    "docs/new-simulator/examples/analog-spdt-selector.json": {
+      "destination": "docs/new-simulator/examples/analog-spdt-selector.json",
+      "sha256": "02a921ad20992c3a08b1ad7d158e33d2f75179eb54a4e207e242ffe8a860147f"
+    },
+    "docs/new-simulator/examples/flip-flop-latch.json": {
+      "destination": "docs/new-simulator/examples/flip-flop-latch.json",
+      "sha256": "3f92af6c0dba2ef9f1dabb7bdd143a2d66acde9365a40eba64cb4ba7947d32f2"
+    },
+    "docs/new-simulator/examples/logic-monitor-divider.json": {
+      "destination": "docs/new-simulator/examples/logic-monitor-divider.json",
+      "sha256": "8401b84e6ba9eaba3560326ea0dcbaed75c857e2e5d89860ce366954843b894f"
+    },
+    "docs/new-simulator/examples/opamp-ac-rail.json": {
+      "destination": "docs/new-simulator/examples/opamp-ac-rail.json",
+      "sha256": "a89636c07fa4a66b5cd470d45603afe39662db21b8457a91024aae213dd6dd1f"
+    },
+    "docs/new-simulator/examples/opamp-noninverting.json": {
+      "destination": "docs/new-simulator/examples/opamp-noninverting.json",
+      "sha256": "1250810e327bbbe6f6d149118f75fece7545ab7b7fe4462d17728061a06e5dee"
+    },
+    "docs/new-simulator/examples/opamp-oscilloscope.json": {
+      "destination": "docs/new-simulator/examples/opamp-oscilloscope.json",
+      "sha256": "149d25b09aee850e2ab2ed73e626f55094808d51b38fedfca93cdce5145f97e4"
+    },
+    "docs/new-simulator/examples/opamp-sine.json": {
+      "destination": "docs/new-simulator/examples/opamp-sine.json",
+      "sha256": "9801db2137453739ff64bd75862631cd8cdb11ee3f9202564ea033dee80d6762"
+    },
+    "docs/new-simulator/examples/polarized-capacitor-rc.json": {
+      "destination": "docs/new-simulator/examples/polarized-capacitor-rc.json",
+      "sha256": "61f3214cb5011fd95a2a3dce13176a0e0e583b53baee8d750dca0c8c864bd66d"
+    },
+    "docs/new-simulator/examples/rc-charge.json": {
+      "destination": "docs/new-simulator/examples/rc-charge.json",
+      "sha256": "4b865aae67f62f320867350e7e287acebc1130261efd3a5cedddf34e4d7cab7f"
+    },
+    "docs/new-simulator/examples/switched-rc.json": {
+      "destination": "docs/new-simulator/examples/switched-rc.json",
+      "sha256": "9b7068f824edd13d2dc6dc8a11b9846b7ceda711c73dc817b79a4e9598f49431"
+    },
+    "docs/new-simulator/examples/voltage-divider.json": {
+      "destination": "docs/new-simulator/examples/voltage-divider.json",
+      "sha256": "bec5140cbd5418347d04db753e74041b320b32796f079041f1a9361629f67eb6"
+    },
+    "docs/new-simulator/examples/worker-session.json": {
+      "destination": "docs/new-simulator/examples/worker-session.json",
+      "sha256": "a348e596f6d64f871c8341e54237375d31afe4de6d1c7f2e827d79919bd9bcc3"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineCircuitUpdate.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineCircuitUpdate.java",
+      "sha256": "87847ed697f0acc417742ad4d6930e7d6b6a81bbbb6a2019ee4f941f209bad8c"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineDiodeSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineDiodeSupport.java",
+      "sha256": "6e0638b5dfceed221e65f193ac2cd378c76d30f4d87ad6dd74253b29cbceffa3"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineEntryPoint.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineEntryPoint.java",
+      "sha256": "739c858fd4de4b502f89f01a211004476977decf4056a3aca088b0afb3b9689c"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineOutputSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineOutputSupport.java",
+      "sha256": "a0c91c5535f5ed0acb16e248302e135c128da5301ad780d3c69eac694a7fa736"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EnginePassiveSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EnginePassiveSupport.java",
+      "sha256": "659e347c2c70921e3940bb7d8da8623fa33afd00b4d780a35098bf499d39df1f"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineSemiconductorSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineSemiconductorSupport.java",
+      "sha256": "270eba056b08aca83c52f32b3c4bcd308757e273b3b8099a288ebd945fd90c90"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineSourceSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineSourceSupport.java",
+      "sha256": "7147e87c843ef7d7406b6c47b3e123031456039c6eb275a9321e72d730366139"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineSwitchSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineSwitchSupport.java",
+      "sha256": "758f629a8deeb4131ef92cf08f9b6efaa8ba7fdb28c9f6560dd8876ba8149097"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/client/EngineTransistorSupport.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/client/EngineTransistorSupport.java",
+      "sha256": "a106b6bedc8b140cfe367db36d85bdbf609dba671466235493b8a9c6273a1b32"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/engine.gwt.xml": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/engine.gwt.xml",
+      "sha256": "e073949cfbd624dd0310e315f9799cfc4bd318c66130b5bb183d936a2587aa81"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/rebind/EngineWorkerLinker.java": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/rebind/EngineWorkerLinker.java",
+      "sha256": "b0a5b6395e16c6eb54743576410b331b804141675d11fb6197ac19be05eee73c"
+    },
+    "engine/integration/com/lushprojects/circuitjs1/worker.gwt.xml": {
+      "destination": "engine/integration/com/lushprojects/circuitjs1/worker.gwt.xml",
+      "sha256": "e5b72fb0aa6d96e35733f3e450e592e992a675a43cac1d5905ef72dc54be89cf"
+    },
+    "engine/patches/01-older-compatibility.patch": {
+      "destination": "engine/patches/01-older-compatibility.patch",
+      "sha256": "fb06500ad72b70ae5b30a28db3ebaad11729163f1b38a4fca6ebfc9a236c365f"
+    },
+    "engine/patches/02-headless.patch": {
+      "destination": "engine/patches/02-headless.patch",
+      "sha256": "fa00ed935e7f6586f77966b39214e5cb0b563ace876a68bfdf85917f3911ed1b"
+    },
+    "engine/patches/03-correctness.patch": {
+      "destination": "engine/patches/03-correctness.patch",
+      "sha256": "24029acad4170e94bd5299a2f3da2d06bf37987a2034408c573e23533f1cc073"
+    },
+    "engine/upstream.json": {
+      "destination": "engine/upstream.json",
+      "sha256": "71da927f3fa4bbe389b08d147f550b9da713b779512c7bc7cecec5adbd2f84ed"
+    },
+    "engine/README.md": {
+      "destination": "engine/README.md",
+      "sha256": "31c8e55b41a5cc4285b74e0e1dc155838cc2f194576ebd660bd7ef9e9d02fc97"
+    },
+    "gradle/wrapper/gradle-wrapper.jar": {
+      "destination": "gradle/wrapper/gradle-wrapper.jar",
+      "sha256": "cb0da6751c2b753a16ac168bb354870ebb1e162e9083f116729cec9c781156b8"
+    },
+    "gradle/wrapper/gradle-wrapper.properties": {
+      "destination": "gradle/wrapper/gradle-wrapper.properties",
+      "sha256": "712d9bc912d4b0d42b0faf8c6afeed13ae31ced75ca28463b1dfc4ced1a4bc9a"
+    },
+    "gradlew": {
+      "destination": "gradlew",
+      "sha256": "fc977a94723af68aaffa4e5d60496fb4aeed1884b6b19e5e2f2fd7612673313d"
+    },
+    "gradlew.bat": {
+      "destination": "gradlew.bat",
+      "sha256": "95e8ae8e8a256a2f066cdd745d56f7a3fc87aa058a2e4beb483300db7171bd1f"
+    },
+    "COPYING.txt": {
+      "destination": "COPYING.txt",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    ".editorconfig": {
+      "destination": ".editorconfig",
+      "sha256": "64403ef4e80f0f588c490035843fb46db6671128aca491c2ae7da489b90b8d5b"
+    },
+    ".gitattributes": {
+      "destination": ".gitattributes",
+      "sha256": "bdbd68b106767972511720c3034130c2ffc1862c5abc29bfe110bf82c5137383"
+    }
+  }
+}

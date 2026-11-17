@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Verify completed disposable proof builds; also supports retrying test-stage failures."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+out = Path(sys.argv[1]).resolve()
+project = out / 'project'
+logs = out / 'logs'
+for label in ['reference', 'reconstructed']:
+    for module in ['engine', 'worker']:
+        if 'Linking succeeded' not in (logs / f'{label}-{module}.log').read_text():
+            raise RuntimeError('A fresh successful compile is required before verification')
+
+# Instrument only the disposable copy. Engine IDs preserve instance isolation and
+# thread ownership when replaying a reference suite's exact calls on reconstruction.
+runtime = project / 'tools/engine_node_runtime.mjs'
+original = (out / 'reference/tools/engine_node_runtime.mjs').read_text()
+script = original.replace('import {readFileSync}', 'import {appendFileSync,readFileSync}')
+script = "import {threadId} from 'node:worker_threads';\nlet engineSequence=0;\n" + script
+script = script.replace("site=path.resolve('build/engine-site')", 'site=process.env.CIRCUIT_ENGINE_SITE')
+script = script.replace('return context.CircuitEngine;', '''const id=threadId+':'+(++engineSequence);
+  return new Proxy(context.CircuitEngine,{get(target,key){
+    const value=target[key];if(typeof value!=='function')return value;
+    return (...args)=>{try{const result=value(...args);
+      appendFileSync(process.env.ENGINE_TRANSCRIPT,JSON.stringify({id,key,args,result})+'\\n');return result;
+    }catch(error){appendFileSync(process.env.ENGINE_TRANSCRIPT,JSON.stringify({id,key,args,error:String(error.message||error)})+'\\n');throw error;}};
+  }});''')
+runtime.write_text(script)
+replay = project / 'tools/replay-boundary.mjs'
+replay.write_text('''import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createEngine} from './engine_node_runtime.mjs';
+const engines=new Map();let count=0;
+for(const line of readFileSync(process.argv[2],'utf8').trim().split('\\n').filter(Boolean)){
+ const call=JSON.parse(line);let engine=engines.get(call.id);
+ if(!engine){engine=createEngine();engines.set(call.id,engine);}
+ let result,error;try{result=engine[call.key](...call.args);}catch(e){error=String(e.message||e);}
+ // Convert cross-VM objects to plain JSON values before strict comparison.
+ assert.deepEqual(JSON.parse(JSON.stringify({result,error})),
+   JSON.parse(JSON.stringify({result:call.result,error:call.error})),`Call ${count}: ${call.key}`);
+ count++;
+}
+console.log(`Replayed ${count} exact API calls across ${engines.size} engine instances`);
+''')
+
+def run(command, log, env):
+    print(log.name, flush=True)
+    with log.open('w') as stream:
+        subprocess.run(command, cwd=project, stdout=stream, stderr=subprocess.STDOUT,
+                       env=env, timeout=180, check=True)
+
+builds = {label: out / label / 'build-proof' for label in ['reference', 'reconstructed']}
+for build in builds.values():
+    site = build / 'site'
+    if not site.exists():
+        site.mkdir()
+        shutil.copytree(build / 'worker/circuitjsworker', site / 'circuitjsworker')
+comparisons = {}
+for suite in sorted((project / 'tools').glob('test_*.mjs')):
+    if 'browser' in suite.name:
+        continue
+    for label, build in builds.items():
+        transcript = logs / (label + '-' + suite.stem + '.jsonl')
+        transcript.write_text('')
+        env = dict(os.environ, CIRCUIT_ENGINE_SITE=str(build / 'site'), ENGINE_TRANSCRIPT=str(transcript))
+        run(['node', str(suite)], logs / (label + '-' + suite.stem + '.log'), env)
+    reference_trace = logs / ('reference-' + suite.stem + '.jsonl')
+    env = dict(os.environ, CIRCUIT_ENGINE_SITE=str(builds['reconstructed'] / 'site'),
+               ENGINE_TRANSCRIPT=str(logs / 'replay-api.jsonl'))
+    run(['node', str(replay), str(reference_trace)], logs / ('replay-' + suite.stem + '.log'), env)
+    comparisons[suite.name] = {'apiCalls': len(reference_trace.read_text().splitlines()),
+                              'referenceTranscriptSha256': hashlib.sha256(reference_trace.read_bytes()).hexdigest()}
+worker = project / 'build/engine-worker'
+if worker.exists():
+    shutil.rmtree(worker)
+shutil.copytree(builds['reconstructed'] / 'worker', worker)
+run(['pnpm', '--dir', 'wires', 'check'], logs / 'react-check.log', dict(os.environ))
+root = Path(__file__).resolve().parents[2]
+manifest = {'baseline':'0971995d9af13e95c5bd4eb07fb4527fb4696e26',
+            'current': subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
+            'patches':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (out/'patches').glob('*.patch')},
+            'integration':{str(p.relative_to(out/'integration')):hashlib.sha256(p.read_bytes()).hexdigest()
+                           for p in (out/'integration').rglob('*') if p.is_file()},
+            'suites':comparisons,'comparison':'Exact reference API calls replayed on reconstructed worker; JSON results/errors compared exactly',
+            'node':subprocess.check_output(['node','--version'],text=True).strip(),
+            'pnpm':subprocess.check_output(['pnpm','--version'],text=True).strip(),
+            'reactCheck':'passed','browserChecks':'not run'}
+manifest.update(json.loads((out/'inputs.json').read_text()))
+(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+print('Proof passed:',out/'manifest.json',flush=True)

@@ -2,6 +2,9 @@ node_modules/
 .gradle/
 build/
 dist/
+
+# Commit the locally built site for Cloudflare Pages.
+!apps/simulator/dist/
 __pycache__/
 .DS_Store
 .vite/

@@ -8,7 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# The production dist directory is committed for static hosting.
 dist-ssr
 *.local
 

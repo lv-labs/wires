@@ -12,7 +12,7 @@
     ACVoltageElm:'acSource', RailElm:'voltageRail', ACRailElm:'acRail', SquareRailElm:'squareRail', ClockElm:'clockRail',
     CurrentElm:'currentSource', OutputElm:'output', LEDElm:'led', DiodeElm:'diode', ZenerElm:'zener',
     NTransistorElm:'npn', PTransistorElm:'pnp', NMosfetElm:'nmos', PMosfetElm:'pmos', NJfetElm:'njfet', PJfetElm:'pjfet',
-    OpAmpElm:'opamp', OpAmpSwapElm:'opampPlusTop', AnalogSwitchElm:'analogSwitch', AnalogSwitch2Elm:'analogSpdtSwitch',
+    OpAmpElm:'opampMinusTop', OpAmpSwapElm:'opampPlusTop', AnalogSwitchElm:'analogSwitch', AnalogSwitch2Elm:'analogSpdtSwitch',
     LogicInputElm:'logicInput', LogicOutputElm:'logicOutput', InverterElm:'inverter', AndGateElm:'andGate',
     NandGateElm:'nandGate', OrGateElm:'orGate', NorGateElm:'norGate', XorGateElm:'xorGate',
     DFlipFlopElm:'dFlipFlop', JKFlipFlopElm:'jkFlipFlop', TFlipFlopElm:'tFlipFlop',

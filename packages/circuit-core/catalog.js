@@ -2824,6 +2824,10 @@
           "offset": 0
         }
       }
+    },
+    "opampMinusTop": {
+      "kind": "opamp",
+      "name": "Op-amp (− on top)"
     }
   };
   // END GENERATED SYMBOL CATALOG
@@ -3324,6 +3328,8 @@
   },
   "opamp": {
     "type": "a",
+    // CircuitJS posts are inverting, non-inverting, output, independent of artwork.
+    "postOrder": ["minus", "plus", "out"],
     "sign": -1
   },
   "ground": {

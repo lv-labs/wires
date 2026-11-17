@@ -149,7 +149,10 @@ geometry. The UI language/toolkit remains open.
 `opamp@1` has `minus`, `plus`, `out` pins and exactly `gain`, `minOutput`, `maxOutput`
 parameters. Gain must be finite/positive; output limits must be finite/ordered.
 The adapter emits the existing `a` element with its explicit-gain flag and maps
-its three actual posts to stable pin IDs. Positive reported op-amp current means
+its three actual posts explicitly in `minus`, `plus`, `out` order, independent of
+the authored symbol pin order and layout. The default artwork has `plus` above
+`minus`; the menu offers both polarities without changing electrical pin IDs.
+Positive reported op-amp current means
 current delivered at the output. The output has an implicit ground reference;
 the inputs have no artificial conductance and need an external reference/feedback
 path. Ideal output/source loops are rejected by the existing preflight policy.

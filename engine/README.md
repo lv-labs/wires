@@ -16,6 +16,12 @@ git submodule update --init engine/upstream
 pnpm engine:build
 ```
 
+The Gradle build, wrapper (`gradlew`/`gradlew.bat`, `gradle/`), settings and local
+`.gradle/` cache live in this directory. Root `pnpm engine:build` invokes
+`./engine/gradlew -p engine makeEngineSite --console plain`. From this directory,
+`./gradlew makeEngineSite --console plain` also works. Generated runtime assets stay
+under the repository's `build/` directory for the app and test consumers.
+
 Java 8, Python 3.9+ and Gradle 8.7 are required. If Gradle is unavailable but GWT
 2.8.2 jars are cached locally:
 

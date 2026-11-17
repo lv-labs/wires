@@ -20,8 +20,8 @@ existing short-link deployment remain in the original `circuitjs` repository.
 
 ## Run
 
-Requirements: Java 8, Python 3.9+, Node 24+ and pnpm 10.30.3. The Gradle 8.7 wrapper
-is included. From a fresh clone:
+Requirements: Java 8, Python 3.9+, Node 24+ and pnpm 10.30.3. The Gradle 8.7
+wrapper and build configuration live under `engine/`. From a fresh clone:
 
 ```sh
 git submodule update --init engine/upstream
@@ -50,6 +50,6 @@ this repository starts with a standalone migration snapshot.
 CircuitJS was created by Paul Falstad and Iain Sharp, with contributions from the
 CircuitJS community. The pinned dependency is
 [pfalstad/circuitjs1](https://github.com/pfalstad/circuitjs1).
-Existing copyright and license notices are preserved. See [COPYING.txt](COPYING.txt)
+Existing copyright and license notices are preserved. See [LICENSE](LICENSE)
 and the source headers. This repository contains no production deployment workflow
 and has no remote configured at migration time.

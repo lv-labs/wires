@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--output', type=Path, help='Optional JSON result file')
     args = parser.parse_args()
     if not (args.site / 'circuitjsengine/circuitjsengine.nocache.js').is_file():
-        parser.error('Build the engine first: ./gradlew makeEngineSite --console plain')
+        parser.error('Build the engine first: pnpm engine:build')
     if args.capture and not args.baseline:
         parser.error('--capture requires --baseline')
     if args.baseline and not (args.baseline / 'index.html').is_file():

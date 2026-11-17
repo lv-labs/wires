@@ -9,14 +9,17 @@
 //      into a Gradle build from older Maven and GWT-based builds.
 //=====================================================================
 
-// Engine tasks derived from the LV Labs CircuitJS fork. See COPYING.txt.
+// Engine tasks derived from the LV Labs CircuitJS fork. See ../LICENSE.
 plugins { id 'java' }
+
+// Keep generated runtime assets at the app's established build paths.
+layout.buildDirectory = file('../build')
 repositories { mavenCentral() }
 sourceCompatibility = 8
 targetCompatibility = 8
 sourceSets {
     main { java.srcDirs = [] }
-    engine { java.srcDirs = ['build/engine-source/src', 'engine/integration'] }
+    engine { java.srcDirs = ['../build/engine-source/src', 'integration'] }
 }
 dependencies {
     engineImplementation 'com.google.gwt:gwt-user:2.8.2'
@@ -25,6 +28,7 @@ dependencies {
 tasks.register('prepareEngine', Exec) {
     group 'circuitjs1'
     description 'Validate the upstream pin and prepare patched disposable sources'
+    workingDir projectDir.parentFile
     commandLine 'python3', 'tools/prepare_engine.py'
 }
 tasks.named('compileEngineJava') { dependsOn 'prepareEngine' }
@@ -34,7 +38,7 @@ tasks.register('compileEngine', JavaExec) {
     group 'circuitjs1'
     description 'Compile the pinned upstream engine with isolated integration sources'
     dependsOn 'engineClasses'
-    classpath = sourceSets.engine.runtimeClasspath + files('build/engine-source/src', 'engine/integration')
+    classpath = sourceSets.engine.runtimeClasspath + files('../build/engine-source/src', 'integration')
     mainClass = 'com.google.gwt.dev.Compiler'
     maxHeapSize = '1024m'
     systemProperty 'gwt.persistentunitcache', 'false'
@@ -48,7 +52,7 @@ tasks.register('compileEngineWorker', JavaExec) {
     group 'circuitjs1'
     description 'Compile a DOM-free bootstrap for the simulation worker'
     dependsOn 'engineClasses'
-    classpath = sourceSets.engine.runtimeClasspath + files('build/engine-source/src', 'engine/integration')
+    classpath = sourceSets.engine.runtimeClasspath + files('../build/engine-source/src', 'integration')
     mainClass = 'com.google.gwt.dev.Compiler'
     maxHeapSize = '1024m'
     systemProperty 'gwt.persistentunitcache', 'false'
@@ -62,17 +66,17 @@ tasks.register('compileEngineWorker', JavaExec) {
 // also retains its native ESM entry for independent frontend consumers.
 def coreBrowserBundle = layout.buildDirectory.file('core/browser.js')
 tasks.register('bundleCircuitCore') {
-    inputs.dir('packages/circuit-core')
+    inputs.dir('../packages/circuit-core')
     outputs.file(coreBrowserBundle)
     doLast {
-        def modules = file('packages/circuit-core/index.mjs').readLines().findResults { line ->
+        def modules = file('../packages/circuit-core/index.mjs').readLines().findResults { line ->
             def match = line =~ /^import '\.\/(.+)';$/
             match.matches() ? match[0][1] : null
         }
         def target = coreBrowserBundle.get().asFile
         target.parentFile.mkdirs()
         target.text = '// Generated from packages/circuit-core; edit the source modules.\n' +
-            modules.collect { name -> "// ${name}\n" + file("packages/circuit-core/${name}").getText('UTF-8') }.join('\n')
+            modules.collect { name -> "// ${name}\n" + file("../packages/circuit-core/${name}").getText('UTF-8') }.join('\n')
     }
 }
 
@@ -84,15 +88,15 @@ tasks.register('makeEngineSite', Sync) {
     into layout.buildDirectory.dir('engine-site')
     from(layout.buildDirectory.dir('engine'))
     from(layout.buildDirectory.dir('engine-worker'))
-    from('packages/circuit-runtime')
-    from('tools/engine-harness')
+    from('../packages/circuit-runtime')
+    from('../tools/engine-harness')
     from(layout.buildDirectory.dir('core')) {
         into 'core'
     }
-    from('packages/circuit-core') {
+    from('../packages/circuit-core') {
         into 'core'
     }
-    from('docs/new-simulator/examples') {
+    from('../docs/new-simulator/examples') {
         include '*.json'
         into 'examples'
     }

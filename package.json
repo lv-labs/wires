@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --dir apps/simulator dev",
-    "engine:build": "./gradlew makeEngineSite --console plain",
+    "engine:build": "./engine/gradlew -p engine makeEngineSite --console plain",
     "build": "pnpm engine:build && pnpm --dir apps/simulator build",
     "check:core": "node tools/check_core.mjs",
     "check:react": "pnpm --dir apps/simulator check",

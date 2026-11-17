@@ -645,7 +645,7 @@ export const CircuitSheet = memo(function CircuitSheet({
   function beginPlacement(symbol: string) {
     cancel()
     if (pointer.current) setCursor(snapped(world(pointer.current)))
-    const reverseOpAmp = symbol === "opampPlusTop"
+    const reverseOpAmp = symbol === "opampMinusTop"
     setPlacement({
       kind: "component",
       symbol,

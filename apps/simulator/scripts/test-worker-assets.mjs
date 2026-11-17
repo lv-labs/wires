@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url'
 import vm from 'node:vm'
 import {adapter} from '../../../packages/circuit-core/index.mjs'
 const root=new URL('../dist/engine/',import.meta.url)
-for(const name of ['voltage-divider','rc-charge']){
+for(const name of ['voltage-divider','rc-charge','opamp-noninverting']){
 const replies=[]
 const context=vm.createContext({console,URL,performance,setTimeout,clearTimeout,structuredClone,crypto,DedicatedWorkerGlobalScope:class {}})
 context.self=context
@@ -27,6 +27,12 @@ request('initialize')
  request('installCircuit',{base:initial,target:base,payload:{circuit:JSON.parse(adapter.compile(document).canonical)}})
  const frame=request('step',{base,payload:{count:name==='voltage-divider'?10:1000}})
  if(name==='voltage-divider')assert.ok(Math.abs(frame.pinVoltages.r2.a-2.5)<1e-10)
- else assert.ok(frame.pinVoltages.c1.a>4.99&&frame.pinVoltages.c1.a<5)
+ else if(name==='rc-charge')assert.ok(frame.pinVoltages.c1.a>4.99&&frame.pinVoltages.c1.a<5)
+ else {
+  const gain=document.electrical.components.find(c=>c.id==='u1').parameters.gain
+  assert.ok(Math.abs(frame.pinVoltages.u1.plus-1)<1e-10)
+  assert.ok(Math.abs(frame.pinVoltages.u1.out-2*gain/(gain+2))<1e-10)
+  assert.ok(Math.abs(frame.pinVoltages.u1.minus-frame.pinVoltages.u1.out/2)<1e-10)
+ }
 }
-console.log(`Packaged worker imports and divider/RC measurements passed: ${fileURLToPath(root)}`)
+console.log(`Packaged worker imports and divider/RC/op-amp measurements passed: ${fileURLToPath(root)}`)

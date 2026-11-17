@@ -17,6 +17,9 @@ export const metadata = {
 } as const;
 
 export const presets = {
+  opampMinusTop: {
+    name: "Op-amp (− on top)",
+  },
   opampPlusTop: {
     name: "Op-amp (+ on top)",
   },
@@ -29,7 +32,8 @@ export function Symbol() {
       <Lead from={metadata.pins.minus} to={[-200, 100]} />
       <Lead from={metadata.pins.out} to={[200, 0]} />
       <polygon points="-200,200 200,0 -200,-200" />
-      {/* <path d="M-300-100V100L300 0ZM-24-16H-10M-24 16H-10M-14 12V20" /> */}
+      <path d="M-175-100H-125M-150-125V-75" />
+      <path d="M-175 100H-125" />
     </>
   );
 }

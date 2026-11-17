@@ -47,5 +47,12 @@
   },
   "browserChecks": "not run",
   "remote": "none",
-  "legacyDeployment": "unchanged; no deployment performed"
+  "legacyDeployment": "unchanged; no deployment performed",
+  "finalPath": "/Users/luke/Documents/lv-labs/wires",
+  "finalEngineBuild": "passed after removal of old simulator source directories",
+  "legacyBuild": "clean makeSite --offline passed",
+  "legacySourceComparison": "src, war, build.gradle, .github, gradle and wrappers match original master baseline c2cd5dc2; README has migration pointer",
+  "finalLocationReactCheck": "passed",
+  "finalLocationReferenceReplay": "39067 exact calls matched",
+  "originalCheckout": "migration cleanup left uncommitted for review"
 }

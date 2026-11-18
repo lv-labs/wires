@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "symbols:generate": "node scripts/generate-symbols.mjs",
     "symbols:check": "node scripts/generate-symbols.mjs --check",
-    "check": "pnpm build && node scripts/test-editor-render.mjs && node scripts/test-component-properties.mjs && node scripts/test-worker-assets.mjs && node scripts/test-wire-display.mjs"
+    "check": "pnpm build && node scripts/test-editor-render.mjs && node scripts/test-component-properties.mjs && node scripts/test-worker-assets.mjs && node scripts/test-wire-display.mjs",
+    "symbols:dev": "vite --open /symbols"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

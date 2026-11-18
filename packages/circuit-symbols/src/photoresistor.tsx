@@ -39,7 +39,23 @@ export function Symbol() {
     <>
       <Lead from={metadata.pins.a} to={[-22, 0]} />
       <Lead from={metadata.pins.b} to={[22, 0]} />
-      <path d="M-22-8H22V8H-22ZM-13-24L-4-13M-10-13H-4V-19M3-26L12-15M6-15H12V-21" />
+      <path
+        d="M -22 -8
+          H 22
+          V 8
+          H -22
+          Z
+          M -13 -24
+          L -4 -13
+          M -10 -13
+          H -4
+          V -19
+          M 3 -26
+          L 12 -15
+          M 6 -15
+          H 12
+          V -21"
+      />
     </>
   );
 }

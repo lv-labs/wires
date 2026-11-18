@@ -73,10 +73,7 @@ export type CircuitDocument = {
     wires: { id: string; from: Target; to: Target }[]
   }
   layout: {
-    components: Record<
-      string,
-      Point & { rotation: number; mirror: boolean }
-    >
+    components: Record<string, Point & { rotation: number; mirror: boolean }>
     junctions: Record<string, Point>
     wires: Record<
       string,
@@ -309,7 +306,10 @@ export const core = implementation as {
     switchDefaults(kind: string): Record<string, unknown>
     switchPositionCount(component: Component): number
     momentary(component?: Component): boolean
-    componentPins(component: Component): Record<string, [number, number]>
+    componentPins(
+      component: Pick<Component, "kind" | "parameters">,
+      definition?: { pins: Record<string, readonly number[]> }
+    ): Record<string, [number, number]>
     gateKind(kind: string): boolean
     mosfetKind(kind: string): boolean
     mosfetOptions: Record<string, boolean>

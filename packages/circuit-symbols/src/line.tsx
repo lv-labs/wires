@@ -34,6 +34,11 @@ export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
   const halfWidth = Number(parameters.width) / 2;
   const halfHeight = Number(parameters.height) / 2;
   return (
-    <path d={`M${-halfWidth} ${-halfHeight}L${halfWidth} ${halfHeight}`} />
+    <path
+      d={`
+        M ${-halfWidth} ${-halfHeight}
+        L ${halfWidth} ${halfHeight}
+      `}
+    />
   );
 }

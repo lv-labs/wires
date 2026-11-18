@@ -51,8 +51,21 @@ export function Symbol() {
     <>
       <Lead from={metadata.pins.input} to={[-24, 0]} />
       <Lead from={metadata.pins.out} to={[26, 0]} />
-      <path d="M-24-24V24L18 0Z" />
-      <path d="M-15 6H-7L1-6H9M-7-6H1L-7 6" />
+      <path
+        d="M -24 -24
+          V 24
+          L 18 0
+          Z"
+      />
+      <path
+        d="M -15 6
+          H -7
+          L 1 -6
+          H 9
+          M -7 -6
+          H 1
+          L -7 6"
+      />
       <circle cx={22} r={4} />
     </>
   );

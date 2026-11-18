@@ -3,10 +3,19 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { engineAssets } from "./scripts/engine-assets.ts"
 import { defineConfig } from "vite"
+import { symbolWorkbench } from "./scripts/symbol-workbench.ts"
+import { editorPages } from "./scripts/editor-pages.ts"
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), engineAssets(import.meta.dirname)],
+  plugins: [
+    editorPages(),
+    react(),
+    tailwindcss(),
+    engineAssets(import.meta.dirname),
+    symbolWorkbench(),
+  ],
+  server: { port: 5173, strictPort: true },
   build: {
     rollupOptions: {
       input: {

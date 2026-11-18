@@ -43,7 +43,7 @@ including stable IDs, layout, explicit connections and initial conditions.
 | Voltage probe | Probe tool or A → Voltage probe; click a pin, wire or junction; name it in Inspector |
 | Oscilloscope | Open bottom dock; Run/Pause, time/div, volts/div, channel toggles and hover cursor |
 | Rotate | R counterclockwise, Shift-R reverse; same detached pick-up/put-down behavior as flipping |
-| Wire | W, then click a pin/junction/wire; pin and floating-end clicks can start directly from Select |
+| Wire | W starts at the cursor and snaps to nearby connections. Press W again to place the wire and continue from its endpoint. Click a pin or floating end to start directly from Select. |
 | Add wire bends | Click empty space while wiring; finish on a connection target |
 | Finish a loose wire | Double-click empty space or press Enter at the cursor; Escape cancels the draft |
 | Add a branch | Finish/start on an existing wire; commits an explicit junction and split |

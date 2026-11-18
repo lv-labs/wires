@@ -3,13 +3,12 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "pushSwitch";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "S",
   name: "Push switch",
   pins: {
-    a: [-48, 0],
-    b: [48, 0],
+    a: [-100, 0],
+    b: [100, 0],
   },
   parameters: {
     onResistance: 0,
@@ -24,12 +23,29 @@ export const metadata = {
 export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
   return (
     <>
-      <Lead from={metadata.pins.a} to={[-20, 0]} />
-      <Lead from={metadata.pins.b} to={[20, 0]} />
+      <Lead from={metadata.pins.a} to={[-50, 0]} />
+      <Lead from={metadata.pins.b} to={[50, 0]} />
+      <circle cx={-50} r={10} fill="white" />
+      <circle cx={50} r={10} fill="white" />
       <path
-        d={`M-20 0L20 ${parameters.normallyClosed ? 0 : -16}M0-32V-16M-12-32H12`}
+        d={`
+          M ${parameters.normallyClosed ? 0 : -50} -50
+          L 60 ${parameters.normallyClosed ? 0 : -50}
+          M 0 -32
+          V -16
+          M -12 -32
+          H 12
+        `}
       />
-      {parameters.iecSymbol === true && <path d="M0-32V-16M-8-32H8" strokeDasharray="3 3" />}
+      {parameters.iecSymbol === true && (
+        <path
+          d="M 0 -32
+            V -16
+            M -8 -32
+            H 8"
+          strokeDasharray="3 3"
+        />
+      )}
     </>
   );
 }

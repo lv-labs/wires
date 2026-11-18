@@ -61,7 +61,12 @@ export function Symbol({ measured }: SymbolProps) {
       <Lead from={metadata.pins.a} to={[-24, 0]} />
       <Lead from={metadata.pins.b} to={[24, 0]} />
       <circle r={24} fill={`rgba(255,175,55,${brightness})`} />
-      <path d="M-16-16L16 16M-16 16L16-16" />
+      <path
+        d="M -16 -16
+          L 16 16
+          M -16 16
+          L 16 -16"
+      />
     </>
   );
 }

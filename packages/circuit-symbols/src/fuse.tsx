@@ -39,7 +39,10 @@ export const output = {
   },
   sign: 1,
 };
-export function Symbol({ parameters = metadata.parameters, measured }: SymbolProps) {
+export function Symbol({
+  parameters = metadata.parameters,
+  measured,
+}: SymbolProps) {
   const iec = Boolean(parameters.iecSymbol);
   const halfWidth = iec ? 16 : 8;
   return (
@@ -47,7 +50,21 @@ export function Symbol({ parameters = metadata.parameters, measured }: SymbolPro
       <Lead from={metadata.pins.a} to={[-halfWidth, 0]} />
       <Lead from={metadata.pins.b} to={[halfWidth, 0]} />
       {!measured?.blown && (
-        <path d={iec ? "M-16-6H16V6H-16ZM-16 0H16" : "M-8 0C-5.333 8-2.667 8 0 0S5.333-8 8 0"} />
+        <path
+          d={
+            iec
+              ? `M -16 -6
+                H 16
+                V 6
+                H -16
+                Z
+                M -16 0
+                H 16`
+              : `M -8 0
+                C -5.333 8, -2.667 8, 0 0
+                S 5.333 -8, 8 0`
+          }
+        />
       )}
     </>
   );

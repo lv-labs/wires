@@ -38,7 +38,18 @@ export function Symbol() {
       <Lead from={metadata.pins.grid} to={[-20, 0]} />
       <Lead from={metadata.pins.cathode} to={[7, 10]} />
       <circle r={24} />
-      <path d="M-16-10H16M-16 0H-9M-5 0H2M6 0H13M-10 10H10" />
+      <path
+        d="M -16 -10
+          H 16
+          M -16 0
+          H -9
+          M -5 0
+          H 2
+          M 6 0
+          H 13
+          M -10 10
+          H 10"
+      />
     </>
   );
 }

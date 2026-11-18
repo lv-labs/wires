@@ -24,7 +24,12 @@ export function Symbol({ pose }: SymbolProps) {
       <Lead from={metadata.pins.gate} to={[-16, 0]} />
       <Lead from={metadata.pins.drain} to={[-8, -16]} />
       <Lead from={metadata.pins.source} to={[-8, 16]} />
-      <path d="M-16-20V20M-8-20V20" />
+      <path
+        d="M -16 -20
+          V 20
+          M -8 -20
+          V 20"
+      />
       <UprightText pose={pose} y={5} fontSize={9}>
         NJFET
       </UprightText>

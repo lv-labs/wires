@@ -12,7 +12,8 @@ pnpm engine:build
 pnpm dev
 ```
 
-Open the URL Vite prints. `/editor.html` is the standalone example preview with
+The same dev server hosts `/editor` (circuit editor) and `/symbols` (development
+symbol workbench). `/editor.html` is the standalone example preview with
 main-app autosave disabled. `pnpm build` builds the engine and React app; deployable
 React files are in `apps/simulator/dist` and are committed for static hosting.
 See the root [deployment instructions](../../README.md#deploy-to-cloudflare-pages).

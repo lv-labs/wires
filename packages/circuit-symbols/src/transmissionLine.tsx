@@ -25,7 +25,17 @@ export function Symbol() {
       <Lead from={metadata.pins.leftReturn} to={[-24, 16]} />
       <Lead from={metadata.pins.right} to={[24, -16]} />
       <Lead from={metadata.pins.rightReturn} to={[24, 16]} />
-      <path d="M-24-24H24V24H-24ZM-24-8H24M-24 8H24" />
+      <path
+        d="M -24 -24
+          H 24
+          V 24
+          H -24
+          Z
+          M -24 -8
+          H 24
+          M -24 8
+          H 24"
+      />
     </>
   );
 }

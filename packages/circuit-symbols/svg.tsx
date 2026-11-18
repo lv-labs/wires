@@ -12,7 +12,14 @@ export type SymbolProps = {
 };
 
 export function Lead({ from, to }: { from: Pin; to: Pin }) {
-  return <path d={`M${from[0]} ${from[1]}L${to[0]} ${to[1]}`} />;
+  return (
+    <path
+      d={`
+        M ${from[0]} ${from[1]}
+        L ${to[0]} ${to[1]}
+      `}
+    />
+  );
 }
 
 export function Upright({
@@ -64,17 +71,24 @@ export function Meter({
   pose?: Pose;
   circle?: boolean;
 }) {
-  if (!circle) return letter === "A" ? (
-    <>
-      <Lead from={pins.a} to={pins.b} />
-      <path d="M-12-10L12 0-12 10Z" fill="currentColor" stroke="none" />
-    </>
-  ) : (
-    <>
-      <Lead from={pins.a} to={[-25, 0]} />
-      <Lead from={pins.b} to={[25, 0]} />
-    </>
-  );
+  if (!circle)
+    return letter === "A" ? (
+      <>
+        <Lead from={pins.a} to={pins.b} />
+        <path
+          d="M -12 -10
+            L 12 0, -12 10
+            Z"
+          fill="currentColor"
+          stroke="none"
+        />
+      </>
+    ) : (
+      <>
+        <Lead from={pins.a} to={[-25, 0]} />
+        <Lead from={pins.b} to={[25, 0]} />
+      </>
+    );
   return (
     <>
       <Lead from={pins.a} to={[-50, 0]} />
@@ -120,20 +134,38 @@ export function Gate({
 }) {
   const count = Number(parameters.inputCount ?? 2);
   let offset = -Math.floor(count / 2);
-  const inputs: Pin[] = count === 2 ? [pins.a, pins.b] : Array.from({ length: count }, () => {
-    if (offset === 0 && count % 2 === 0) offset++;
-    return [-48, 16 * offset++];
-  });
-  const height = Math.max(28, ...inputs.map(pin => Math.abs(pin[1]) + 12));
+  const inputs: Pin[] =
+    count === 2
+      ? [pins.a, pins.b]
+      : Array.from({ length: count }, () => {
+          if (offset === 0 && count % 2 === 0) offset++;
+          return [-48, 16 * offset++];
+        });
+  const height = Math.max(28, ...inputs.map((pin) => Math.abs(pin[1]) + 12));
   return (
     <>
-      {inputs.map((pin, index) => <g key={index}>
-        <Lead from={pin} to={[parameters.invertInputs ? -32 : -24, pin[1]]} />
-        {parameters.invertInputs === true && <circle cx={-28} cy={pin[1]} r={4} />}
-      </g>)}
+      {inputs.map((pin, index) => (
+        <g key={index}>
+          <Lead from={pin} to={[parameters.invertInputs ? -32 : -24, pin[1]]} />
+          {parameters.invertInputs === true && (
+            <circle cx={-28} cy={pin[1]} r={4} />
+          )}
+        </g>
+      ))}
       <Lead from={pins.out} to={[24, 0]} />
       <rect x={-24} y={-height} width={48} height={height * 2} />
-      {parameters.schmittInputs === true && <path d="M-20-8H-16V-16H-12M-20-16H-18V-8H-12" />}
+      {parameters.schmittInputs === true && (
+        <path
+          d="M -20 -8
+            H -16
+            V -16
+            H -12
+            M -20 -16
+            H -18
+            V -8
+            H -12"
+        />
+      )}
       <UprightText pose={pose} y={4} textAnchor="middle" fontSize={11}>
         {label}
       </UprightText>
@@ -235,7 +267,12 @@ export function Motor({
         );
       })}
       <circle r={24} />
-      <path d={`M0 0L${Math.cos(angle) * 17} ${Math.sin(angle) * 17}`} />
+      <path
+        d={`
+          M 0 0
+          L ${Math.cos(angle) * 17} ${Math.sin(angle) * 17}
+        `}
+      />
       <UprightText pose={pose} y={5} textAnchor="middle" fontSize={10}>
         {letter}
       </UprightText>
@@ -266,17 +303,40 @@ export function SwitchPole({
       <Lead from={b} to={[20, bY]} />
       <circle cx={20} cy={aY} r={2} />
       <circle cx={20} cy={bY} r={2} />
-      <path d={`M-20 ${y}L18 ${bladeY}`} />
+      <path
+        d={`
+          M -20 ${y}
+          L 18 ${bladeY}
+        `}
+      />
     </>
   );
 }
 
 const waveforms: Record<string, string> = {
-  sine: "M-16 0C-12-20-4-20 0 0S12 20 16 0",
-  square: "M-16 10V-10H0V10H16V-10",
-  triangle: "M-16 10L-8-10L8 10L16-10",
-  sawtooth: "M-16 10L0-10V10L16-10",
-  pulse: "M-16 10H-8V-10H0V10H16-10",
+  sine: `M -16 0
+    C -12 -20, -4 -20, 0 0
+    S 12 20, 16 0`,
+  square: `M -16 10
+    V -10
+    H 0
+    V 10
+    H 16
+    V -10`,
+  triangle: `M -16 10
+    L -8 -10
+    L 8 10
+    L 16 -10`,
+  sawtooth: `M -16 10
+    L 0 -10
+    V 10
+    L 16 -10`,
+  pulse: `M -16 10
+    H -8
+    V -10
+    H 0
+    V 10
+    H 16, -10`,
 };
 
 export function WaveformGlyph({

@@ -22,7 +22,8 @@ pnpm engine:build
 pnpm dev
 ```
 
-Open the URL printed by Vite. `/editor.html` provides an example preview with
+Run one dev server, then open `http://localhost:5173/editor` for the circuit editor
+or `http://localhost:5173/symbols` for the development symbol workbench. `/editor.html` provides an example preview with
 autosave disabled.
 
 ## Build and check

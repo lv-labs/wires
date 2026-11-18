@@ -49,3 +49,69 @@ update its local pins and artwork together, then regenerate the catalog.
 Text, box and line annotations use native sheet-unit dimensions. Their default
 sizes have been increased to match the new grid. Saved circuit positions and
 explicit annotation sizes are not automatically resized by this authoring change.
+
+## Development symbol workbench
+
+Run `pnpm dev` from the repository root. One server hosts the circuit editor at
+`http://localhost:5173/editor` and the symbol workbench at
+`http://localhost:5173/symbols`. The root URL also opens the circuit editor;
+`/editor.html` remains the example preview. There is no separate workbench server.
+The optional `pnpm symbols:dev` command starts the same server and opens `/symbols`.
+Both routes mount the main React app under its shared theme provider and error
+boundary. The workbench uses the shared shadcn controls and follows light/dark
+mode (including the app’s D shortcut). The workbench and source-writing endpoint
+remain development-only and are not included in the production build.
+
+Browse all 84 symbols, grouped in Add menu category order, and edit their complete
+TSX source next to a live preview.
+This includes symbols with parameter-dependent or animated artwork; the workbench
+does not flatten them into editable SVG primitives. The drawing tools have been
+replaced with a source editor featuring TSX colouring, line numbers, Tab
+indentation, automatic indentation on Enter, and native text undo/redo.
+
+Paste converted JSX shapes inside the existing `Symbol()` function. Omit the
+outer `<svg>` wrapper, keep the pin metadata and `<Lead>` elements, and inherit
+stroke styling where possible. Existing React logic and helper imports can remain
+in place. Edit pin coordinates in the literal metadata when needed.
+
+After a short typing pause, the dev server compiles an in-memory draft and the
+preview updates. Draft previews never write source files. Syntax errors show line
+and column information while retaining the last compiled preview; runtime render
+errors are caught and displayed. This checks syntax and required exports, not a
+full project typecheck. Each symbol keeps its draft while browsing. Drafts are
+not persisted across page reloads.
+
+Toggle the preview grid and pin markers, rotate or mirror the preview, and inspect
+parameter values and current. Hover over the preview for crosshairs and SVG
+source coordinates, accounting for rotation, mirroring and `drawingScale`. Set
+**Snap** to a positive whole SVG unit spacing (suggestions: 1, 5, 10, 25, 50);
+the visible dots and crosshairs use that same spacing. Click the preview to copy
+the snapped coordinates as space-separated `X Y`, ready for SVG path data. This
+preview setting does not change the circuit editor’s placement grid. Older
+scaled symbols also show sheet coordinates. The preview uses the full available
+height without a comparison panel.
+
+Preview navigation uses the circuit editor’s viewport controls: scroll to pan,
+Ctrl/Command-scroll or trackpad pinch to zoom at the pointer, middle-drag or
+Space-drag to pan, and `+`/`-` to zoom or `0` to fit. The on-screen **Pan** and
+**Fit** buttons offer the same actions. Dragging to pan does not copy coordinates.
+Preview zoom extends to 1600% for close artwork inspection; the circuit editor’s
+zoom limits are unchanged. Viewport shortcuts ignore the source editor and inputs.
+
+**Save symbol** or Ctrl/Command-S writes the selected `src/<kind>.tsx` and
+regenerates the core pin catalog. Other symbol drafts remain unsaved. The server
+checks for stale source before writing, and restores both source and catalog if
+generation fails. **Reload** rereads the file from disk, and **Reset to saved**
+discards the current draft. Changing pin positions affects existing circuits too.
+
+Run `node tools/test_symbol_workbench.mjs` for source validation and in-memory Vite
+compilation checks, including dynamic symbols. No browser automation is required.
+
+## Readable SVG paths
+
+Path data uses a command per line, spaces between X/Y values, and commas between
+coordinate pairs (for example `C -24 -22, -12 -22, -12 0`). Dynamic paths keep their
+existing `${...}` expressions. Shared helper paths and waveform glyphs follow the
+same format. Reapply this formatting with `node tools/format_symbol_paths.mjs`, or
+check it with `node tools/format_symbol_paths.mjs --check`. The formatter verifies
+that command, numeric and expression tokens remain unchanged.

@@ -361,7 +361,8 @@ public class EngineEntryPoint implements EntryPoint {
         if (id < 0 || id >= app.elmList.size() || !(app.elmList.get(id) instanceof SwitchElm))
             throw new IllegalArgumentException("Expected switch/input element ID");
         SwitchElm elm = (SwitchElm) app.elmList.get(id);
-        int max = elm instanceof MBBSwitchElm ? 3 : elm instanceof Switch2Elm ? 2 :
+        int max = elm instanceof MBBSwitchElm ? 3 :
+            elm instanceof Switch2Elm ? (((Switch2Elm)elm).hasCenterOff() ? 2 : ((Switch2Elm)elm).throwCount - 1) :
             elm instanceof LogicInputElm && ((LogicInputElm)elm).isTernary() ? 2 : 1;
         if(position < 0 || position > max)throw new IllegalArgumentException("Invalid contact position");
         checkStopped();

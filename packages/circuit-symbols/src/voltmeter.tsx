@@ -51,12 +51,24 @@ export const output = {
   sign: 1,
 };
 
-export function Symbol({ parameters = metadata.parameters, pose }: SymbolProps) {
+export function Symbol({
+  parameters = metadata.parameters,
+  pose,
+}: SymbolProps) {
   const circle = parameters.circleSymbol !== false;
   return (
     <>
       <Meter pins={metadata.pins} letter="V" pose={pose} circle={circle} />
-      <UprightText pose={pose} x={circle ? -80 : -55} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>+</UprightText>
+      <UprightText
+        pose={pose}
+        x={circle ? -80 : -55}
+        y={-30}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={36}
+      >
+        +
+      </UprightText>
     </>
   );
 }

@@ -21,6 +21,16 @@ export const metadata = {
   },
 } as const;
 
-export function Symbol({ pose, parameters = metadata.parameters }: SymbolProps) {
-  return <Gate pins={metadata.pins} parameters={parameters} label="XOR" pose={pose} />;
+export function Symbol({
+  pose,
+  parameters = metadata.parameters,
+}: SymbolProps) {
+  return (
+    <Gate
+      pins={metadata.pins}
+      parameters={parameters}
+      label="XOR"
+      pose={pose}
+    />
+  );
 }

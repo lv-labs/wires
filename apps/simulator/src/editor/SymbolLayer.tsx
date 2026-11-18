@@ -102,6 +102,12 @@ export const SymbolLayer = memo(function SymbolLayer({
           >
             <g
               data-symbol-body={component.id}
+              data-symbol-hit-area={
+                core.catalog.switchKind(component.kind) ||
+                ["analogSwitch", "analogSpdtSwitch"].includes(component.kind)
+                  ? "bounds"
+                  : undefined
+              }
               transform={`translate(${pose.x} ${pose.y}) rotate(${pose.rotation}) scale(${pose.mirror ? -1 : 1} 1)`}
             >
               <SymbolBody

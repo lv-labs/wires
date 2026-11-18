@@ -46,6 +46,25 @@ for(const throwCount of [2,3,10]){
  session.loadDocument(d);const f=session.step(10);assert.ok(f.pinVoltages['r'+(throwCount-1)].a>4.8);for(let i=0;i<throwCount-1;i++)assert.ok(Math.abs(f.pinVoltages['r'+i].a)<1e-7);
  editing.replaceParameters(d,'s',{...d.electrical.components[0].parameters,throwCount:2,position:0});documents.validate(d);session.updateProjection(JSON.parse(adapter.compile(d).canonical),d.id);assert.ok(session.step(10).pinVoltages.r0.a>4.8);
 }
+// Runtime contact changes must accept every configured throw, including the fourth and beyond.
+for (const [throwCount, centerOff] of [[2,false],[2,true],[3,false],[4,false],[10,false]]) {
+ const positions=throwCount===2&&centerOff?3:throwCount;
+ const {d,add,connect}=make('spdtSwitch',{throwCount,centerOff,position:0,onResistance:100});
+ connect('v','p','s','common');
+ for(let i=0;i<throwCount;i++){
+  add('load'+i,'resistor',{resistance:1000});
+  connect('s',i<2?['a','b'][i]:'throw'+(i+1),'load'+i,'a');
+  connect('load'+i,'b','g','g');
+ }
+ session.loadDocument(d);
+ for(let position=0;position<positions;position++){
+  session.setContact('s','position',position);
+  const frame=session.step(10);
+  for(let i=0;i<throwCount;i++)assert.ok(Math.abs(frame.pinVoltages['load'+i].a-(i===position?50/11:0))<1e-7,`Live ${throwCount}-throw switch position ${position}`);
+ }
+ assert.throws(()=>session.setContact('s','position',positions),/switch|position|state/i);
+}
+
 for(const poleCount of [1,2,8]){
  const {d,add,connect}=make('dpdtSwitch',{poleCount,position:1,onResistance:100});
  for(let i=1;i<=poleCount;i++){add('r'+i,'resistor',{resistance:1000});connect('v','p','s','common'+i);connect('s','b'+i,'r'+i,'a');connect('r'+i,'b','g','g');}

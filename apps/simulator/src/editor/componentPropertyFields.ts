@@ -9,9 +9,7 @@ export function spdtPositionLabels(
       ? requested
       : 2
   return [
-    ...Array.from({ length: count }, (_, i) =>
-      i < 2 ? ["A", "B"][i] : `Throw ${i + 1}`
-    ),
+    ...Array.from({ length: count }, (_, i) => String.fromCharCode(65 + i)),
     ...(parameters.centerOff && count === 2 ? ["Off"] : []),
   ]
 }

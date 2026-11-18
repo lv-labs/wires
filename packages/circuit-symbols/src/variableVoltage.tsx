@@ -47,7 +47,13 @@ export function Symbol({ pose }: SymbolProps) {
       <g transform="translate(0 -100)">
         <circle r={50} />
         <Upright pose={pose}>
-          <path d="M-24 24L24-24M6-24H24V-6" />
+          <path
+            d="M -24 24
+              L 24 -24
+              M 6 -24
+              H 24
+              V -6"
+          />
         </Upright>
       </g>
     </>

@@ -22,6 +22,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar"
 import { core } from "./core"
+import { wheelCamera, zoomCamera, isPanStart } from "./viewport"
 import { symbolBodyHit } from "./symbolHit"
 import { moveAnchor } from "./moveAnchor"
 import type {
@@ -74,7 +75,19 @@ type Placement =
 type WireDraft = {
   from: Target
   points: Point[]
+  firstAxis?: "x" | "y"
   lastClick?: Point & { time: number }
+}
+
+function routeLeg(route: WireDraft, end: Point): Point[] {
+  const start = route.points.at(-1)!
+  if (start.x === end.x && start.y === end.y) return []
+  if (start.x === end.x || start.y === end.y) return [end]
+  const corner =
+    route.firstAxis === "y"
+      ? { x: start.x, y: end.y }
+      : { x: end.x, y: start.y }
+  return [corner, end]
 }
 
 function entityFromHit(hit: Hit | null): Entity | null {
@@ -279,6 +292,7 @@ export const CircuitSheet = memo(function CircuitSheet({
   const [preview, setPreview] = useState<CircuitDocument | null>(null)
   const [box, setBox] = useState<{ a: Point; b: Point } | null>(null)
   const [route, setRoute] = useState<WireDraft | null>(null)
+  const wireContinuation = useRef<Point | null>(null)
   const [hover, setHover] = useState<Point | null>(null)
   const [cursor, setCursor] = useState<Point>({ x: 0, y: 0 })
   const pointer = useRef<Point | null>(null)
@@ -302,13 +316,21 @@ export const CircuitSheet = memo(function CircuitSheet({
   const releaseMomentary = useEffectEvent((id: string) =>
     onReleaseComponent(id)
   )
+  const resumeRoute = useEffectEvent((point: Point) =>
+    startRoute(targetAt(point, true))
+  )
   useEffect(() => {
-    // A committed edit (including toolbar undo) invalidates any in-flight preview.
+    // Resolve the continuation against the committed document, which may have split or merged wires.
+    const continuation = wireContinuation.current
+    wireContinuation.current = null
     gesture.current = null
     setPreview(null)
     setBox(null)
-    setRoute(null)
-    setHover(null)
+    if (continuation) resumeRoute(continuation)
+    else {
+      setRoute(null)
+      setHover(null)
+    }
     setPlacement((current) => (current?.kind === "paste" ? null : current))
     lastBodyClick.current = null
     pressedPush.current = null
@@ -326,21 +348,12 @@ export const CircuitSheet = memo(function CircuitSheet({
         return
       event.preventDefault()
       if (gesture.current && gesture.current.kind !== "pan") return
-      if (!event.ctrlKey && !event.metaKey) {
-        setCamera((current) => ({
-          ...current,
-          x: current.x - event.deltaX,
-          y: current.y - event.deltaY,
-        }))
-        return
-      }
       const bounds = element.getBoundingClientRect()
       setCamera((current) =>
-        core.geometry.zoom(
-          current,
-          { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
-          Math.exp(-event.deltaY * 0.008)
-        )
+        wheelCamera(current, event, {
+          x: event.clientX - bounds.left,
+          y: event.clientY - bounds.top,
+        })
       )
     }
     surface.addEventListener("wheel", wheel, { passive: false })
@@ -457,6 +470,7 @@ export const CircuitSheet = memo(function CircuitSheet({
     gesture.current = null
     setPreview(null)
     setBox(null)
+    wireContinuation.current = null
     setRoute(null)
     setHover(null)
     setPlacement(null)
@@ -603,11 +617,7 @@ export const CircuitSheet = memo(function CircuitSheet({
     const rect = svg.current?.getBoundingClientRect()
     if (rect)
       setCamera((current) =>
-        core.geometry.zoom(
-          current,
-          { x: rect.width / 2, y: rect.height / 2 },
-          factor
-        )
+        zoomCamera(current, { x: rect.width / 2, y: rect.height / 2 }, factor)
       )
   }
   function changeHistory(action: () => void) {
@@ -678,6 +688,27 @@ export const CircuitSheet = memo(function CircuitSheet({
       return
     const key = event.key.toLowerCase()
     const command = event.ctrlKey || event.metaKey
+    if (
+      key === "w" &&
+      !command &&
+      !target.closest("input, textarea, select, [role=menu], [role=dialog]") &&
+      !(target instanceof HTMLElement && target.isContentEditable)
+    ) {
+      const sheet = svg.current
+      if (!sheet) return
+      event.preventDefault()
+      if (event.repeat) return
+      const { width, height } = sheet.getBoundingClientRect()
+      const point = world(pointer.current ?? { x: width / 2, y: height / 2 })
+      const endpoint = targetAt(point, true)
+      if (route) connect(endpoint, true)
+      else {
+        changeTool("wire")
+        startRoute(endpoint)
+      }
+      sheet.focus()
+      return
+    }
     // Scope editing owns Delete etc.; sheet navigation remains available over sheet scopes.
     if (
       target.closest("[data-sheet-scope]") &&
@@ -734,7 +765,8 @@ export const CircuitSheet = memo(function CircuitSheet({
         spacePan.current = true
       } else if (route) {
         event.preventDefault()
-        connect(targetAtPointer())
+        const point = pointer.current ? world(pointer.current) : cursor
+        connect(targetAt(point, true))
       }
       return
     }
@@ -787,7 +819,6 @@ export const CircuitSheet = memo(function CircuitSheet({
     }
     if (key === "0") fit()
     if (["+", "=", "-"].includes(key)) zoom(key === "-" ? 1 / 1.2 : 1.2)
-    if (key === "w") changeTool("wire")
     if (key === "h") changeTool("pan")
     if (key === "1") cancel()
     if (key === "p") beginPlacement("ground")
@@ -893,13 +924,24 @@ export const CircuitSheet = memo(function CircuitSheet({
         !shift
       ) {
         cancel()
-        setRoute({
-          from: { kind: "junction", junctionId: loose },
-          points: [g.original.layout.junctions[loose]],
-        })
+        startRoute({ kind: "junction", junctionId: loose })
         return
       }
       if (g.probeAnchor) {
+        if (!g.dx && !g.dy && !g.keyboard && !shift) {
+          const endpoint = g.original.probes.find(
+            ({ id }) => id === g.probeAnchor
+          )?.positive
+          if (
+            endpoint?.kind === "pin" ||
+            (endpoint?.kind === "junction" &&
+              core.editing.looseEndpoint(g.original, endpoint.junctionId))
+          ) {
+            cancel()
+            startRoute(endpoint)
+            return
+          }
+        }
         if (g.reconnectTo && (g.dx || g.dy)) {
           const next = structuredClone(g.original)
           core.editing.retargetProbe(next, g.probeAnchor, g.reconnectTo)
@@ -951,11 +993,12 @@ export const CircuitSheet = memo(function CircuitSheet({
       symbolBodyHit(
         svg.current,
         point.x * camera.scale + camera.x,
-        point.y * camera.scale + camera.y
+        point.y * camera.scale + camera.y,
+        hit?.kind !== "wire"
       )
     return id ? { kind: "component", id } : hit
   }
-  function target(p: Point, ignoreProbes = false): Target {
+  function targetAt(p: Point, ignoreProbes = false): Target {
     const hit = core.geometry.hit(document, p, camera.scale, ignoreProbes)
     if (
       hit &&
@@ -966,9 +1009,6 @@ export const CircuitSheet = memo(function CircuitSheet({
       return hit as Target
     return { kind: "point", point: snapped(p) }
   }
-  function targetAtPointer() {
-    return target(pointer.current ? world(pointer.current) : cursor)
-  }
   function targetPoint(to: Target): Point {
     if (to.kind === "pin") return core.geometry.pin(document, to)
     if (to.kind === "wire") return to.point
@@ -976,22 +1016,24 @@ export const CircuitSheet = memo(function CircuitSheet({
     return to.point
   }
   function startRoute(from: Target) {
-    setRoute({ from, points: [targetPoint(from)] })
+    const start = targetPoint(from)
+    setCursor(start)
+    setHover(start)
+    setRoute({ from, points: [start] })
   }
-  function connect(to: Target) {
+  function connect(to: Target, continueRouting = false) {
     if (!route) return
-    const bends = route.points.slice(1)
-    if (to.kind === "point") {
-      const end = snapped(to.point)
-      while (bends.at(-1)?.x === end.x && bends.at(-1)?.y === end.y) bends.pop()
-    }
-    execute({
+    const end = targetPoint(to)
+    const points = [...route.points, ...routeLeg(route, end)]
+    const placed = execute({
       type: "connect",
       from: route.from,
       to,
-      bends,
+      bends: points.slice(1, -1),
     })
-    setRoute(null)
+    if (continueRouting) {
+      if (placed === true) wireContinuation.current = end
+    } else setRoute(null)
   }
   function componentClick(id: string, point: Point) {
     const kind = document.electrical.components.find((c) => c.id === id)?.kind
@@ -1030,7 +1072,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       }
       return
     }
-    if (e.button === 1 || tool === "pan" || spacePan.current) {
+    if (isPanStart(e.button, tool, spacePan.current)) {
       e.preventDefault()
       e.currentTarget.setPointerCapture(e.pointerId)
       gesture.current = { kind: "pan", origin: screen, camera }
@@ -1060,13 +1102,13 @@ export const CircuitSheet = memo(function CircuitSheet({
       return
     }
     if (tool === "probe") {
-      const endpoint = target(p)
+      const endpoint = targetAt(p)
       if (endpoint.kind !== "point") onAddProbe(endpoint)
       else onNotice("Place the voltage probe on a wire, pin or junction.")
       return
     }
     if (route) {
-      const endpoint = target(p)
+      const endpoint = targetAt(p, true)
       const last = route.lastClick
       const time = performance.now()
       if (
@@ -1076,16 +1118,18 @@ export const CircuitSheet = memo(function CircuitSheet({
           Math.hypot(screen.x - last.x, screen.y - last.y) < 8)
       )
         connect(endpoint)
-      else
+      else {
+        setHover(null)
         setRoute({
-          ...route,
-          points: [...route.points, snapped(p)],
+          from: route.from,
+          points: [...route.points, ...routeLeg(route, endpoint.point)],
           lastClick: { ...screen, time },
         })
+      }
       return
     }
     if (tool === "wire") {
-      const endpoint = target(p)
+      const endpoint = targetAt(p, true)
       if (endpoint.kind !== "point") startRoute(endpoint)
       else onNotice("Start a wire on a pin, junction or existing wire.")
       return
@@ -1138,7 +1182,8 @@ export const CircuitSheet = memo(function CircuitSheet({
     clientPointer.current = { x: e.clientX, y: e.clientY }
     pointer.current = screen
     setCrosshairPointer(e.pointerType === "touch" ? null : screen)
-    setCursor(snapped(p))
+    const gridPoint = snapped(p)
+    setCursor(gridPoint)
     const g = gesture.current
     if (g?.kind === "pan")
       setCamera({
@@ -1149,7 +1194,19 @@ export const CircuitSheet = memo(function CircuitSheet({
     if (g?.kind === "box") setBox({ a: g.origin, b: p })
     if (g?.kind === "drag") updateDragPosition(g, p)
     else if (!g && !placement && !pressedPush.current) {
-      const endpoint = target(p)
+      if (route) {
+        setRoute((draft) => {
+          if (!draft) return draft
+          const start = snapped(draft.points.at(-1)!)
+          const dx = Math.abs(gridPoint.x - start.x)
+          const dy = Math.abs(gridPoint.y - start.y)
+          // Keep the initial direction until the leg is placed or retraced.
+          const firstAxis =
+            dx || dy ? (draft.firstAxis ?? (dx >= dy ? "x" : "y")) : undefined
+          return firstAxis === draft.firstAxis ? draft : { ...draft, firstAxis }
+        })
+      }
+      const endpoint = targetAt(p, !!route || tool === "wire")
       setHover(endpoint.kind === "point" ? null : targetPoint(endpoint))
     } else setHover(null)
   }
@@ -1163,7 +1220,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       ? core.geometry.snap(p.y) - g.origin.y
       : core.geometry.snap(p.y - g.origin.y)
     if (g.probeAnchor) {
-      const to = target(p, true)
+      const to = targetAt(p, true)
       g.reconnectTo = to.kind === "point" ? undefined : to
       const next = structuredClone(g.original)
       const probe = next.probes.find(({ id }) => id === g.probeAnchor)!
@@ -1245,17 +1302,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       })
   }
   const routePoints = route
-    ? (() => {
-        const anchors = [...route.points, hover ?? cursor]
-        const points = [anchors[0]]
-        for (const point of anchors.slice(1)) {
-          const previous = points.at(-1)!
-          if (previous.x !== point.x && previous.y !== point.y)
-            points.push({ x: point.x, y: previous.y })
-          points.push(point)
-        }
-        return points
-      })()
+    ? [...route.points, ...routeLeg(route, hover ?? cursor)]
     : []
   const crossing = box !== null && box.b.x < box.a.x
   const componentDefinition =
@@ -1515,8 +1562,8 @@ export const CircuitSheet = memo(function CircuitSheet({
         {(tool === "wire" || route) && (
           <span role="status" className="text-xs">
             {route
-              ? "Click to add bends · click a pin, wire or junction to attach · double-click empty space or Enter to finish · Esc cancels"
-              : "Click a pin, wire or junction to start · Esc cancels"}
+              ? "W places the wire and continues · click to add a bend or attach · Enter or double-click to finish · Esc cancels"
+              : "Press W or click a pin, wire or junction to start · Esc cancels"}
           </span>
         )}
         {placement && (
@@ -1688,8 +1735,8 @@ export const CircuitSheet = memo(function CircuitSheet({
       <svg
         ref={svg}
         tabIndex={0}
-        aria-label="Circuit sheet. Select and drag; G connected move, M detached move, R rotate, X/Y flip, W wire, Escape cancel and clear selection."
-        className="min-h-[450px] w-full flex-1 touch-none outline-none"
+        aria-label="Circuit sheet. Select and drag; G connected move, M detached move, R rotate, X/Y flip, W start or place wire and continue, Escape cancel and clear selection."
+        className={`min-h-[450px] w-full flex-1 touch-none outline-none${tool === "wire" || route ? " cursor-crosshair" : ""}`}
         onContextMenu={(e) => {
           e.preventDefault()
           cancel()
@@ -1708,7 +1755,7 @@ export const CircuitSheet = memo(function CircuitSheet({
             x: e.clientX,
             y: e.clientY,
             entity,
-            target: target(point),
+            target: targetAt(point),
           })
         }}
         onPointerDown={down}

@@ -27,8 +27,19 @@ export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
       <Lead from={metadata.pins.base} to={[-12, 0]} />
       <Lead from={metadata.pins.collector} to={[16, -16]} />
       <Lead from={metadata.pins.emitter} to={[16, 16]} />
-      <path d="M-12-20V20M-12-8L16 -16M-12 8L16 16" />
-      <path d="M7 8L16 16L5 17" />
+      <path
+        d="M -12 -20
+          V 20
+          M -12 -8
+          L 16 -16
+          M -12 8
+          L 16 16"
+      />
+      <path
+        d="M 7 8
+          L 16 16
+          L 5 17"
+      />
     </g>
   );
 }

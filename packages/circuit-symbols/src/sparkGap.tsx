@@ -49,8 +49,22 @@ export function Symbol({ measured }: SymbolProps) {
     <>
       <Lead from={metadata.pins.a} to={[-16, 0]} />
       <Lead from={metadata.pins.b} to={[16, 0]} />
-      <path d="M-16 0H-6L-2-5M16 0H6L2 5" />
-      {measured?.conducting && <path d="M-6 0L-2 3L2-3L6 0" />}
+      <path
+        d="M -16 0
+          H -6
+          L -2 -5
+          M 16 0
+          H 6
+          L 2 5"
+      />
+      {measured?.conducting && (
+        <path
+          d="M -6 0
+            L -2 3
+            L 2 -3
+            L 6 0"
+        />
+      )}
     </>
   );
 }

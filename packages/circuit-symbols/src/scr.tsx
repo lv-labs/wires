@@ -44,7 +44,14 @@ export function Symbol() {
       <Lead from={metadata.pins.cathode} to={[16, 0]} />
       <Lead from={metadata.pins.gate} to={[6, 11]} />
 
-      <path d="M-16-16V16L16 0ZM16-16V16" />
+      <path
+        d="M -16 -16
+          V 16
+          L 16 0
+          Z
+          M 16 -16
+          V 16"
+      />
     </>
   );
 }

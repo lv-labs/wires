@@ -32,10 +32,14 @@ detached move, R/Shift+R to rotate, and X/Y to flip. Ctrl/⌘ Z undoes an edit a
 Shift + Ctrl/⌘ Z redoes it.
 
 Press A to open Add, then choose a component and click to place it. Placement
-stays active until Escape or a tool change. Use W to enter wire mode and click a
-pin, junction, or existing wire to start. Click blank space to add bends, click a
-target to attach, or use Enter or a double-click to finish a loose end. Click a
-loose end to start a route from it or drag it onto a new target to reconnect it.
+stays active until Escape or a tool change. Press W to start a wire at the cursor,
+snapping to a nearby pin, junction, or wire, including one with a voltage probe.
+The cursor becomes a crosshair while wiring. Move horizontally or vertically
+first to choose the direction of each corner. Click blank space to place bends
+or click a target to attach. Press W again to place the wire and start the next
+one from its endpoint. Press Enter to finish at the cursor, or double-click
+blank space to finish a loose end. Click a loose end to start a route from it or
+drag it onto a new target to reconnect it.
 
 Use Ctrl/⌘ C to copy within the editor, Ctrl/⌘ V to preview a paste, and Ctrl/⌘ D
 to preview a duplicate. Click to place or press Escape to cancel. The File menu

@@ -27,7 +27,6 @@ export const output = {
       type: "number",
       min: 8,
       max: 300,
-      
     },
   },
   sign: null,
@@ -49,20 +48,29 @@ export function Symbol({
   const y = -height / 2 + size;
   return (
     <>
-    {parameters.drawBar === true && <Upright pose={pose}><path d={`M${x} ${-height/2}H${x+width}`} /></Upright>}
-    <UprightText
-      pose={pose}
-      x={x}
-      y={y}
-      fontSize={size}
-      fontFamily="system-ui,sans-serif"
-    >
-      {lines.map((line, index) => (
-        <tspan key={index} x={x} dy={index ? size * 1.3 : 0}>
-          {line}
-        </tspan>
-      ))}
-    </UprightText>
+      {parameters.drawBar === true && (
+        <Upright pose={pose}>
+          <path
+            d={`
+              M ${x} ${-height / 2}
+              H ${x + width}
+            `}
+          />
+        </Upright>
+      )}
+      <UprightText
+        pose={pose}
+        x={x}
+        y={y}
+        fontSize={size}
+        fontFamily="system-ui,sans-serif"
+      >
+        {lines.map((line, index) => (
+          <tspan key={index} x={x} dy={index ? size * 1.3 : 0}>
+            {line}
+          </tspan>
+        ))}
+      </UprightText>
     </>
   );
 }

@@ -37,8 +37,26 @@ export function Symbol({ pose }: SymbolProps) {
   return (
     <>
       <Meter pins={metadata.pins} letter="Ω" pose={pose} />
-      <UprightText pose={pose} x={-80} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>+</UprightText>
-      <UprightText pose={pose} x={80} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>−</UprightText>
+      <UprightText
+        pose={pose}
+        x={-80}
+        y={-30}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={36}
+      >
+        +
+      </UprightText>
+      <UprightText
+        pose={pose}
+        x={80}
+        y={-30}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={36}
+      >
+        −
+      </UprightText>
     </>
   );
 }

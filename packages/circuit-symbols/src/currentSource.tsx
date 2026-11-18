@@ -22,7 +22,13 @@ export function Symbol() {
       <Lead from={metadata.pins.a} to={[-24, 0]} />
       <Lead from={metadata.pins.b} to={[24, 0]} />
       <circle r={24} />
-      <path d="M-12 0H12M4-7L12 0L4 7" />
+      <path
+        d="M -12 0
+          H 12
+          M 4 -7
+          L 12 0
+          L 4 7"
+      />
     </>
   );
 }

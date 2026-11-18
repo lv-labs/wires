@@ -29,8 +29,15 @@ export function Symbol({ pose }: SymbolProps) {
       <Lead from={metadata.pins.a} to={[20, -16]} />
       <Lead from={metadata.pins.b} to={[20, 16]} />
       <Lead from={metadata.pins.control} to={[0, 20]} />
-      <path d="M-20 0L18-16" />
-      <path d="M0 20V0" strokeDasharray="3 3" />
+      <path
+        d="M -20 0
+          L 18 -16"
+      />
+      <path
+        d="M 0 20
+          V 0"
+        strokeDasharray="3 3"
+      />
       <UprightText pose={pose} x={7} y={26} fontSize={9}>
         C
       </UprightText>

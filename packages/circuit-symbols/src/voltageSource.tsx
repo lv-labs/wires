@@ -3,13 +3,12 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "voltageSource";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "V",
   name: "DC source (2 terminals)",
   pins: {
-    p: [0, -48],
-    n: [0, 48],
+    p: [0, -100],
+    n: [0, 100],
   },
   parameters: {
     waveform: {
@@ -39,10 +38,12 @@ export function Symbol({
 }: SymbolProps) {
   return (
     <>
-      <circle r={16} />
-      <Lead from={metadata.pins.p} to={[0, -16]} />
-      <Lead from={metadata.pins.n} to={[0, 16]} />
-      <g transform="scale(.8)"><WaveformGlyph waveform={parameters.waveform} pose={pose} /></g>
+      <circle r={50} />
+      <Lead from={metadata.pins.p} to={[0, -50]} />
+      <Lead from={metadata.pins.n} to={[0, 50]} />
+      <g transform="scale(2.5)">
+        <WaveformGlyph waveform={parameters.waveform} pose={pose} />
+      </g>
     </>
   );
 }

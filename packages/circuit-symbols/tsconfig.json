@@ -1,0 +1,7 @@
+{
+  "extends": "../../apps/simulator/tsconfig.app.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["index.ts", "svg.tsx", "src/**/*.tsx"]
+}

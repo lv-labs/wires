@@ -58,6 +58,45 @@ for (const [kind, definition] of Object.entries(catalog.definitions)) {
     }
 }
 
+// Additional SPDT throws must retain the source's pin width and align with the headless catalog.
+for (let throwCount = 2; throwCount <= 10; throwCount++) {
+  const authored = load(new URL("src/spdtSwitch.tsx", root));
+  const parameters = { ...authored.metadata.parameters, throwCount };
+  const pins = catalog.componentPins({ kind: "spdtSwitch", parameters });
+  assert.deepEqual(pins.common, [...authored.metadata.pins.common]);
+  const markup = renderToStaticMarkup(React.createElement(symbols.spdtSwitch, { parameters }));
+  const paths = [...markup.matchAll(/\bd="([^"]*)"/g)].map(match => (match[1].match(/[MLHVZ]|-?(?:\d*\.)?\d+/g) || []).join(" "));
+  for (const [id, point] of Object.entries(pins)) {
+    if (id !== "common") assert.equal(point[0], authored.metadata.pins.a[0]);
+    assert.ok(paths.some(path => path.startsWith(`M ${point[0]} ${point[1]} L `)), `spdtSwitch ${throwCount}: lead ends at ${id}`);
+  }
+  assert.equal((markup.match(/<circle/g) || []).length, throwCount + 1);
+}
+// Every DPDT pole uses the same sheet-unit contact style and matching pin positions.
+for (let poleCount = 1; poleCount <= 8; poleCount++) for (const position of [0, 1]) {
+  const authored = load(new URL("src/dpdtSwitch.tsx", root));
+  const parameters = { ...authored.metadata.parameters, poleCount, position };
+  const pins = catalog.componentPins({ kind: "dpdtSwitch", parameters });
+  const markup = renderToStaticMarkup(React.createElement(symbols.dpdtSwitch, { parameters }));
+  const paths = [...markup.matchAll(/\bd="([^"]*)"/g)].map(match => (match[1].match(/[MLHVZ]|-?(?:\d*\.)?\d+/g) || []).join(" "));
+  assert.equal(Object.keys(pins).length, poleCount * 3);
+  assert.equal((markup.match(/<circle/g) || []).length, poleCount * 3);
+  for (const point of Object.values(pins)) {
+    assert.equal(Math.abs(point[0]), 100);
+    assert.ok(paths.some(path => path.startsWith(`M ${point[0]} ${point[1]} L `)), `dpdtSwitch ${poleCount}: lead matches pin`);
+  }
+  for (let i = 0; i < poleCount; i++) {
+    const y = pins['common' + (i + 1)][1];
+    assert.ok(paths.includes(`M -40 ${y} L 40 ${y + (position === 0 ? 50 : -50)}`), 'Each pole follows the selected contact');
+  }
+  assert.equal((markup.match(/stroke-dasharray="10 10"/g) || []).length, poleCount > 1 ? 1 : 0);
+}
+
+const draftPins = { common: [-200, 0], a: [200, -50], b: [200, 50] };
+const previewPins = catalog.componentPins({ kind: "spdtSwitch", parameters: { throwCount: 3 } }, { pins: draftPins });
+assert.deepEqual(previewPins.common, [-200, 0]);
+assert.equal(previewPins.throw3[0], 200);
+
 for (const kind of ["acSource", "acRail", "clockRail", "squareRail"]) {
   const preset = catalog.placementDefinitions[kind];
   const markup = renderToStaticMarkup(

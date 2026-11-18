@@ -75,8 +75,8 @@ for (const kind of ['voltmeter','ammeter']) {
       const drawing=renderToStaticMarkup(React.createElement(Meter,{parameters:part.parameters,pose:{rotation,mirror}}));
       assert.equal(drawing.includes('<circle'),circleSymbol);
       assert.doesNotMatch(drawing,/NaN/);
-      if (!circleSymbol && kind==='ammeter') assert.match(drawing,/M-12-10L12 0-12 10Z/);
-      if (!circleSymbol && kind==='voltmeter') assert.match(drawing,/M-100 0L-25 0/);
+      if (!circleSymbol && kind==='ammeter') assert.match(drawing,/M\s*-12\s*-10\s*L\s*12\s+0[\s,]*-12\s+10\s*Z/);
+      if (!circleSymbol && kind==='voltmeter') assert.match(drawing,/M\s*-100\s+0\s*L\s*-25\s+0/);
     }
   }
   const model=editing.create(doc), before=model.document;
@@ -101,11 +101,11 @@ for (const iecSymbol of [false,true]) {
   assert.equal(frame.componentMeasurements.part.blown,false);
   drawings.push(renderToStaticMarkup(React.createElement(Fuse,{parameters:fuse.parameters,measured:{blown:false}})));
   const blown=renderToStaticMarkup(React.createElement(Fuse,{parameters:fuse.parameters,measured:{blown:true}}));
-  assert.doesNotMatch(blown,/M-16-6|M-8 0C/,'Blown fuse has an open body in both styles');
+  assert.doesNotMatch(blown,/M\s*-16\s*-6|M\s*-8\s+0\s*C/,'Blown fuse has an open body in both styles');
 }
 assert.notEqual(drawings[0],drawings[1]);
-assert.match(drawings[0],/M-8 0C/);
-assert.match(drawings[1],/M-16-6/);
+assert.match(drawings[0],/M\s*-8\s+0\s*C/);
+assert.match(drawings[1],/M\s*-16\s*-6/);
 assert.throws(()=>adapter.compile(coverageCircuit('fuse',{iecSymbol:'yes'})));
 assert.throws(()=>adapter.compile(coverageCircuit('thermistor',{label:'x'.repeat(81)})));
 
@@ -143,6 +143,8 @@ console.log('Property controls passed: sensor labels/save/undo, live light/tempe
   const initial=session.step(10);assert.equal(initial.pinVoltages.last.a,5);
   const settings=normaliseSpdtSettings({...before.electrical.components[0].parameters,throwCount:2});
   assert.equal(settings.position,0);assert.deepEqual(spdtPositionLabels(settings),['A','B']);
+  assert.deepEqual(spdtPositionLabels({...settings,throwCount:10}),['A','B','C','D','E','F','G','H','I','J']);
+  assert.deepEqual(spdtPositionLabels({...settings,centerOff:true}),['A','B','Off']);
   model.execute({type:'setParameters',componentId:'switch',parameters:settings});
   const after=model.document, loose=after.electrical.wires.find(w=>w.id==='last-wire').from;
   assert.equal(loose.kind,'junction');assert.deepEqual(after.layout.junctions[loose.junctionId],endpoint);

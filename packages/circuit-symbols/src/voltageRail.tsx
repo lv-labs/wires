@@ -64,7 +64,9 @@ export function Symbol({
     <>
       <circle r={16} />
       <Lead from={metadata.pins.p} to={[0, 16]} />
-      <g transform="scale(.8)"><WaveformGlyph waveform={parameters.waveform} pose={pose} /></g>
+      <g transform="scale(.8)">
+        <WaveformGlyph waveform={parameters.waveform} pose={pose} />
+      </g>
     </>
   );
 }

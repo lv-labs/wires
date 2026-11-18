@@ -32,8 +32,16 @@ export function Symbol() {
       <Lead from={metadata.pins.minus} to={[-200, 100]} />
       <Lead from={metadata.pins.out} to={[200, 0]} />
       <polygon points="-200,200 200,0 -200,-200" />
-      <path d="M-175-100H-125M-150-125V-75" />
-      <path d="M-175 100H-125" />
+      <path
+        d="M -175 -100
+          H -125
+          M -150 -125
+          V -75"
+      />
+      <path
+        d="M -175 100
+          H -125"
+      />
     </>
   );
 }

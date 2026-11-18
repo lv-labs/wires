@@ -3,7 +3,6 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "ammeter";
 export const metadata = {
- 
   prefix: "AM",
   name: "Ammeter",
   pins: {
@@ -46,14 +45,26 @@ export const output = {
   sign: 1,
 };
 
-export function Symbol({ parameters = metadata.parameters, pose }: SymbolProps) {
+export function Symbol({
+  parameters = metadata.parameters,
+  pose,
+}: SymbolProps) {
   const circle = parameters.circleSymbol !== false;
   return (
     <>
       <Meter pins={metadata.pins} letter="A" pose={pose} circle={circle} />
-      {circle && <UprightText pose={pose} x={-80} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>
-        +
-      </UprightText>}
+      {circle && (
+        <UprightText
+          pose={pose}
+          x={-80}
+          y={-30}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={36}
+        >
+          +
+        </UprightText>
+      )}
     </>
   );
 }

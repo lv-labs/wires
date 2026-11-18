@@ -3,14 +3,13 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "mbbSwitch";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "S",
   name: "Make-before-break switch",
   pins: {
-    common: [-48, 0],
-    a: [48, -16],
-    b: [48, 16],
+    common: [-100, 0],
+    a: [100, -50],
+    b: [100, 50],
   },
   parameters: {
     onResistance: 0,
@@ -28,12 +27,35 @@ export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
   const bridging = position % 2 === 1;
   return (
     <>
-      <Lead from={metadata.pins.common} to={[-20, 0]} />
-      <Lead from={metadata.pins.a} to={[20, -16]} />
-      <Lead from={metadata.pins.b} to={[20, 16]} />
-      {(position === 0 || bridging) && <path d="M-20 0L20-16" />}
-      {(position === 2 || bridging) && <path d="M-20 0L20 16" />}
-      {parameters.iecSymbol === true && <path d="M0-32V-16M-8-32H8" strokeDasharray="3 3" />}
+      <Lead from={metadata.pins.common} to={[-40, 0]} />
+      <Lead from={metadata.pins.a} to={[40, -50]} />
+      <Lead from={metadata.pins.b} to={[40, 50]} />
+      
+      <circle cx={-40}  r={10} fill="white" />
+      <circle cx={40} cy={-50} r={10} fill="white" />
+      <circle cx={40} cy={50} r={10} fill="white" />
+      
+      {(position === 0 || bridging) && (
+        <path
+          d="M -40 0
+            L 40 -50"
+        />
+      )}
+      {(position === 2 || bridging) && (
+        <path
+          d="M -40 0
+            L 40 50"
+        />
+      )}
+      {parameters.iecSymbol === true && (
+        <path
+          d="M 0 -32
+            V -16
+            M -8 -32
+            H 8"
+          strokeDasharray="3 3"
+        />
+      )}
     </>
   );
 }

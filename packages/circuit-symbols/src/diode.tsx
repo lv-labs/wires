@@ -2,13 +2,11 @@ import { Lead } from "../svg";
 
 export const kind = "diode";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "D",
   name: "Diode",
   pins: {
-    anode: [-48, 0],
-    cathode: [48, 0],
+    anode: [-100, 0],
+    cathode: [100, 0],
   },
   parameters: { model: "default" },
 } as const;
@@ -16,10 +14,13 @@ export const metadata = {
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.anode} to={[-16, 0]} />
-      <Lead from={metadata.pins.cathode} to={[16, 0]} />
-      <path d="M-16-16V16L16 0Z" />
-      <path d="M16-16V16" />
+      <Lead from={metadata.pins.anode} to={[-30, 0]} />
+      <Lead from={metadata.pins.cathode} to={[30, 0]} />
+      <polygon points="30,0 -30,-40 -30,40" />
+      <path
+        d="M 30 -40
+          V 40"
+      />
     </>
   );
 }

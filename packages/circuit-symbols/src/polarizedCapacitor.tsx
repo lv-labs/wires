@@ -2,13 +2,11 @@ import { Lead } from "../svg";
 
 export const kind = "polarizedCapacitor";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "C",
   name: "Polarized capacitor",
   pins: {
-    positive: [-48, 0],
-    negative: [48, 0],
+    positive: [-100, 0],
+    negative: [100, 0],
   },
   parameters: {
     capacitance: 0.000001,
@@ -21,9 +19,22 @@ export const metadata = {
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.positive} to={[-5, 0]} />
-      <Lead from={metadata.pins.negative} to={[8, 0]} />
-      <path d="M-5-16V16M12-16Q4 0 12 16M-24-14H-12M-18-20V-8" />
+      <Lead from={metadata.pins.positive} to={[-15, 0]} />
+      <Lead from={metadata.pins.negative} to={[15, 0]} />
+      <path
+        d="M -15 -40
+          V 40"
+      />
+      <path
+        d="M 15 -40
+          Q 0 0, 15 40"
+      />
+      <path
+        d="M -50 -20
+          H -30
+          M -40 -30
+          V -10"
+      />
     </>
   );
 }

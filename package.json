@@ -15,6 +15,7 @@
     "check": "pnpm check:core && pnpm check:react && pnpm check:reference",
     "verify": "pnpm engine:build && pnpm check",
     "deps:install": "pnpm --dir apps/simulator install --frozen-lockfile",
-    "check:reference": "node tools/upstream-boundary/replay.mjs build/engine-site tools/upstream-boundary/reference/*.jsonl.gz"
+    "check:reference": "node tools/upstream-boundary/replay.mjs build/engine-site tools/upstream-boundary/reference/*.jsonl.gz",
+    "symbols:dev": "pnpm --dir apps/simulator symbols:dev"
   }
 }

@@ -22,7 +22,7 @@ The LV Labs reskin remains deployed separately from its original repository.
 | Editor | React menus, properties, file/history/clipboard actions, connected dragging, detached transforms, explicit wiring | Remaining native Falstad behavior and browser verification |
 | Library | 84 authored models, including 3 graphics; generated core metadata | Unsupported components and variants; see catalog/property audits |
 | Inspection | Per-step voltage/current sampling, meters, captures, saved mixed dock/floating/sheet scopes | Frequency/period, triggering/FFT, interactive verification |
-| Documents | Schema v1, explicit graph, JSON save/open/autosave, scope workspace persistence | General Falstad text importer, bundled-example chooser, migration policy |
+| Documents | Schema v1, explicit graph, JSON save/open/autosave, scope workspace persistence | Broader Falstad import coverage, bundled-example chooser, migration policy |
 | Maintenance | React runtime separated from verification harness; direct core test imports; current tests and build commands | Future upstream update automation |
 
 ## Next work
@@ -36,8 +36,8 @@ The LV Labs reskin remains deployed separately from its original repository.
    [PROPERTY-PARITY.md](PROPERTY-PARITY.md) and [REACT-PARITY.md](REACT-PARITY.md).
    Track component/property coverage, numerical behavior and import fidelity
    separately. Preserve current UX and original equations.
-3. **Implement explicit legacy import.** Start with a measured subset of bundled
-   circuits; translate coordinate connectivity, flags, definitions/subcircuits,
+3. **Expand explicit legacy import.** The text/XML subset converts 67 bundled
+   circuits (64 compile), including all ten Basics examples; see [FALSTAD-IMPORT.md](FALSTAD-IMPORT.md). Continue to translate coordinate connectivity, flags, definitions/subcircuits,
    models and scopes into the explicit document graph. Diagnose unsupported
    records instead of dropping content. Type coverage alone is not import success.
 4. **Automate upstream proposals.** Compile/test pinned revision updates and

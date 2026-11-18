@@ -1,4 +1,4 @@
-import { TerminalBox } from "../svg";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "output";
@@ -15,6 +15,6 @@ export const metadata = {
   },
 } as const;
 
-export function Symbol({ pose }: SymbolProps) {
-  return <TerminalBox pin={metadata.pins.in} label="out" pose={pose} />;
+export function Symbol(_: SymbolProps) {
+  return <><Lead from={metadata.pins.in} to={[0, 0]} /><circle r={3} /></>;
 }

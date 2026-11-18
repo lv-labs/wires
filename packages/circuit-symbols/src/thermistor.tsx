@@ -16,11 +16,19 @@ export const metadata = {
     minTemperature: -40,
     maxTemperature: 150,
     position: 0.34,
+    label: "Temperature",
   },
 } as const;
 export const output = {
   type: "350",
   fields: {
+    label: {
+      label: "Slider label",
+      type: "string",
+      maxLength: 80,
+      optional: true,
+      default: "Temperature",
+    },
     resistance25: {
       label: "Resistance at 25 °C · Ω",
       type: "number",

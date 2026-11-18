@@ -142,8 +142,16 @@ export function ComponentSliderPanel({
       ...components.map((component): SliderItem => {
         const isVoltage = component.kind === "variableVoltage"
         const { field } = componentSliders[component.kind]
-        const min = isVoltage ? Number(component.parameters.minVoltage) : potPositionRange.min
-        const max = isVoltage ? Number(component.parameters.maxVoltage) : potPositionRange.max
+        const min = isVoltage
+          ? Number(component.parameters.minVoltage)
+          : component.kind === "potentiometer"
+            ? potPositionRange.min
+            : 0
+        const max = isVoltage
+          ? Number(component.parameters.maxVoltage)
+          : component.kind === "potentiometer"
+            ? potPositionRange.max
+            : 1
         return {
           id: component.id,
           component,
@@ -151,12 +159,16 @@ export function ComponentSliderPanel({
           label: sliderNames.get(component.id) ?? "Slider",
           min,
           max,
-          step: Math.max(Number.MIN_VALUE, (max - min) / 1000),
+          step: Math.max(Number.MIN_VALUE, Math.abs(max - min) / 1000),
           value: Number(component.parameters[field]),
           displayValue: (number) =>
             isVoltage
               ? format(number, "V")
-              : `${Number((number * 100).toPrecision(4))}%`,
+              : component.kind === "thermistor"
+                ? `${Math.round(Number(component.parameters.minTemperature) + number * (Number(component.parameters.maxTemperature) - Number(component.parameters.minTemperature)))} °C`
+                : component.kind === "photoresistor"
+                  ? format(10000 * number + 0.1, "lx")
+                  : `${Number((number * 100).toPrecision(4))}%`,
         }
       }),
     ]

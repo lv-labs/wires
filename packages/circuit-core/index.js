@@ -5,6 +5,7 @@
   const catalog=typeof module==='object'&&module.exports?require('./catalog.js'):registry.catalog;
   const geometry=typeof module==='object'&&module.exports?require('./geometry.js'):registry.geometry;
   const document=typeof module==='object'&&module.exports?require('./document.js'):registry.document;
+  const falstad=typeof module==='object'&&module.exports?require('./falstad.js'):registry.falstad;
   const history=typeof module==='object'&&module.exports?require('./history.js'):registry.history;
   const drag=typeof module==='object'&&module.exports?require('./drag.js'):registry.drag;
   const commands=typeof module==='object'&&module.exports?require('./commands.js'):registry.commands;
@@ -13,7 +14,7 @@
   const simulation=typeof module==='object'&&module.exports?require('./simulation.js'):registry.simulation;
   const signals=typeof module==='object'&&module.exports?require('./signals.js'):registry.signals;
   const browserTransport=typeof module==='object'&&module.exports?require('./browser-transport.js'):registry.browser_transport;
-  const api=Object.freeze({version:1,catalog,geometry,document,history,editing:commands,adapter,protocol,simulation,signals,browserTransport});
+  const api=Object.freeze({version:1,catalog,geometry,document,falstad,history,editing:commands,adapter,protocol,simulation,signals,browserTransport});
   globalThis.CircuitCore=api;
 
   registry.index=api;

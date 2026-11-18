@@ -42,8 +42,8 @@ inversion, follower, saturation, current sign, reset and all orientations.
 
 ## Next work
 
-Expand measured component, property and import compatibility. No general Falstad text importer or bundled
-library chooser exists. Bus/hierarchical objects and many variants are unsupported.
+Expand measured component, property and import compatibility. A strict first-subset Falstad text importer now exists; see
+[FALSTAD-IMPORT.md](FALSTAD-IMPORT.md). A bundled library chooser does not yet exist. Bus/hierarchical objects and many variants are unsupported.
 Frequency/period, triggering/FFT, large-scene/platform coverage and desktop packaging
 remain open. Scope layout is saved in circuit JSON; property-slider configuration
 is local per circuit. No browser or benchmark parity is claimed.

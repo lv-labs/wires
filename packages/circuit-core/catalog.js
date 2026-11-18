@@ -7,22 +7,22 @@
     "variableVoltage": {
       "name": "Variable voltage",
       "prefix": "V",
-      "drawingScale": 3.125,
+      "drawingScale": 1,
       "pins": {
         "p": [
           0,
-          100
+          0
         ]
       },
       "type": "172",
       "fields": {
         "minVoltage": {
-          "label": "Minimum voltage · V",
+          "label": "Minimum voltage (left) · V",
           "type": "number",
           "default": 0
         },
         "maxVoltage": {
-          "label": "Maximum voltage · V",
+          "label": "Maximum voltage (right) · V",
           "type": "number",
           "default": 5
         },
@@ -246,11 +246,28 @@
           "type": "number",
           "min": 0,
           "default": 10000000
+        },
+        "scale": {
+          "label": "Scale",
+          "type": "number",
+          "min": 0,
+          "max": 3,
+          "integer": true,
+          "optional": true,
+          "default": 0
+        },
+        "circleSymbol": {
+          "label": "Circular symbol",
+          "type": "boolean",
+          "optional": true,
+          "default": true
         }
       },
       "parameters": {
         "mode": 0,
-        "resistance": 10000000
+        "resistance": 10000000,
+        "scale": 0,
+        "circleSymbol": true
       },
       "sign": 1
     },
@@ -313,10 +330,27 @@
           "max": 1,
           "integer": true,
           "default": 0
+        },
+        "scale": {
+          "label": "Scale",
+          "type": "number",
+          "min": 0,
+          "max": 3,
+          "integer": true,
+          "optional": true,
+          "default": 0
+        },
+        "circleSymbol": {
+          "label": "Circular symbol",
+          "type": "boolean",
+          "optional": true,
+          "default": true
         }
       },
       "parameters": {
-        "mode": 0
+        "mode": 0,
+        "scale": 0,
+        "circleSymbol": true
       },
       "sign": 1
     },
@@ -1252,11 +1286,18 @@
           "type": "number",
           "exclusiveMin": 0,
           "default": 6.73
+        },
+        "iecSymbol": {
+          "label": "IEC symbol",
+          "type": "boolean",
+          "optional": true,
+          "default": false
         }
       },
       "parameters": {
         "resistance": 0.0613,
-        "i2t": 6.73
+        "i2t": 6.73,
+        "iecSymbol": false
       },
       "sign": 1
     },
@@ -1276,6 +1317,13 @@
       },
       "type": "374",
       "fields": {
+        "label": {
+          "label": "Slider label",
+          "type": "string",
+          "maxLength": 80,
+          "optional": true,
+          "default": "Light Brightness"
+        },
         "position": {
           "label": "Sensor position · 0 to 1",
           "type": "number",
@@ -1285,7 +1333,8 @@
         }
       },
       "parameters": {
-        "position": 0.34
+        "position": 0.34,
+        "label": "Light Brightness"
       },
       "sign": 1
     },
@@ -1305,6 +1354,13 @@
       },
       "type": "350",
       "fields": {
+        "label": {
+          "label": "Slider label",
+          "type": "string",
+          "maxLength": 80,
+          "optional": true,
+          "default": "Temperature"
+        },
         "resistance25": {
           "label": "Resistance at 25 °C · Ω",
           "type": "number",
@@ -1342,7 +1398,8 @@
         "resistance50": 3605,
         "minTemperature": -40,
         "maxTemperature": 150,
-        "position": 0.34
+        "position": 0.34,
+        "label": "Temperature"
       },
       "sign": 1
     },
@@ -3062,7 +3119,7 @@
       else if(f.type==='boolean'){if(typeof v!=='boolean')throw new Error('Invalid '+f.label);}
       else if(!Number.isFinite(v)||(f.integer&&!Number.isInteger(v))||(f.min!==undefined&&v<f.min)||(f.max!==undefined&&v>f.max)||(f.exclusiveMin!==undefined&&v<=f.exclusiveMin)||(f.choices&&!f.choices.includes(v)))throw new Error('Invalid '+f.label);
     }
-    if(component.kind==='variableVoltage'&&(!(p.minVoltage<p.maxVoltage)||!Number.isFinite(p.maxVoltage-p.minVoltage)||p.voltage<p.minVoltage||p.voltage>p.maxVoltage))throw new Error('Voltage must lie within the ordered source range');
+    if(component.kind==='variableVoltage'&&(p.minVoltage===p.maxVoltage||!Number.isFinite(p.maxVoltage-p.minVoltage)||p.voltage<Math.min(p.minVoltage,p.maxVoltage)||p.voltage>Math.max(p.minVoltage,p.maxVoltage)))throw new Error('Voltage must lie between distinct source endpoints');
     if (component.kind==='sweepSource') {
       const {minFrequency:min,maxFrequency:max,sweepTime:duration,logarithmic}=p;
       if (!(max>=min && Number.isFinite(2*Math.PI*max) && duration>=timeStep) ||

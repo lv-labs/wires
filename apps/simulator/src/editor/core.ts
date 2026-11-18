@@ -34,11 +34,6 @@ export type Component = {
   kind: string
   parameters: Record<string, unknown>
 }
-export type LabelSettings = {
-  position?: "auto" | "left" | "right" | "above" | "below"
-  showValue?: boolean
-  showDetails?: boolean
-}
 export type ScopePaneLayout = {
   mode: "docked" | "floating" | "sheet"
   timeDivision: number
@@ -80,10 +75,13 @@ export type CircuitDocument = {
   layout: {
     components: Record<
       string,
-      Point & { rotation: number; mirror: boolean; label?: LabelSettings }
+      Point & { rotation: number; mirror: boolean }
     >
     junctions: Record<string, Point>
-    wires: Record<string, { bends: Point[] }>
+    wires: Record<
+      string,
+      { bends: Point[]; showVoltage?: boolean; showCurrent?: boolean }
+    >
     scopes?: ScopeLayout
     probes?: Record<string, Point>
   }
@@ -129,6 +127,7 @@ export type Frame = {
   time: number
   timeStep: number
   pinVoltages: Record<string, Record<string, number>>
+  pinCurrents?: Record<string, Record<string, number>>
   componentCurrents?: Record<string, number>
   componentMeasurements?: Record<
     string,
@@ -184,6 +183,20 @@ export type Drag = {
   cancel(): void
 }
 export const core = implementation as {
+  falstad: {
+    importText(
+      text: string,
+      options?: { id?: string; title?: string }
+    ): {
+      document: CircuitDocument | null
+      diagnostics: {
+        severity: string
+        line: number
+        code: string
+        message: string
+      }[]
+    }
+  }
   geometry: {
     grid: number
     snap(n: number): number

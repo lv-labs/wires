@@ -28,18 +28,14 @@ export function SheetLabel({ pose, kind, children }: {
     const right = Math.max(...points.map(p => p.x))
     const top = Math.min(...points.map(p => p.y))
     const bottom = Math.max(...points.map(p => p.y))
-    const position = !pose.label?.position || pose.label.position === "auto"
-      ? (["voltageSource", "voltageRail", "variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(kind) || right - left > bottom - top ? "above" : "right")
-      : pose.label.position
+    const position = ["voltageSource", "voltageRail", "variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(kind) || right - left > bottom - top ? "above" : "right"
     const gap = 25
     const height = element.getBBox().height
     let x = (left + right) / 2
     let y = (top + bottom) / 2
     let anchor = "middle"
-    if (position === "left") { x = left - gap; anchor = "end" }
     if (position === "right") { x = right + gap; anchor = "start" }
     if (position === "above") y = top - gap - height / 2
-    if (position === "below") y = bottom + gap + height / 2
     element.setAttribute("x", String(x))
     element.setAttribute("y", String(y))
     element.setAttribute("text-anchor", anchor)

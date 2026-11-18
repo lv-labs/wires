@@ -235,3 +235,13 @@ circuit projection. Each request snapshots them at dispatch, and its usual run/
 revision/epoch/sequence gates apply to the whole reply. Display buffers additionally
 match the expected accepted identity and channel targets, rejecting old probes or
 runs even if their IDs/labels overlap. Labels/layout never become solver identity.
+
+## Optional terminal-current presentation data — 2026-11-17
+
+Document frames now include `pinCurrents[componentId][pinId]` when native synthetic
+connection-wire currents are available. Positive means current entering a component
+terminal. The data is separate from normalized `componentCurrents`, including for
+models without a single meaningful component current. Engine text, equations and raw
+engine snapshots are unchanged. Missing terminal currents remain unavailable. The
+editor uses these values to resolve unique wire-branch currents for presentation;
+ideal-wire-cycle flows are not inferred.

@@ -1,4 +1,4 @@
-import {sliderField, setProperty, clampSliderValue} from '../apps/simulator/src/editor/componentSliders.ts';
+import {sliderField, setProperty, clampSliderValue, sliderPosition, sliderVoltage} from '../apps/simulator/src/editor/componentSliders.ts';
 import {editing as CircuitEditorModel, adapter as CircuitDocumentAdapter, protocol as CircuitRevisionProtocol, simulation as CircuitSimulation} from '../packages/circuit-core/index.mjs';
 import assert from 'node:assert/strict';
 import {createEngine} from './engine_node_runtime.mjs';
@@ -41,3 +41,27 @@ for(let i=0;i<50;i++){
 assert.equal(workerCount,1);assert.equal(updates,50);await sim.pause();const next=structuredClone(d);next.electrical.components[0].parameters.voltage=4.9;await sim.setDocument(next);assert.equal(timers.size,0);assert.equal(sim.getState().runRequested,false);
 const state=sim.getState();for(const status of ['error','loading','disposed'])assert.equal(CircuitSimulation.presentationFrame({...state,status}),null);assert.equal(CircuitSimulation.presentationFrame({...state,accepted:{...state.accepted,runEpoch:999}}),null);sim.dispose();
 console.log('Voltage slider checks passed: React property mapping, nested fields, safe pot endpoints, continuous native RC charge/time across 50 edits, prompt solves and safe presentation frames.');
+
+// Endpoint order controls slider direction; native engine bounds remain sorted.
+for(const [left,right] of [[0,-5],[-5,0],[5,-5],[-5,5]]) {
+  for(const t of [0,.25,.5,.75,1]) {
+    const voltage=sliderVoltage(t,left,right);
+    assert.equal(sliderPosition(voltage,left,right),t);
+    const doc=outputFamilyCircuit('variableVoltage',{minVoltage:left,maxVoltage:right,voltage});
+    const session=A.createSession(createEngine());session.loadDocument(doc);
+    assert.ok(Math.abs(session.step(2).pinVoltages.part.p-voltage)<1e-12);
+    const end=t<.5?right:left;session.setVariableVoltage('part',end);
+    assert.ok(Math.abs(session.step(2).pinVoltages.part.p-end)<1e-12);
+  }
+}
+const model=M.create(outputFamilyCircuit('variableVoltage'),()=>{});
+model.execute({type:'setParameters',componentId:'part',parameters:{minVoltage:0,maxVoltage:-5}});
+assert.equal(model.document.electrical.components[0].parameters.voltage,0);
+model.execute({type:'setParameters',componentId:'part',parameters:{voltage:-3}});
+model.execute({type:'setParameters',componentId:'part',parameters:{minVoltage:2,maxVoltage:4}});
+assert.equal(model.document.electrical.components[0].parameters.voltage,2);
+model.undo();assert.equal(model.document.electrical.components[0].parameters.voltage,-3);
+model.redo();assert.equal(model.document.electrical.components[0].parameters.voltage,2);
+assert.throws(()=>M.validate(outputFamilyCircuit('variableVoltage',{minVoltage:0,maxVoltage:0,voltage:0})));
+assert.throws(()=>M.validate(outputFamilyCircuit('variableVoltage',{minVoltage:0,maxVoltage:-5,voltage:1})));
+console.log('Descending voltage ranges passed: normalized slider positions, all endpoints/midpoints, native live updates, reset-to-left and undo/redo.');

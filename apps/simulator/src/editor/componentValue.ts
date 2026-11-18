@@ -1,5 +1,6 @@
 import { core } from "./core"
 import type { Component } from "./core"
+import { spdtPositionLabels } from "./componentPropertyFields"
 
 export function format(value: number, unit = "") {
   if (!Number.isFinite(value)) return "—"
@@ -18,6 +19,16 @@ export function format(value: number, unit = "") {
 }
 function isSource(c: Component) {
   return c.kind === "voltageSource" || c.kind === "voltageRail"
+}
+function meterValue(value: number, unit: string, scale = 0) {
+  if (!Number.isFinite(value)) return "—"
+  if (![1, 2, 3].includes(scale) || Math.abs(value) > 1e12)
+    return format(value, unit)
+  const multiplier = [1, 1, 1e3, 1e6][scale]
+  const prefix = ["", "", "m", "µ"][scale]
+  // CircuitElm.getUnitTextWithScale uses up to three decimal places for
+  // explicitly selected units; Auto retains the editor's SI-prefix formatter.
+  return `${Number((value * multiplier).toFixed(3))} ${prefix}${unit}`
 }
 function logicLevel(p: Record<string, any>, voltage: number) {
   if (!Number.isFinite(voltage)) return "—"
@@ -62,7 +73,9 @@ function outputReading(c: Component, measured: Record<string, any>) {
       ? c.kind === "ohmmeter"
         ? `∞ ${unit[c.kind]}`
         : "—"
-      : format(Number(measured.value), unit[c.kind])
+      : ["voltmeter", "ammeter"].includes(c.kind)
+        ? meterValue(Number(measured.value), unit[c.kind], Number(c.parameters.scale ?? 0))
+        : format(Number(measured.value), unit[c.kind])
     : ""
 }
 export function componentValue(
@@ -77,11 +90,14 @@ export function componentValue(
     return `${outputReading(c, live?.measurement || {})}${p.mode === 1 ? " RMS" : ""}`
   if (["voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(c.kind)) {
     const mode = Number(p.mode || 0)
-    const suffix = c.kind === "wattmeter"
-      ? mode === 1 ? " avg" : ""
-      : ["voltmeter", "testPoint"].includes(c.kind)
-        ? ["", " RMS", " max", " min", " pk–pk", ""][mode] || ""
-        : ""
+    const suffix =
+      c.kind === "wattmeter"
+        ? mode === 1
+          ? " avg"
+          : ""
+        : ["voltmeter", "testPoint"].includes(c.kind)
+          ? ["", " RMS", " max", " min", " pk–pk", ""][mode] || ""
+          : ""
     return `${outputReading(c, live?.measurement || {})}${suffix}`
   }
   if (core.catalog.outputSpecs[c.kind])
@@ -104,12 +120,15 @@ export function componentValue(
   if (c.kind === "resistor") return format(p.resistance, "Ω")
   if (c.kind === "transformer" || c.kind === "tappedTransformer")
     return `1:${p.ratio} · ${format(p.inductance, "H")}`
-  if (["spdtSwitch", "dpdtSwitch"].includes(c.kind))
-    return p.position === 2 ? "Off" : p.position === 0 ? "A" : "B"
+  if (c.kind === "spdtSwitch") return spdtPositionLabels(p)[p.position] ?? "—"
+  if (c.kind === "dpdtSwitch") return p.position === 0 ? "A" : "B"
   if (["diode", "led", "zener"].includes(c.kind) && p.model) {
     const model = core.catalog.resolveDiodeModel(p.model)
-    const name = typeof p.model === "string" ? p.model : (p.model as { name: string }).name
-    return c.kind === "zener" ? `${format(model.breakdownVoltage, "V")} Zener · ${name}` : name
+    const name =
+      typeof p.model === "string" ? p.model : (p.model as { name: string }).name
+    return c.kind === "zener"
+      ? `${format(model.breakdownVoltage, "V")} Zener · ${name}`
+      : name
   }
   if (c.kind === "led") return format(p.forwardVoltage, "V")
   if (c.kind === "zener") return `${format(p.breakdownVoltage, "V")} Zener`
@@ -144,4 +163,83 @@ export function componentValue(
     return `${format(p.minOutput, "V")} … ${format(p.maxOutput, "V")}`
   const reading = outputReading(c, live?.measurement || {})
   return reading
+}
+
+/** Sheet artwork carries only a primary value or a live reading. */
+export function sheetValue(
+  c: Component,
+  live?: Parameters<typeof componentValue>[1]
+) {
+  const p = c.parameters as Record<string, any>
+  if (
+    [
+      "ground",
+      "opamp",
+      "switch",
+      "pushSwitch",
+      "spdtSwitch",
+      "dpdtSwitch",
+      "mbbSwitch",
+      "logicInput",
+      "logicOutput",
+      "diode",
+      "led",
+      "npn",
+      "pnp",
+      "nmos",
+      "pmos",
+      "njfet",
+      "pjfet",
+    ].includes(c.kind)
+  )
+    return ""
+  if (c.kind === "output")
+    return p.showVoltage ? format(Number(live?.pinVoltages?.in), "V") : ""
+  if (c.kind === "potentiometer") return format(p.resistance, "Ω")
+  if (c.kind === "voltageSource" || c.kind === "voltageRail") {
+    const w = p.waveform
+    return w.kind === "dc"
+      ? format(w.voltage, "V")
+      : `${format(w.amplitude, "V")} · ${format(w.frequency, "Hz")}`
+  }
+  if (["transformer", "tappedTransformer"].includes(c.kind))
+    return `1:${p.ratio}`
+  if (c.kind === "zener")
+    return format(
+      p.model
+        ? core.catalog.resolveDiodeModel(p.model).breakdownVoltage
+        : p.breakdownVoltage,
+      "V"
+    )
+  if (
+    core.catalog.outputSpecs[c.kind] &&
+    ![
+      "variableVoltage",
+      "voltmeter",
+      "ammeter",
+      "ohmmeter",
+      "wattmeter",
+      "testPoint",
+      "labeledNode",
+    ].includes(c.kind)
+  )
+    return ""
+  if (
+    ![
+      "resistor",
+      "capacitor",
+      "polarizedCapacitor",
+      "inductor",
+      "currentSource",
+      "variableVoltage",
+      "voltmeter",
+      "ammeter",
+      "ohmmeter",
+      "wattmeter",
+      "testPoint",
+      "labeledNode",
+    ].includes(c.kind)
+  )
+    return ""
+  return componentValue(c, live)
 }

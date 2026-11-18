@@ -1,10 +1,10 @@
 {
-  "scope": "Bundled Falstad fork, all menu classes. Dump-type matches are candidates, not proof of equivalent behavior. Includes inherited options; conditional/dynamic labels and model dialogs require manual review. No row is marked complete by this inventory.",
+  "scope": "Bundled Falstad fork, all menu classes. Dump-type matches are candidates, not proof of equivalent behavior. Includes chip-specific methods and inherited candidate options, excludes comments. Inherited options may be restricted by subclass overrides; conditional/dynamic labels and model dialogs require manual review. Label visibility/placement controls are intentionally omitted in Wires. No row is marked complete by this inventory.",
   "rows": [
     {
       "legacy": "ACRailElm",
       "dumpType": "R",
-      "source": "src/com/lushprojects/circuitjs1/client/ACRailElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ACRailElm.java",
       "reactCandidates": [
         "noiseSource",
         "voltageRail"
@@ -37,7 +37,7 @@
     {
       "legacy": "ACVoltageElm",
       "dumpType": "v",
-      "source": "src/com/lushprojects/circuitjs1/client/ACVoltageElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ACVoltageElm.java",
       "reactCandidates": [
         "voltageSource"
       ],
@@ -65,9 +65,10 @@
     {
       "legacy": "ADCElm",
       "dumpType": "167",
-      "source": "src/com/lushprojects/circuitjs1/client/ADCElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ADCElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -77,7 +78,7 @@
     {
       "legacy": "AMElm",
       "dumpType": "200",
-      "source": "src/com/lushprojects/circuitjs1/client/AMElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AMElm.java",
       "reactCandidates": [
         "amSource"
       ],
@@ -98,7 +99,7 @@
     {
       "legacy": "AmmeterElm",
       "dumpType": "370",
-      "source": "src/com/lushprojects/circuitjs1/client/AmmeterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AmmeterElm.java",
       "reactCandidates": [
         "ammeter"
       ],
@@ -112,14 +113,18 @@
           "mode"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Scale and circular symbol"
     },
     {
       "legacy": "AnalogMuxElm",
       "dumpType": "432",
-      "source": "src/com/lushprojects/circuitjs1/client/AnalogMuxElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AnalogMuxElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Select Bits",
+        "On Resistance (ohms)",
+        "Off Resistance (ohms)",
+        "Threshold Voltage",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -129,7 +134,7 @@
     {
       "legacy": "AnalogSwitch2Elm",
       "dumpType": "160",
-      "source": "src/com/lushprojects/circuitjs1/client/AnalogSwitch2Elm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AnalogSwitch2Elm.java",
       "reactCandidates": [
         "analogSpdtSwitch"
       ],
@@ -154,7 +159,7 @@
     {
       "legacy": "AnalogSwitchElm",
       "dumpType": "159",
-      "source": "src/com/lushprojects/circuitjs1/client/AnalogSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AnalogSwitchElm.java",
       "reactCandidates": [
         "analogSwitch"
       ],
@@ -179,7 +184,7 @@
     {
       "legacy": "AndGateElm",
       "dumpType": "150",
-      "source": "src/com/lushprojects/circuitjs1/client/AndGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AndGateElm.java",
       "reactCandidates": [
         "andGate"
       ],
@@ -204,7 +209,7 @@
     {
       "legacy": "AntennaElm",
       "dumpType": "A",
-      "source": "src/com/lushprojects/circuitjs1/client/AntennaElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AntennaElm.java",
       "reactCandidates": [
         "antennaSource"
       ],
@@ -230,7 +235,7 @@
     {
       "legacy": "AudioInputElm",
       "dumpType": "411",
-      "source": "src/com/lushprojects/circuitjs1/client/AudioInputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AudioInputElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Max Voltage",
@@ -254,7 +259,7 @@
     {
       "legacy": "AudioOutputElm",
       "dumpType": "211",
-      "source": "src/com/lushprojects/circuitjs1/client/AudioOutputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/AudioOutputElm.java",
       "reactCandidates": [
         "audioOutput"
       ],
@@ -273,7 +278,7 @@
     {
       "legacy": "BoxElm",
       "dumpType": "b",
-      "source": "src/com/lushprojects/circuitjs1/client/BoxElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/BoxElm.java",
       "reactCandidates": [
         "box"
       ],
@@ -289,7 +294,7 @@
     {
       "legacy": "BusLogicInputElm",
       "dumpType": "0",
-      "source": "src/com/lushprojects/circuitjs1/client/BusLogicInputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/BusLogicInputElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Bus Width",
@@ -307,9 +312,10 @@
     {
       "legacy": "BusSplitterElm",
       "dumpType": "433",
-      "source": "src/com/lushprojects/circuitjs1/client/BusSplitterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/BusSplitterElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -319,9 +325,10 @@
     {
       "legacy": "BusTransceiverElm",
       "dumpType": null,
-      "source": "src/com/lushprojects/circuitjs1/client/BusTransceiverElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/BusTransceiverElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -331,7 +338,7 @@
     {
       "legacy": "CC2Elm",
       "dumpType": "179",
-      "source": "src/com/lushprojects/circuitjs1/client/CC2Elm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CC2Elm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "High Logic Voltage",
@@ -343,9 +350,10 @@
     {
       "legacy": "CCCSElm",
       "dumpType": "215",
-      "source": "src/com/lushprojects/circuitjs1/client/CCCSElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CCCSElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Inputs",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -355,9 +363,10 @@
     {
       "legacy": "CCVSElm",
       "dumpType": "214",
-      "source": "src/com/lushprojects/circuitjs1/client/CCVSElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CCVSElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Inputs",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -367,7 +376,7 @@
     {
       "legacy": "CapacitorElm",
       "dumpType": "c",
-      "source": "src/com/lushprojects/circuitjs1/client/CapacitorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CapacitorElm.java",
       "reactCandidates": [
         "capacitor"
       ],
@@ -384,12 +393,12 @@
           "integration"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Series resistance"
     },
     {
       "legacy": "ClockElm",
       "dumpType": "R",
-      "source": "src/com/lushprojects/circuitjs1/client/ClockElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ClockElm.java",
       "reactCandidates": [
         "noiseSource",
         "voltageRail"
@@ -422,7 +431,7 @@
     {
       "legacy": "ComparatorElm",
       "dumpType": "401",
-      "source": "src/com/lushprojects/circuitjs1/client/ComparatorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ComparatorElm.java",
       "reactCandidates": [],
       "legacyOptions": [],
       "reactParameters": {},
@@ -431,9 +440,11 @@
     {
       "legacy": "Counter2Elm",
       "dumpType": "421",
-      "source": "src/com/lushprojects/circuitjs1/client/Counter2Elm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/Counter2Elm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
+        "Modulus",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -443,11 +454,16 @@
     {
       "legacy": "CounterElm",
       "dumpType": "164",
-      "source": "src/com/lushprojects/circuitjs1/client/CounterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CounterElm.java",
       "reactCandidates": [
         "counter"
       ],
       "legacyOptions": [
+        "Invert reset pin",
+        "# of Bits",
+        "Modulus",
+        "Up/Down Pin",
+        "Negative Edge Triggered",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -465,7 +481,7 @@
     {
       "legacy": "CrossSwitchElm",
       "dumpType": "430",
-      "source": "src/com/lushprojects/circuitjs1/client/CrossSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CrossSwitchElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "IEC Symbol",
@@ -479,7 +495,7 @@
     {
       "legacy": "CrystalElm",
       "dumpType": "412",
-      "source": "src/com/lushprojects/circuitjs1/client/CrystalElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CrystalElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Series Capacitance (F)",
@@ -493,7 +509,7 @@
     {
       "legacy": "CurrentElm",
       "dumpType": "i",
-      "source": "src/com/lushprojects/circuitjs1/client/CurrentElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CurrentElm.java",
       "reactCandidates": [
         "currentSource"
       ],
@@ -512,7 +528,7 @@
     {
       "legacy": "CustomCompositeElm",
       "dumpType": "410",
-      "source": "src/com/lushprojects/circuitjs1/client/CustomCompositeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CustomCompositeElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Edit Pin Layout",
@@ -526,7 +542,7 @@
     {
       "legacy": "CustomTransformerElm",
       "dumpType": "406",
-      "source": "src/com/lushprojects/circuitjs1/client/CustomTransformerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/CustomTransformerElm.java",
       "reactCandidates": [
         "customTransformer"
       ],
@@ -550,9 +566,10 @@
     {
       "legacy": "DACElm",
       "dumpType": "166",
-      "source": "src/com/lushprojects/circuitjs1/client/DACElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DACElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -562,7 +579,7 @@
     {
       "legacy": "DCMotorElm",
       "dumpType": "415",
-      "source": "src/com/lushprojects/circuitjs1/client/DCMotorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DCMotorElm.java",
       "reactCandidates": [
         "dcMotor"
       ],
@@ -591,7 +608,7 @@
     {
       "legacy": "DCVoltageElm",
       "dumpType": "v",
-      "source": "src/com/lushprojects/circuitjs1/client/DCVoltageElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DCVoltageElm.java",
       "reactCandidates": [
         "voltageSource"
       ],
@@ -619,11 +636,14 @@
     {
       "legacy": "DFlipFlopElm",
       "dumpType": "155",
-      "source": "src/com/lushprojects/circuitjs1/client/DFlipFlopElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DFlipFlopElm.java",
       "reactCandidates": [
         "dFlipFlop"
       ],
       "legacyOptions": [
+        "Reset Pin",
+        "Set Pin",
+        "Invert Set/Reset",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -638,7 +658,7 @@
     {
       "legacy": "DPDTSwitchElm",
       "dumpType": "429",
-      "source": "src/com/lushprojects/circuitjs1/client/DPDTSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DPDTSwitchElm.java",
       "reactCandidates": [
         "dpdtSwitch"
       ],
@@ -664,7 +684,7 @@
     {
       "legacy": "DataInputElm",
       "dumpType": "424",
-      "source": "src/com/lushprojects/circuitjs1/client/DataInputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DataInputElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Scale Factor",
@@ -689,7 +709,7 @@
     {
       "legacy": "DataRecorderElm",
       "dumpType": "210",
-      "source": "src/com/lushprojects/circuitjs1/client/DataRecorderElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DataRecorderElm.java",
       "reactCandidates": [
         "dataExport"
       ],
@@ -706,9 +726,13 @@
     {
       "legacy": "DeMultiplexerElm",
       "dumpType": "185",
-      "source": "src/com/lushprojects/circuitjs1/client/DeMultiplexerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DeMultiplexerElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Select Bits",
+        "Output Mode",
+        "Bus Select",
+        "Data Bus Width",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -718,11 +742,13 @@
     {
       "legacy": "DecimalDisplayElm",
       "dumpType": "419",
-      "source": "src/com/lushprojects/circuitjs1/client/DecimalDisplayElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DecimalDisplayElm.java",
       "reactCandidates": [
         "decimalDisplay"
       ],
       "legacyOptions": [
+        "# of Bits",
+        "Display Mode",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -731,12 +757,12 @@
           "mode"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Bit width, high logic voltage and bit order"
     },
     {
       "legacy": "DelayBufferElm",
       "dumpType": "422",
-      "source": "src/com/lushprojects/circuitjs1/client/DelayBufferElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DelayBufferElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Delay (s)",
@@ -749,7 +775,7 @@
     {
       "legacy": "DiacElm",
       "dumpType": "203",
-      "source": "src/com/lushprojects/circuitjs1/client/DiacElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DiacElm.java",
       "reactCandidates": [
         "diac"
       ],
@@ -772,7 +798,7 @@
     {
       "legacy": "DiodeElm",
       "dumpType": "d",
-      "source": "src/com/lushprojects/circuitjs1/client/DiodeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/DiodeElm.java",
       "reactCandidates": [
         "diode"
       ],
@@ -792,7 +818,7 @@
     {
       "legacy": "ExtVoltageElm",
       "dumpType": "418",
-      "source": "src/com/lushprojects/circuitjs1/client/ExtVoltageElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ExtVoltageElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Name",
@@ -815,7 +841,7 @@
     {
       "legacy": "FMElm",
       "dumpType": "201",
-      "source": "src/com/lushprojects/circuitjs1/client/FMElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/FMElm.java",
       "reactCandidates": [
         "fmSource"
       ],
@@ -838,11 +864,12 @@
     {
       "legacy": "FullAdderElm",
       "dumpType": "196",
-      "source": "src/com/lushprojects/circuitjs1/client/FullAdderElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/FullAdderElm.java",
       "reactCandidates": [
         "fullAdder"
       ],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -856,7 +883,7 @@
     {
       "legacy": "FuseElm",
       "dumpType": "404",
-      "source": "src/com/lushprojects/circuitjs1/client/FuseElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/FuseElm.java",
       "reactCandidates": [
         "fuse"
       ],
@@ -868,15 +895,16 @@
       "reactParameters": {
         "fuse": [
           "resistance",
-          "i2t"
+          "i2t",
+          "iecSymbol"
         ]
       },
-      "status": "Review required"
+      "status": "Properties implemented; bundled-source review recorded in PROPERTY-PARITY.md"
     },
     {
       "legacy": "GroundElm",
       "dumpType": "g",
-      "source": "src/com/lushprojects/circuitjs1/client/GroundElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/GroundElm.java",
       "reactCandidates": [
         "ground"
       ],
@@ -891,7 +919,7 @@
     {
       "legacy": "GyratorElm",
       "dumpType": null,
-      "source": "src/com/lushprojects/circuitjs1/client/GyratorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/GyratorElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Gyration Resistance (\\u2126)"
@@ -902,7 +930,7 @@
     {
       "legacy": "HalfAdderElm",
       "dumpType": "195",
-      "source": "src/com/lushprojects/circuitjs1/client/HalfAdderElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/HalfAdderElm.java",
       "reactCandidates": [
         "halfAdder"
       ],
@@ -920,7 +948,7 @@
     {
       "legacy": "InductorElm",
       "dumpType": "l",
-      "source": "src/com/lushprojects/circuitjs1/client/InductorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/InductorElm.java",
       "reactCandidates": [
         "inductor"
       ],
@@ -937,12 +965,12 @@
           "integration"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Saturation current"
     },
     {
       "legacy": "InstructionDisplayElm",
       "dumpType": null,
-      "source": "src/com/lushprojects/circuitjs1/client/InstructionDisplayElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/InstructionDisplayElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Bus Width",
@@ -955,7 +983,7 @@
     {
       "legacy": "InverterElm",
       "dumpType": "I",
-      "source": "src/com/lushprojects/circuitjs1/client/InverterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/InverterElm.java",
       "reactCandidates": [
         "inverter"
       ],
@@ -974,7 +1002,7 @@
     {
       "legacy": "InvertingSchmittElm",
       "dumpType": "183",
-      "source": "src/com/lushprojects/circuitjs1/client/InvertingSchmittElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/InvertingSchmittElm.java",
       "reactCandidates": [
         "invertingSchmittTrigger"
       ],
@@ -999,11 +1027,14 @@
     {
       "legacy": "JKFlipFlopElm",
       "dumpType": "156",
-      "source": "src/com/lushprojects/circuitjs1/client/JKFlipFlopElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/JKFlipFlopElm.java",
       "reactCandidates": [
         "jkFlipFlop"
       ],
       "legacyOptions": [
+        "Reset Pin",
+        "Positive Edge Triggered",
+        "Invert Reset",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1019,7 +1050,7 @@
     {
       "legacy": "LDRElm",
       "dumpType": "374",
-      "source": "src/com/lushprojects/circuitjs1/client/LDRElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LDRElm.java",
       "reactCandidates": [
         "photoresistor"
       ],
@@ -1028,31 +1059,34 @@
       ],
       "reactParameters": {
         "photoresistor": [
-          "position"
+          "position",
+          "label"
         ]
       },
-      "status": "Review required"
+      "status": "Properties implemented; bundled-source review recorded in PROPERTY-PARITY.md"
     },
     {
       "legacy": "LEDArrayElm",
       "dumpType": "405",
-      "source": "src/com/lushprojects/circuitjs1/client/LEDArrayElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LEDArrayElm.java",
       "reactCandidates": [
         "ledArray"
       ],
       "legacyOptions": [
+        "Grid Width",
+        "Grid Height",
         "High Logic Voltage",
         "Bit Order"
       ],
       "reactParameters": {
         "ledArray": []
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Grid width/height, high logic voltage and bit order"
     },
     {
       "legacy": "LEDElm",
       "dumpType": "162",
-      "source": "src/com/lushprojects/circuitjs1/client/LEDElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LEDElm.java",
       "reactCandidates": [
         "led"
       ],
@@ -1080,7 +1114,7 @@
     {
       "legacy": "LabeledNodeElm",
       "dumpType": "207",
-      "source": "src/com/lushprojects/circuitjs1/client/LabeledNodeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LabeledNodeElm.java",
       "reactCandidates": [
         "labeledNode"
       ],
@@ -1094,12 +1128,12 @@
           "name"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Internal node and vertical text rotation"
     },
     {
       "legacy": "LampElm",
       "dumpType": "181",
-      "source": "src/com/lushprojects/circuitjs1/client/LampElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LampElm.java",
       "reactCandidates": [
         "lamp"
       ],
@@ -1123,11 +1157,16 @@
     {
       "legacy": "LatchElm",
       "dumpType": "168",
-      "source": "src/com/lushprojects/circuitjs1/client/LatchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LatchElm.java",
       "reactCandidates": [
         "latch"
       ],
       "legacyOptions": [
+        "# of Bits",
+        "Edge Triggered",
+        "Reset Pin",
+        "Set Pin",
+        "Enable Pins",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1143,7 +1182,7 @@
     {
       "legacy": "LineElm",
       "dumpType": "423",
-      "source": "src/com/lushprojects/circuitjs1/client/LineElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LineElm.java",
       "reactCandidates": [
         "line"
       ],
@@ -1159,7 +1198,7 @@
     {
       "legacy": "LogicInputElm",
       "dumpType": "L",
-      "source": "src/com/lushprojects/circuitjs1/client/LogicInputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LogicInputElm.java",
       "reactCandidates": [
         "logicInput"
       ],
@@ -1186,7 +1225,7 @@
     {
       "legacy": "LogicOutputElm",
       "dumpType": "M",
-      "source": "src/com/lushprojects/circuitjs1/client/LogicOutputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/LogicOutputElm.java",
       "reactCandidates": [
         "logicOutput"
       ],
@@ -1208,7 +1247,7 @@
     {
       "legacy": "MBBSwitchElm",
       "dumpType": "416",
-      "source": "src/com/lushprojects/circuitjs1/client/MBBSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/MBBSwitchElm.java",
       "reactCandidates": [
         "mbbSwitch"
       ],
@@ -1234,7 +1273,7 @@
     {
       "legacy": "MemristorElm",
       "dumpType": "m",
-      "source": "src/com/lushprojects/circuitjs1/client/MemristorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/MemristorElm.java",
       "reactCandidates": [
         "memristor"
       ],
@@ -1259,9 +1298,11 @@
     {
       "legacy": "MonostableElm",
       "dumpType": "194",
-      "source": "src/com/lushprojects/circuitjs1/client/MonostableElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/MonostableElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "Retriggerable",
+        "Period (s)",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1271,7 +1312,7 @@
     {
       "legacy": "MotorProtectionSwitchElm",
       "dumpType": "428",
-      "source": "src/com/lushprojects/circuitjs1/client/MotorProtectionSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/MotorProtectionSwitchElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "I2t",
@@ -1284,9 +1325,15 @@
     {
       "legacy": "MultiplexerElm",
       "dumpType": "184",
-      "source": "src/com/lushprojects/circuitjs1/client/MultiplexerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/MultiplexerElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Select Bits",
+        "Inverted Output",
+        "Strobe Pin",
+        "Input Mode",
+        "Bus Select",
+        "Data Bus Width",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1296,7 +1343,7 @@
     {
       "legacy": "NDarlingtonElm",
       "dumpType": "400",
-      "source": "src/com/lushprojects/circuitjs1/client/NDarlingtonElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NDarlingtonElm.java",
       "reactCandidates": [],
       "legacyOptions": [],
       "reactParameters": {},
@@ -1305,7 +1352,7 @@
     {
       "legacy": "NJfetElm",
       "dumpType": "j",
-      "source": "src/com/lushprojects/circuitjs1/client/NJfetElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NJfetElm.java",
       "reactCandidates": [
         "njfet",
         "pjfet"
@@ -1334,7 +1381,7 @@
     {
       "legacy": "NMosfetElm",
       "dumpType": "f",
-      "source": "src/com/lushprojects/circuitjs1/client/NMosfetElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NMosfetElm.java",
       "reactCandidates": [
         "nmos",
         "pmos"
@@ -1375,7 +1422,7 @@
     {
       "legacy": "NTransistorElm",
       "dumpType": "t",
-      "source": "src/com/lushprojects/circuitjs1/client/NTransistorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NTransistorElm.java",
       "reactCandidates": [
         "npn",
         "pnp"
@@ -1407,7 +1454,7 @@
     {
       "legacy": "NandGateElm",
       "dumpType": "151",
-      "source": "src/com/lushprojects/circuitjs1/client/NandGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NandGateElm.java",
       "reactCandidates": [
         "nandGate"
       ],
@@ -1432,7 +1479,7 @@
     {
       "legacy": "NoiseElm",
       "dumpType": "R",
-      "source": "src/com/lushprojects/circuitjs1/client/NoiseElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NoiseElm.java",
       "reactCandidates": [
         "noiseSource",
         "voltageRail"
@@ -1465,7 +1512,7 @@
     {
       "legacy": "NorGateElm",
       "dumpType": "153",
-      "source": "src/com/lushprojects/circuitjs1/client/NorGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/NorGateElm.java",
       "reactCandidates": [
         "norGate"
       ],
@@ -1490,7 +1537,7 @@
     {
       "legacy": "OTAElm",
       "dumpType": "402",
-      "source": "src/com/lushprojects/circuitjs1/client/OTAElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OTAElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Positive Supply Voltage (5-20V)",
@@ -1502,7 +1549,7 @@
     {
       "legacy": "OhmMeterElm",
       "dumpType": "216",
-      "source": "src/com/lushprojects/circuitjs1/client/OhmMeterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OhmMeterElm.java",
       "reactCandidates": [
         "ohmmeter"
       ],
@@ -1521,7 +1568,7 @@
     {
       "legacy": "OpAmpElm",
       "dumpType": "a",
-      "source": "src/com/lushprojects/circuitjs1/client/OpAmpElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OpAmpElm.java",
       "reactCandidates": [
         "opamp"
       ],
@@ -1542,7 +1589,7 @@
     {
       "legacy": "OpAmpRealElm",
       "dumpType": "409",
-      "source": "src/com/lushprojects/circuitjs1/client/OpAmpRealElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OpAmpRealElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Swap Inputs",
@@ -1555,7 +1602,7 @@
     {
       "legacy": "OpAmpSwapElm",
       "dumpType": "a",
-      "source": "src/com/lushprojects/circuitjs1/client/OpAmpSwapElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OpAmpSwapElm.java",
       "reactCandidates": [
         "opamp"
       ],
@@ -1576,7 +1623,7 @@
     {
       "legacy": "OptocouplerElm",
       "dumpType": "407",
-      "source": "src/com/lushprojects/circuitjs1/client/OptocouplerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OptocouplerElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "CTR Scale",
@@ -1588,7 +1635,7 @@
     {
       "legacy": "OrGateElm",
       "dumpType": "152",
-      "source": "src/com/lushprojects/circuitjs1/client/OrGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OrGateElm.java",
       "reactCandidates": [
         "orGate"
       ],
@@ -1613,7 +1660,7 @@
     {
       "legacy": "OutputElm",
       "dumpType": "O",
-      "source": "src/com/lushprojects/circuitjs1/client/OutputElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/OutputElm.java",
       "reactCandidates": [
         "output"
       ],
@@ -1627,12 +1674,12 @@
           "showVoltage"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Scale and fixed precision (visibility intentionally omitted)"
     },
     {
       "legacy": "PDarlingtonElm",
       "dumpType": "400",
-      "source": "src/com/lushprojects/circuitjs1/client/PDarlingtonElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PDarlingtonElm.java",
       "reactCandidates": [],
       "legacyOptions": [],
       "reactParameters": {},
@@ -1641,7 +1688,7 @@
     {
       "legacy": "PMosfetElm",
       "dumpType": "f",
-      "source": "src/com/lushprojects/circuitjs1/client/PMosfetElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PMosfetElm.java",
       "reactCandidates": [
         "nmos",
         "pmos"
@@ -1682,7 +1729,7 @@
     {
       "legacy": "PTransistorElm",
       "dumpType": "t",
-      "source": "src/com/lushprojects/circuitjs1/client/PTransistorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PTransistorElm.java",
       "reactCandidates": [
         "npn",
         "pnp"
@@ -1714,7 +1761,7 @@
     {
       "legacy": "PhaseCompElm",
       "dumpType": "161",
-      "source": "src/com/lushprojects/circuitjs1/client/PhaseCompElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PhaseCompElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "High Logic Voltage",
@@ -1726,9 +1773,10 @@
     {
       "legacy": "PisoShiftElm",
       "dumpType": "186",
-      "source": "src/com/lushprojects/circuitjs1/client/PisoShiftElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PisoShiftElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1738,7 +1786,7 @@
     {
       "legacy": "PolarCapacitorElm",
       "dumpType": "209",
-      "source": "src/com/lushprojects/circuitjs1/client/PolarCapacitorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PolarCapacitorElm.java",
       "reactCandidates": [
         "polarizedCapacitor"
       ],
@@ -1757,12 +1805,12 @@
           "maxReverseVoltage"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Series resistance"
     },
     {
       "legacy": "PotElm",
       "dumpType": "174",
-      "source": "src/com/lushprojects/circuitjs1/client/PotElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PotElm.java",
       "reactCandidates": [
         "potentiometer"
       ],
@@ -1779,12 +1827,12 @@
           "label"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Linked groups (value visibility intentionally omitted)"
     },
     {
       "legacy": "ProbeElm",
       "dumpType": "p",
-      "source": "src/com/lushprojects/circuitjs1/client/ProbeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ProbeElm.java",
       "reactCandidates": [
         "voltmeter"
       ],
@@ -1801,12 +1849,12 @@
           "resistance"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Scale and circular symbol (visibility intentionally omitted)"
     },
     {
       "legacy": "PushSwitchElm",
       "dumpType": "s",
-      "source": "src/com/lushprojects/circuitjs1/client/PushSwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/PushSwitchElm.java",
       "reactCandidates": [
         "pushSwitch",
         "switch"
@@ -1838,9 +1886,15 @@
     {
       "legacy": "ROMElm",
       "dumpType": "436",
-      "source": "src/com/lushprojects/circuitjs1/client/ROMElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ROMElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Address Bits",
+        "# of Data Bits",
+        "Contents",
+        "Hex Display",
+        "Load Contents From File",
+        "Restore Contents on Reset",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1850,7 +1904,7 @@
     {
       "legacy": "RailElm",
       "dumpType": "R",
-      "source": "src/com/lushprojects/circuitjs1/client/RailElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/RailElm.java",
       "reactCandidates": [
         "noiseSource",
         "voltageRail"
@@ -1878,12 +1932,12 @@
           "waveform"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Internal resistance, rise/fall time and high/low-time editing"
     },
     {
       "legacy": "RelayCoilElm",
       "dumpType": "425",
-      "source": "src/com/lushprojects/circuitjs1/client/RelayCoilElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/RelayCoilElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Type",
@@ -1900,7 +1954,7 @@
     {
       "legacy": "RelayContactElm",
       "dumpType": "426",
-      "source": "src/com/lushprojects/circuitjs1/client/RelayContactElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/RelayContactElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "On Resistance (ohms)",
@@ -1915,7 +1969,7 @@
     {
       "legacy": "RelayElm",
       "dumpType": "178",
-      "source": "src/com/lushprojects/circuitjs1/client/RelayElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/RelayElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Model",
@@ -1928,7 +1982,7 @@
     {
       "legacy": "ResistorElm",
       "dumpType": "r",
-      "source": "src/com/lushprojects/circuitjs1/client/ResistorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ResistorElm.java",
       "reactCandidates": [
         "resistor"
       ],
@@ -1945,7 +1999,7 @@
     {
       "legacy": "RoutedWireElm",
       "dumpType": "0",
-      "source": "src/com/lushprojects/circuitjs1/client/RoutedWireElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/RoutedWireElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Show Current",
@@ -1959,7 +2013,7 @@
     {
       "legacy": "SCRElm",
       "dumpType": "177",
-      "source": "src/com/lushprojects/circuitjs1/client/SCRElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SCRElm.java",
       "reactCandidates": [
         "scr"
       ],
@@ -1980,9 +2034,15 @@
     {
       "legacy": "SRAMElm",
       "dumpType": "413",
-      "source": "src/com/lushprojects/circuitjs1/client/SRAMElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SRAMElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Address Bits",
+        "# of Data Bits",
+        "Contents",
+        "Hex Display",
+        "Load Contents From File",
+        "Restore Contents on Reset",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -1992,7 +2052,7 @@
     {
       "legacy": "SchmittElm",
       "dumpType": "182",
-      "source": "src/com/lushprojects/circuitjs1/client/SchmittElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SchmittElm.java",
       "reactCandidates": [
         "schmittTrigger"
       ],
@@ -2017,9 +2077,11 @@
     {
       "legacy": "SeqGenElm",
       "dumpType": "188",
-      "source": "src/com/lushprojects/circuitjs1/client/SeqGenElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SeqGenElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "Play Once",
+        "Sequence",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2029,9 +2091,12 @@
     {
       "legacy": "SevenSegDecoderElm",
       "dumpType": "197",
-      "source": "src/com/lushprojects/circuitjs1/client/SevenSegDecoderElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SevenSegDecoderElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "Segments",
+        "Blank Pin",
+        "Blank on 1111",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2041,9 +2106,12 @@
     {
       "legacy": "SevenSegElm",
       "dumpType": "157",
-      "source": "src/com/lushprojects/circuitjs1/client/SevenSegElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SevenSegElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "Segments",
+        "Extra Segment",
+        "Diodes",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2053,9 +2121,10 @@
     {
       "legacy": "SipoShiftElm",
       "dumpType": "189",
-      "source": "src/com/lushprojects/circuitjs1/client/SipoShiftElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SipoShiftElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Bits",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2065,7 +2134,7 @@
     {
       "legacy": "SparkGapElm",
       "dumpType": "187",
-      "source": "src/com/lushprojects/circuitjs1/client/SparkGapElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SparkGapElm.java",
       "reactCandidates": [
         "sparkGap"
       ],
@@ -2088,7 +2157,7 @@
     {
       "legacy": "SquareRailElm",
       "dumpType": "R",
-      "source": "src/com/lushprojects/circuitjs1/client/SquareRailElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SquareRailElm.java",
       "reactCandidates": [
         "noiseSource",
         "voltageRail"
@@ -2121,7 +2190,7 @@
     {
       "legacy": "StopTriggerElm",
       "dumpType": "408",
-      "source": "src/com/lushprojects/circuitjs1/client/StopTriggerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/StopTriggerElm.java",
       "reactCandidates": [
         "stopTrigger"
       ],
@@ -2142,7 +2211,7 @@
     {
       "legacy": "SweepElm",
       "dumpType": "170",
-      "source": "src/com/lushprojects/circuitjs1/client/SweepElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SweepElm.java",
       "reactCandidates": [
         "sweepSource"
       ],
@@ -2169,12 +2238,11 @@
     {
       "legacy": "Switch2Elm",
       "dumpType": "S",
-      "source": "src/com/lushprojects/circuitjs1/client/Switch2Elm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/Switch2Elm.java",
       "reactCandidates": [
         "spdtSwitch"
       ],
       "legacyOptions": [
-        "Center Off",
         "Group Number (for linking)",
         "# of Throws",
         "Momentary Switch",
@@ -2199,7 +2267,7 @@
     {
       "legacy": "SwitchElm",
       "dumpType": "s",
-      "source": "src/com/lushprojects/circuitjs1/client/SwitchElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/SwitchElm.java",
       "reactCandidates": [
         "pushSwitch",
         "switch"
@@ -2231,11 +2299,13 @@
     {
       "legacy": "TFlipFlopElm",
       "dumpType": "193",
-      "source": "src/com/lushprojects/circuitjs1/client/TFlipFlopElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TFlipFlopElm.java",
       "reactCandidates": [
         "tFlipFlop"
       ],
       "legacyOptions": [
+        "Reset Pin",
+        "Set Pin",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2250,7 +2320,7 @@
     {
       "legacy": "TappedTransformerElm",
       "dumpType": "169",
-      "source": "src/com/lushprojects/circuitjs1/client/TappedTransformerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TappedTransformerElm.java",
       "reactCandidates": [
         "tappedTransformer"
       ],
@@ -2273,7 +2343,7 @@
     {
       "legacy": "TestPointElm",
       "dumpType": "368",
-      "source": "src/com/lushprojects/circuitjs1/client/TestPointElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TestPointElm.java",
       "reactCandidates": [
         "testPoint"
       ],
@@ -2292,7 +2362,7 @@
     {
       "legacy": "TextElm",
       "dumpType": "x",
-      "source": "src/com/lushprojects/circuitjs1/client/TextElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TextElm.java",
       "reactCandidates": [
         "text"
       ],
@@ -2313,7 +2383,7 @@
     {
       "legacy": "ThermistorNTCElm",
       "dumpType": "350",
-      "source": "src/com/lushprojects/circuitjs1/client/ThermistorNTCElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ThermistorNTCElm.java",
       "reactCandidates": [
         "thermistor"
       ],
@@ -2330,15 +2400,16 @@
           "resistance50",
           "minTemperature",
           "maxTemperature",
-          "position"
+          "position",
+          "label"
         ]
       },
-      "status": "Review required"
+      "status": "Properties implemented; bundled-source review recorded in PROPERTY-PARITY.md"
     },
     {
       "legacy": "ThreePhaseMotorElm",
       "dumpType": "427",
-      "source": "src/com/lushprojects/circuitjs1/client/ThreePhaseMotorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ThreePhaseMotorElm.java",
       "reactCandidates": [
         "threePhaseMotor"
       ],
@@ -2362,14 +2433,18 @@
           "inertia"
         ]
       },
-      "status": "Review required"
+      "status": "Properties implemented; bundled-source review recorded in PROPERTY-PARITY.md"
     },
     {
       "legacy": "TimeDelayRelayElm",
       "dumpType": "414",
-      "source": "src/com/lushprojects/circuitjs1/client/TimeDelayRelayElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TimeDelayRelayElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "On Delay (s)",
+        "Off Delay (s)",
+        "On Resistance (ohms)",
+        "Off Resistance (ohms)",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2379,9 +2454,11 @@
     {
       "legacy": "TimerElm",
       "dumpType": "165",
-      "source": "src/com/lushprojects/circuitjs1/client/TimerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TimerElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "Ground Pin",
+        "Show Pin Numbers",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2391,7 +2468,7 @@
     {
       "legacy": "TransLineElm",
       "dumpType": "171",
-      "source": "src/com/lushprojects/circuitjs1/client/TransLineElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TransLineElm.java",
       "reactCandidates": [
         "transmissionLine"
       ],
@@ -2410,7 +2487,7 @@
     {
       "legacy": "TransformerElm",
       "dumpType": "T",
-      "source": "src/com/lushprojects/circuitjs1/client/TransformerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TransformerElm.java",
       "reactCandidates": [
         "transformer"
       ],
@@ -2430,12 +2507,12 @@
           "integration"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Secondary polarity and saturation current"
     },
     {
       "legacy": "TriStateElm",
       "dumpType": "180",
-      "source": "src/com/lushprojects/circuitjs1/client/TriStateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TriStateElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "On Resistance (ohms)",
@@ -2450,7 +2527,7 @@
     {
       "legacy": "TriacElm",
       "dumpType": "206",
-      "source": "src/com/lushprojects/circuitjs1/client/TriacElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TriacElm.java",
       "reactCandidates": [
         "triac"
       ],
@@ -2471,7 +2548,7 @@
     {
       "legacy": "TriodeElm",
       "dumpType": "173",
-      "source": "src/com/lushprojects/circuitjs1/client/TriodeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TriodeElm.java",
       "reactCandidates": [
         "triode"
       ],
@@ -2490,7 +2567,7 @@
     {
       "legacy": "TunnelDiodeElm",
       "dumpType": "175",
-      "source": "src/com/lushprojects/circuitjs1/client/TunnelDiodeElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/TunnelDiodeElm.java",
       "reactCandidates": [
         "tunnelDiode"
       ],
@@ -2503,7 +2580,7 @@
     {
       "legacy": "UnijunctionElm",
       "dumpType": "417",
-      "source": "src/com/lushprojects/circuitjs1/client/UnijunctionElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/UnijunctionElm.java",
       "reactCandidates": [],
       "legacyOptions": [],
       "reactParameters": {},
@@ -2512,9 +2589,10 @@
     {
       "legacy": "VCCSElm",
       "dumpType": "213",
-      "source": "src/com/lushprojects/circuitjs1/client/VCCSElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/VCCSElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Inputs",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2524,7 +2602,7 @@
     {
       "legacy": "VCOElm",
       "dumpType": "158",
-      "source": "src/com/lushprojects/circuitjs1/client/VCOElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/VCOElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "High Logic Voltage",
@@ -2536,9 +2614,10 @@
     {
       "legacy": "VCVSElm",
       "dumpType": "212",
-      "source": "src/com/lushprojects/circuitjs1/client/VCVSElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/VCVSElm.java",
       "reactCandidates": [],
       "legacyOptions": [
+        "# of Inputs",
         "High Logic Voltage",
         "Bit Order"
       ],
@@ -2548,7 +2627,7 @@
     {
       "legacy": "VarRailElm",
       "dumpType": "172",
-      "source": "src/com/lushprojects/circuitjs1/client/VarRailElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/VarRailElm.java",
       "reactCandidates": [
         "variableVoltage"
       ],
@@ -2582,7 +2661,7 @@
     {
       "legacy": "VaractorElm",
       "dumpType": "176",
-      "source": "src/com/lushprojects/circuitjs1/client/VaractorElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/VaractorElm.java",
       "reactCandidates": [
         "varactor"
       ],
@@ -2598,12 +2677,12 @@
           "capacitance"
         ]
       },
-      "status": "Review required"
+      "status": "Confirmed gaps: Diode model selection"
     },
     {
       "legacy": "WattmeterElm",
       "dumpType": "420",
-      "source": "src/com/lushprojects/circuitjs1/client/WattmeterElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/WattmeterElm.java",
       "reactCandidates": [
         "wattmeter"
       ],
@@ -2620,7 +2699,7 @@
     {
       "legacy": "WireElm",
       "dumpType": "w",
-      "source": "src/com/lushprojects/circuitjs1/client/WireElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/WireElm.java",
       "reactCandidates": [],
       "legacyOptions": [
         "Show Current",
@@ -2634,7 +2713,7 @@
     {
       "legacy": "XnorGateElm",
       "dumpType": "431",
-      "source": "src/com/lushprojects/circuitjs1/client/XnorGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/XnorGateElm.java",
       "reactCandidates": [
         "xnorGate"
       ],
@@ -2659,7 +2738,7 @@
     {
       "legacy": "XorGateElm",
       "dumpType": "154",
-      "source": "src/com/lushprojects/circuitjs1/client/XorGateElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/XorGateElm.java",
       "reactCandidates": [
         "xorGate"
       ],
@@ -2684,7 +2763,7 @@
     {
       "legacy": "ZenerElm",
       "dumpType": "z",
-      "source": "src/com/lushprojects/circuitjs1/client/ZenerElm.java",
+      "source": "engine/upstream/src/com/lushprojects/circuitjs1/client/ZenerElm.java",
       "reactCandidates": [
         "zener"
       ],

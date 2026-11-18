@@ -3,7 +3,7 @@ import { GripVerticalIcon, PencilIcon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { sliderField } from "./componentSliders"
+import { sliderField, sliderPosition, sliderVoltage } from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
 import type { Component } from "./core"
 import type { PropertySlider } from "./PropertySliders"
@@ -272,11 +272,11 @@ export function SliderList({
                 )}
               </div>
               <Slider
-                value={value}
-                min={min}
-                max={max}
-                step={step}
-                largeStep={10 * step}
+                value={sliderPosition(value, min, max)}
+                min={0}
+                max={1}
+                step={Math.min(1, step / Math.abs(max - min))}
+                largeStep={Math.min(1, (10 * step) / Math.abs(max - min))}
                 disabled={
                   !!drop ||
                   (!!adjustment &&
@@ -284,12 +284,16 @@ export function SliderList({
                       sliderField(adjustment) !== field))
                 }
                 getAriaLabel={() => label}
-                getAriaValueText={(_, value) => displayValue(value)}
+                getAriaValueText={(_, value) =>
+                  displayValue(sliderVoltage(value, min, max))
+                }
                 onValueChange={(next) => {
-                  if (typeof next === "number") onPreview(item, next)
+                  if (typeof next === "number")
+                    onPreview(item, sliderVoltage(next, min, max))
                 }}
                 onValueCommitted={(next) => {
-                  if (typeof next === "number") onCommit(component.id, next)
+                  if (typeof next === "number")
+                    onCommit(component.id, sliderVoltage(next, min, max))
                 }}
                 className="py-1"
               />

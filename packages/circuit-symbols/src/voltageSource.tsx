@@ -39,10 +39,10 @@ export function Symbol({
 }: SymbolProps) {
   return (
     <>
-      <circle r={24} />
-      <Lead from={metadata.pins.p} to={[0, -24]} />
-      <Lead from={metadata.pins.n} to={[0, 24]} />
-      <WaveformGlyph waveform={parameters.waveform} pose={pose} />
+      <circle r={16} />
+      <Lead from={metadata.pins.p} to={[0, -16]} />
+      <Lead from={metadata.pins.n} to={[0, 16]} />
+      <g transform="scale(.8)"><WaveformGlyph waveform={parameters.waveform} pose={pose} /></g>
     </>
   );
 }

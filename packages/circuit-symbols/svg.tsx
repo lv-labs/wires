@@ -57,11 +57,24 @@ export function Meter({
   pins,
   letter,
   pose,
+  circle = true,
 }: {
   pins: { a: Pin; b: Pin };
   letter: string;
   pose?: Pose;
+  circle?: boolean;
 }) {
+  if (!circle) return letter === "A" ? (
+    <>
+      <Lead from={pins.a} to={pins.b} />
+      <path d="M-12-10L12 0-12 10Z" fill="currentColor" stroke="none" />
+    </>
+  ) : (
+    <>
+      <Lead from={pins.a} to={[-25, 0]} />
+      <Lead from={pins.b} to={[25, 0]} />
+    </>
+  );
   return (
     <>
       <Lead from={pins.a} to={[-50, 0]} />

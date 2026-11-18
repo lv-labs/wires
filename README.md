@@ -5,6 +5,12 @@ Build circuits on an SVG sheet, run simulations in a dedicated Web Worker, and
 inspect signals with probes and an oscilloscope. The interface uses React and
 TypeScript; simulation runs locally in your browser.
 
+## Import Falstad circuits
+
+Use **File → Import Falstad…** to paste exported text/XML, or **Open…** for `.txt`/`.cir`/`.xml`
+files. The importer supports a measured subset and reports unsupported records.
+See [import coverage and remaining work](docs/new-simulator/FALSTAD-IMPORT.md).
+
 ## Development
 
 Requirements: Java 8, Python 3.9+, Node 24+ and pnpm 10.30.3.

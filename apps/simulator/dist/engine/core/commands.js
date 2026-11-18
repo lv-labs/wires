@@ -187,7 +187,7 @@
       const ref = { kind: 'junction', junctionId }; d.electrical.junctions.push({ id: junctionId }); d.layout.junctions[junctionId] = clone(target.point);
       wire.to = ref; d.layout.wires[wire.id].bends = clean([...points.slice(0, index + 1), target.point]).slice(1, -1);
       d.electrical.wires.push({ id: wireId, from: ref, to: end });
-      d.layout.wires[wireId] = { bends: clean([target.point, ...points.slice(index + 1)]).slice(1, -1) }; family.push(wireId); return ref;
+      d.layout.wires[wireId] = { ...d.layout.wires[wire.id], bends: clean([target.point, ...points.slice(index + 1)]).slice(1, -1) }; family.push(wireId); return ref;
     }
     return resolve;
   }
@@ -221,6 +221,7 @@
   function replaceParameters(document,componentId,parameters) {
     const c=document.electrical.components.find(c=>c.id===componentId);
     if(!c)throw new Error('Unknown component');
+    if(c.kind==='variableVoltage'&&(parameters.minVoltage!==c.parameters.minVoltage||parameters.maxVoltage!==c.parameters.maxVoltage))parameters={...parameters,voltage:parameters.minVoltage};
     const previousPins=Catalog.componentPins(c),nextPins=Catalog.componentPins({...c,parameters});
     if((Catalog.transistorKind(c.kind)||Catalog.mosfetKind(c.kind))&&!!c.parameters.swapTerminals!==!!parameters.swapTerminals){
       const pair=Catalog.transistorKind(c.kind)?['collector','emitter']:['source','drain'];
@@ -419,7 +420,7 @@
       s.cuts.sort((a,b)=>direction*(a.p[axis]-b.p[axis]));
       for(let i=1;i<s.cuts.length;i++) {
         const id=i===1?s.w.id:crypto.randomUUID();
-        wires.push({...s.w,id,from:clone(root(s.cuts[i-1].ref)),to:clone(root(s.cuts[i].ref))});d.layout.wires[id]={bends:[]};
+        wires.push({...s.w,id,from:clone(root(s.cuts[i-1].ref)),to:clone(root(s.cuts[i].ref))});d.layout.wires[id]={...d.layout.wires[s.w.id],bends:[]};
       }
     }
     // A pin is a physical terminal: preserve its contact when another pin wins
@@ -445,11 +446,11 @@
     for(const p of d.probes)for(const side of ['positive','negative'])if(p[side]?.kind==='junction')probed.add(p[side].junctionId);
     const split=[];
     for(const wire of d.electrical.wires){
-      const points=route(d,wire,true);if(points.length<=2){split.push(wire);d.layout.wires[wire.id]={bends:[]};continue;}
+      const points=route(d,wire,true);if(points.length<=2){split.push(wire);d.layout.wires[wire.id]={...d.layout.wires[wire.id],bends:[]};continue;}
       const refs=[wire.from];
       for(const point of points.slice(1,-1)){const id=crypto.randomUUID();d.electrical.junctions.push({id});d.layout.junctions[id]=clone(point);refs.push({kind:'junction',junctionId:id});}
       refs.push(wire.to);const retained=Math.floor((refs.length-2)/2);
-      for(let i=0;i<refs.length-1;i++){const id=i===retained?wire.id:crypto.randomUUID();split.push({id,from:clone(refs[i]),to:clone(refs[i+1])});d.layout.wires[id]={bends:[]};}
+      for(let i=0;i<refs.length-1;i++){const id=i===retained?wire.id:crypto.randomUUID();split.push({id,from:clone(refs[i]),to:clone(refs[i+1])});d.layout.wires[id]={...d.layout.wires[wire.id],bends:[]};}
     }
     d.electrical.wires=split;
     const tails=mergeOverlappingSections(d);
@@ -462,7 +463,7 @@
     for(const w of d.electrical.wires)for(const side of ['from','to'])if(w[side].kind==='junction')w[side]={kind:'junction',junctionId:root(w[side].junctionId)};
     for(const p of d.probes)for(const side of ['positive','negative'])if(p[side]?.kind==='junction')p[side]={kind:'junction',junctionId:root(p[side].junctionId)};
     for(const id of [...probed])if(aliases.has(id)){probed.delete(id);probed.add(root(id));}
-    const seen=new Set();d.electrical.wires=d.electrical.wires.filter(w=>{const a=key(w.from),b=key(w.to),k=JSON.stringify([a,b].sort());if(a===b||seen.has(k)){delete d.layout.wires[w.id];return false;}seen.add(k);return true;});
+    const seen=new Map();d.electrical.wires=d.electrical.wires.filter(w=>{const a=key(w.from),b=key(w.to),k=JSON.stringify([a,b].sort());if(a===b||seen.has(k)){if(seen.has(k))for(const field of ['showVoltage','showCurrent'])if(d.layout.wires[w.id][field])d.layout.wires[seen.get(k)][field]=true;delete d.layout.wires[w.id];return false;}seen.set(k,w.id);return true;});
     // Overlap removal may expose an old turnaround as a dangling tail. Peel
     // those sections back to the surviving branch, without pruning loose ends.
     const tailNodes=new Set([...tails].map(root));
@@ -486,10 +487,12 @@
       for(const w of d.electrical.wires)for(const ref of [w.from,w.to])if(ref.kind==='junction'){if(!incidence.has(ref.junctionId))incidence.set(ref.junctionId,[]);incidence.get(ref.junctionId).push(w);}
       for(const [id,edges] of incidence){
         if(edges.length!==2||probed.has(id))continue;
-        const [a,b]=edges,other=w=>w.from.junctionId===id?w.to:w.from,left=other(a),right=other(b),p=d.layout.junctions[id],x=pin(d,left),y=pin(d,right);
+        const [a,b]=edges;
+        if(['showVoltage','showCurrent'].some(field=>!!d.layout.wires[a.id][field]!==!!d.layout.wires[b.id][field]))continue;
+        const other=w=>w.from.junctionId===id?w.to:w.from,left=other(a),right=other(b),p=d.layout.junctions[id],x=pin(d,left),y=pin(d,right);
         const straight=Math.abs(x.x-p.x)<.001&&Math.abs(y.x-p.x)<.001&&(x.y-p.y)*(y.y-p.y)<0||Math.abs(x.y-p.y)<.001&&Math.abs(y.y-p.y)<.001&&(x.x-p.x)*(y.x-p.x)<0;
         if(!straight)continue;
-        a.from=clone(left);a.to=clone(right);d.layout.wires[a.id]={bends:[]};d.electrical.wires=d.electrical.wires.filter(w=>w!==b);delete d.layout.wires[b.id];again=true;break;
+        a.from=clone(left);a.to=clone(right);d.layout.wires[a.id]={...d.layout.wires[a.id],bends:[]};d.electrical.wires=d.electrical.wires.filter(w=>w!==b);delete d.layout.wires[b.id];again=true;break;
       }
     }
     const used=new Set(probed);for(const w of d.electrical.wires)for(const ref of [w.from,w.to])if(ref.kind==='junction')used.add(ref.junctionId);

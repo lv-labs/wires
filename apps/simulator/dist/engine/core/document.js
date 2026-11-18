@@ -62,6 +62,7 @@
       return Object.hasOwn(Catalog.componentPins(c), ref.pinId);
     };
     for (const w of e.wires) assert(endpoint(w.from) && endpoint(w.to) && Array.isArray(l.wires?.[w.id]?.bends) && l.wires[w.id].bends.every(point), 'Invalid wire endpoint or route');
+    for(const route of Object.values(l.wires))for(const field of ['showVoltage','showCurrent'])assert(route[field]===undefined||typeof route[field]==='boolean','Invalid wire display setting');
     assert(Array.isArray(document.probes) && document.simulation && Number.isFinite(document.simulation.timeStep) && document.simulation.timeStep > 0, 'Invalid probes or timestep');
     const probeIds = ids(document.probes);
     for (const p of document.probes) assert(p.kind === 'voltage' ? endpoint(p.positive) && (p.reference === 'ground' || endpoint(p.negative)) : p.kind === 'current' && components.has(p.componentId), 'Invalid probe target');

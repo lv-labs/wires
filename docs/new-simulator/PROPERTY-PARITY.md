@@ -18,7 +18,114 @@ Baseline: the original Falstad Java application bundled in this repository, not 
 
 These are implemented property families, not a declaration of complete application parity. Global drawing preferences are currently represented per component; IEC/body-diode artwork uses the React symbol style rather than reproducing every original drawing detail.
 
+## Properties panel audit — 17 November 2026
+
+The current pass inventories all 136 original menu classes and checks default
+form submissions for all 84 supported React component kinds. Focused source
+review uses the bundled Java `getEditInfo`, `getChipEditInfo` and `setEditValue`
+methods, rather than the live upstream website. This is a panel cleanup and
+presentation parity pass; it does not implement every missing original option.
+
+Fixed in this pass:
+
+- Voltmeter, test point, ammeter, wattmeter and decimal display modes use named
+  dropdowns instead of requiring numeric codes. Stop triggers use ≥ / ≤ choices.
+  Numeric mode values stay numeric on Apply; logic input/output modes stay strings.
+- Single-line labels, net names and linking labels use compact inputs. Text
+  annotations and instruction lookup tables retain multiline editors.
+- MOSFET bulk/body/digital controls follow the original conditional availability.
+  Body terminal and body-diode artwork controls appear only when the bulk/body
+  path is enabled. Enabling bulk clears digital mode, as in the original editor.
+  Hidden settings retain their values until their controls are available again.
+- P-channel MOSFET/JFET thresholds are presented with the original channel sign;
+  stored engine threshold values retain their existing convention.
+- Standard and tapped transformer ratios are edited as N1/N2, matching the
+  original editor, while the model continues storing N2/N1.
+- Memristor widths use nanometres and mobility uses µm²/(V·s), matching the original
+  editor; documents and solver projections continue using SI units.
+- Transformer inductance, transistor terminal swaps, analog switch inversion and
+  logic-output current requirement captions describe their component-specific
+  meaning. Unchanged converted values retain their stored precision on Apply.
+
+Label visibility and manual placement controls are intentionally absent, per the
+product decision. They are not missing parity work. SPDT "Center Off" is also
+absent from the panel: its original control is commented out in `Switch2Elm.java`.
+
+The inventory generator now excludes commented-out controls and includes
+chip-specific editor methods. Inherited labels are still candidate controls:
+subclass overrides can limit them (for example JFETs expose only threshold/beta).
+The table must not be read as proof that every inherited option is actually shown.
+
+Confirmed follow-up work:
+
+| Family | Missing original behavior/options |
+| --- | --- |
+| Capacitors | Series resistance |
+| Inductors / standard transformers | Saturation current; transformer secondary polarity |
+| Voltage sources / rails | Internal resistance, rise/fall time, high/low-time editing; review waveform-dependent controls |
+| Meters / voltage output | Manual scale, circle styles where applicable, fixed precision on voltage output |
+| Digital chips / displays | Variable bit widths, bit order, optional control pins, LED grid dimensions and logic levels |
+| Potentiometers | Linked potentiometer groups |
+| Labeled nodes | Internal nodes and vertical text rotation |
+| Varactors | Diode model selection |
+| Switches | Keyboard shortcuts |
+
+Some Wires panels additionally expose model state or geometry (for example initial
+lamp temperature, motor load and shape dimensions). These remain intentional
+editor capabilities for now; this pass does not silently delete model parameters.
+The existing inventory also lists 49 original menu classes with no matching React
+dump type. Those require component implementation, beyond a properties-panel change.
+
+## Follow-up: small property fixes — 17 November 2026
+
+- Capacitor, polarized-capacitor, inductor and transformer integration settings use
+  the original **Trapezoidal approximation** checkbox. Reset-only initial voltage
+  and current fields now say **on reset**. Passive, fuse and motor fields follow
+  their original order.
+- Three-phase motor properties show coupling coefficient `k = Lm / sqrt(Ls × Lr)`.
+  Apply converts it using the final values of both inductances, including when
+  those values are edited together. It requires `0 < k < 1` and preserves the
+  exact existing mutual inductance when no values are changed.
+- Thermistors and photoresistors expose the original slider-label field and get
+  built-in sliders alongside potentiometers and variable voltage sources. The
+  sensor sliders span the full 0–1 model range and show rounded temperature in °C
+  or light level in lux, using the bundled models' conversions. Labels persist in
+  documents, undo/redo and projection round trips.
+- Fuses expose the original IEC-symbol checkbox. The default symbol uses the
+  original wave form; IEC uses the rectangle and line. Both show an open circuit
+  when blown, with the original 16/32-unit body widths.
+- Sensor labels and fuse artwork stay in the React editor. Worker records retain
+  their fixed placeholder labels and drawing flags, so these presentation changes
+  cannot alter solver equations. No worker rebuild or native API change is needed.
+
+## Follow-up: dependent switch fields and source precision
+
+- SPDT position choices update immediately with the edited throw count. Shrinking
+  the switch resets a removed selection to A. As in the original `Switch2Elm`,
+  selecting more than two throws clears momentary operation; its checkbox stays
+  disabled while that configuration is selected. Apply enforces the same rules.
+- Component descriptions identify third and later positions as **Throw 3** through
+  **Throw 10**. **Off** applies only to an actual two-throw, center-off configuration.
+- Source edits preserve exact saved radians and duty-cycle fractions when their
+  displayed values are unchanged. An absent optional phase stays absent on Apply.
+  Panel regressions cover all six supported waveforms on two-terminal sources and
+  rails, including arbitrary nonzero phases and fractional duty cycles.
+- Property errors clear when fields are edited, so a corrected value does not keep
+  an obsolete error message visible.
+
 ## Validation
+
+- `node tools/test_property_controls.mjs`: sensor label persistence, undo/redo,
+  native light/temperature endpoint and current checks, fuse rendering and native
+  record invariance, motor coupling conversions and native solves; switch throw-count edits, removed-pin
+  wiring, undo/redo and live native rerouting.
+
+- `node scripts/test-component-properties.mjs` from `apps/simulator`: render all
+  84 panels, submit defaults without changing values, validate saved parameters,
+  edit numeric/string modes, verify original units/ratio/sign conversions and
+  conditional MOSFET controls, integration checkboxes, sensor-slider rendering and
+  motor coupling edits. Uses the real form handler with a portal-free test
+  wrapper; it does not replace browser interaction coverage.
 
 - `node tools/test_diode_models.mjs`: all built-ins, simple/advanced models, LED/zener curves, breakdown, live edits, old-document migration, shared edits/rename/conflicts, invalid values and projection round trips.
 - `node tools/test_property_parity.mjs`: NPN/PNP model behavior, charge parameters and live edits, gate truth tables/counts/inversion/delay, removed-pin migration, live node-count changes, MOSFET reverse body-diode conduction, body terminals and terminal swaps.

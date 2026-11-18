@@ -12,6 +12,8 @@ export const metadata = {
   parameters: {
     mode: 0,
     resistance: 10000000,
+    scale: 0,
+    circleSymbol: true,
   },
 } as const;
 
@@ -30,16 +32,31 @@ export const output = {
       type: "number",
       min: 0,
     },
+    scale: {
+      label: "Scale",
+      type: "number",
+      min: 0,
+      max: 3,
+      integer: true,
+      optional: true,
+      default: 0,
+    },
+    circleSymbol: {
+      label: "Circular symbol",
+      type: "boolean",
+      optional: true,
+      default: true,
+    },
   },
   sign: 1,
 };
 
-export function Symbol({ pose }: SymbolProps) {
+export function Symbol({ parameters = metadata.parameters, pose }: SymbolProps) {
+  const circle = parameters.circleSymbol !== false;
   return (
     <>
-      <Meter pins={metadata.pins} letter="V" pose={pose} />
-      <UprightText pose={pose} x={-80} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>+</UprightText>
-      <UprightText pose={pose} x={80} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>−</UprightText>
+      <Meter pins={metadata.pins} letter="V" pose={pose} circle={circle} />
+      <UprightText pose={pose} x={circle ? -80 : -55} y={-30} textAnchor="middle" dominantBaseline="central" fontSize={36}>+</UprightText>
     </>
   );
 }

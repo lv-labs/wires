@@ -3,12 +3,10 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "variableVoltage";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "V",
   name: "Variable voltage",
   pins: {
-    p: [0, 32],
+    p: [0, 0],
   },
   parameters: {
     minVoltage: 0,
@@ -22,11 +20,11 @@ export const output = {
   type: "172",
   fields: {
     minVoltage: {
-      label: "Minimum voltage · V",
+      label: "Minimum voltage (left) · V",
       type: "number",
     },
     maxVoltage: {
-      label: "Maximum voltage · V",
+      label: "Maximum voltage (right) · V",
       type: "number",
     },
     voltage: {
@@ -45,11 +43,13 @@ export const output = {
 export function Symbol({ pose }: SymbolProps) {
   return (
     <>
-      <circle r={20} />
-      <Lead from={metadata.pins.p} to={[0, 20]} />
-      <Upright pose={pose}>
-        <path d="M-12 12L12-12M3-12H12V-3" />
-      </Upright>
+      <Lead from={metadata.pins.p} to={[0, -50]} />
+      <g transform="translate(0 -100)">
+        <circle r={50} />
+        <Upright pose={pose}>
+          <path d="M-24 24L24-24M6-24H24V-6" />
+        </Upright>
+      </g>
     </>
   );
 }

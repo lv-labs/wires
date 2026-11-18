@@ -111,6 +111,7 @@ export const CircuitSheet = memo(function CircuitSheet({
   tool,
   onToolChange,
   onAddProbe,
+  onWireDisplay,
   onEdit,
   onConfigureSlider,
   onPlotComponent,
@@ -119,12 +120,14 @@ export const CircuitSheet = memo(function CircuitSheet({
   onReleaseComponent,
   onSaveDocument,
   onOpenDocument,
+  onImportFalstad,
   onNewDocument,
   onLoadExample,
   exampleNames,
   canUndo,
   canRedo,
   gridMode,
+  simulationRunning = false,
   onGridModeChange,
   scopeOpen,
   onToggleScope,
@@ -149,6 +152,11 @@ export const CircuitSheet = memo(function CircuitSheet({
   tool: string
   onToolChange: (tool: string) => void
   onAddProbe: (target: Target) => void
+  onWireDisplay?: (
+    ids: string[],
+    field: "showVoltage" | "showCurrent",
+    value: boolean
+  ) => void
   onConfigureSlider: (id: string) => void
   onPlotComponent: (id: string, pin?: string) => void
   onEdit: (entity: Entity) => void
@@ -157,11 +165,13 @@ export const CircuitSheet = memo(function CircuitSheet({
   onReleaseComponent: (id: string) => void
   onSaveDocument: () => void
   onOpenDocument: () => void
+  onImportFalstad?: () => void
   onNewDocument: () => void
   onLoadExample: (name: string) => void
   exampleNames: string[]
   canUndo: boolean
   canRedo: boolean
+  simulationRunning?: boolean
   gridMode: "dots" | "lines" | "off"
   onGridModeChange: (mode: "dots" | "lines" | "off") => void
   scopeOpen: boolean
@@ -183,6 +193,8 @@ export const CircuitSheet = memo(function CircuitSheet({
     top: number
   }) => void
 }) {
+  const [showWireVoltage, setShowWireVoltage] = useState(true)
+  const [showWireCurrent, setShowWireCurrent] = useState(true)
   const [crosshairMode, setCrosshairMode] = useState<"off" | "small" | "full">(
     () => {
       try {
@@ -1034,9 +1046,11 @@ export const CircuitSheet = memo(function CircuitSheet({
       tool === "select" &&
       !e.shiftKey &&
       hit?.kind === "component" &&
-      core.catalog.momentary(document.electrical.components.find(
-        (component) => component.id === hit.id
-      ))
+      core.catalog.momentary(
+        document.electrical.components.find(
+          (component) => component.id === hit.id
+        )
+      )
     ) {
       onSelection([{ kind: "component", id: hit.id }])
       pressedPush.current = hit.id
@@ -1285,6 +1299,11 @@ export const CircuitSheet = memo(function CircuitSheet({
             <MenubarContent>
               <MenubarItem onClick={onNewDocument}>New circuit</MenubarItem>
               <MenubarItem onClick={onOpenDocument}>Open…</MenubarItem>
+              {onImportFalstad && (
+                <MenubarItem onClick={onImportFalstad}>
+                  Import Falstad…
+                </MenubarItem>
+              )}
               <MenubarItem onClick={onSaveDocument}>Save as…</MenubarItem>
               <MenubarSeparator />
               <MenubarSub>
@@ -1441,6 +1460,19 @@ export const CircuitSheet = memo(function CircuitSheet({
                   ))}
                 </MenubarSubContent>
               </MenubarSub>
+              <MenubarSeparator />
+              <MenubarCheckboxItem
+                checked={showWireVoltage}
+                onCheckedChange={setShowWireVoltage}
+              >
+                Show voltage colours
+              </MenubarCheckboxItem>
+              <MenubarCheckboxItem
+                checked={showWireCurrent}
+                onCheckedChange={setShowWireCurrent}
+              >
+                Show current dots
+              </MenubarCheckboxItem>
               <MenubarSeparator />
               <MenubarItem onClick={() => onGridModeChange("dots")}>
                 Grid: dots {gridMode === "dots" ? "✓" : ""}
@@ -1608,6 +1640,32 @@ export const CircuitSheet = memo(function CircuitSheet({
                 </>
               )
             })()}
+          {itemMenu?.entity.kind === "wire" && onWireDisplay && (
+            <>
+              <MenubarSeparator />
+              {(["showVoltage", "showCurrent"] as const).map((field) => (
+                <MenubarCheckboxItem
+                  key={field}
+                  checked={!!document.layout.wires[itemMenu.entity.id]?.[field]}
+                  onCheckedChange={(value) =>
+                    onWireDisplay(
+                      selection.some(
+                        (s) => s.kind === "wire" && s.id === itemMenu.entity.id
+                      )
+                        ? selection
+                            .filter((s) => s.kind === "wire")
+                            .map((s) => s.id)
+                        : [itemMenu.entity.id],
+                      field,
+                      value
+                    )
+                  }
+                >
+                  {field === "showVoltage" ? "Show voltage" : "Show current"}
+                </MenubarCheckboxItem>
+              ))}
+            </>
+          )}
           {itemMenu && ["wire", "junction"].includes(itemMenu.entity.kind) && (
             <>
               <MenubarSeparator />
@@ -1764,7 +1822,14 @@ export const CircuitSheet = memo(function CircuitSheet({
         <g
           transform={`translate(${camera.x} ${camera.y}) scale(${camera.scale})`}
         >
-          <WireLayer document={shown} selection={selection} frame={frame} />
+          <WireLayer
+            document={shown}
+            selection={selection}
+            frame={frame}
+            showVoltage={showWireVoltage}
+            showCurrent={showWireCurrent}
+            running={simulationRunning}
+          />
           <SymbolLayer
             document={shown}
             frame={frame}

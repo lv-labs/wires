@@ -1711,7 +1711,7 @@ TSX rather than hand-editing generated pins.
 
 Ammeter, voltmeter, ohmmeter, wattmeter and test point display live measurements
 above their symbols by default, using the existing upright sheet-label placement.
-Explicit user label position/value-visibility settings still apply. Readings include
+Labels now use automatic placement and visibility. Readings include
 engineering units, RMS/average and voltage max/min/peak-to-peak suffixes where
 applicable, binary mode and open-circuit resistance. Before a measurement arrives,
 they show an em dash. Test point artwork/pins were not resized in this slice.

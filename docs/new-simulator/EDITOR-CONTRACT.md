@@ -26,6 +26,36 @@ then exposes the shared edit/transform/clipboard/delete/probe commands. Suppress
 sheet shortcuts while menus or text inputs own focus. Clipboard copies probes
 with selected electrical anchors, not as independent disconnected objects.
 
+## Sheet presentation
+
+Sheet symbols show only primary values and live meter/output readings. Supplementary
+labels (model details, op-amp rails/gain, switch state descriptions, chip settings,
+source offsets and similar configuration) stay in properties. Labels are always visible when a primary value is available and are positioned
+automatically. There are no label visibility or placement controls.
+
+Fixed/variable voltage sources use compact circular bodies (50 sheet-unit radius),
+with waveform/polarity marks or a variable-source arrow. Outputs use a lead and live voltage, logic outputs a lead and live logic
+state. Their pin positions and electrical models are unchanged.
+
+View has independent **Show voltage colours** and **Show current dots** switches,
+both on by default. Voltage colour varies continuously around zero with a ±5 V
+reference range. Current dots show conventional current direction using positioned particles along
+each oriented wire route. Speed follows magnitude and travel per paint is bounded
+to avoid apparent reversal on slow frames. Pausing freezes dots, and reduced-motion
+preferences stop animation.
+Native synthetic-connection currents supply per-pin currents without solver changes.
+Wire branches resolve by Kirchhoff current sums; ambiguous ideal-wire cycles and
+connections between implicit grounds do not receive guessed dots.
+
+Right-click a wire for **Show voltage** and **Show current**; both can be enabled
+together, including on a selection of wires. Readings sit beside the segment;
+current shows magnitude and a route-direction arrow. Unavailable current reads
+`— A`. Optional boolean `layout.wires[id].showVoltage/showCurrent` fields save
+with circuit JSON/autosave, survive route splitting and participate in undo/redo.
+Differently labelled collinear sections retain their boundary during normalization.
+Readings are independent of the global colour/dot switches and do not affect the
+electrical projection.
+
 ## Sliders
 
 Variable voltage and potentiometer placement opens one draggable Sliders panel;
@@ -42,6 +72,14 @@ submitting so an in-flight sample batch is not discarded by a new revision.
 Release commits the exact final value once; cancellation or a history no-op
 restores the committed simulation document. Pot position controls use .001–.999
 to keep both track sections resistive. The wiper artwork follows preview state.
+
+Variable-voltage minimum/maximum are directional endpoints: minimum is the left
+end and maximum the right end, so `0 → -5 V` is valid. Endpoints must be distinct
+and finite. Editing either endpoint resets the current voltage to the new minimum,
+including in the properties form; applying the range is one undoable edit. Slider
+position is normalized left-to-right, while physical bounds are sorted only when
+encoding the native engine record. Live voltage edits validate between either pair
+of endpoints and preserve simulation time as before.
 
 ## Scopes
 

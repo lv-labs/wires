@@ -14,6 +14,7 @@ export const metadata = {
   parameters: {
     resistance: 0.0613,
     i2t: 6.73,
+    iecSymbol: false,
   },
 } as const;
 export const output = {
@@ -29,16 +30,25 @@ export const output = {
       type: "number",
       exclusiveMin: 0,
     },
+    iecSymbol: {
+      label: "IEC symbol",
+      type: "boolean",
+      optional: true,
+      default: false,
+    },
   },
   sign: 1,
 };
-export function Symbol({ measured }: SymbolProps) {
+export function Symbol({ parameters = metadata.parameters, measured }: SymbolProps) {
+  const iec = Boolean(parameters.iecSymbol);
+  const halfWidth = iec ? 16 : 8;
   return (
     <>
-      <Lead from={metadata.pins.a} to={[-22, 0]} />
-      <Lead from={metadata.pins.b} to={[22, 0]} />
-      <path d="M-22-8H22V8H-22Z" />
-      <path d={measured?.blown ? "M-22 0H-5L3-5M7 0H22" : "M-22 0H22"} />
+      <Lead from={metadata.pins.a} to={[-halfWidth, 0]} />
+      <Lead from={metadata.pins.b} to={[halfWidth, 0]} />
+      {!measured?.blown && (
+        <path d={iec ? "M-16-6H16V6H-16ZM-16 0H16" : "M-8 0C-5.333 8-2.667 8 0 0S5.333-8 8 0"} />
+      )}
     </>
   );
 }

@@ -45,8 +45,9 @@ if(!isMainThread){
  const sandbox={structuredClone,crypto,console,setTimeout,clearTimeout};
  for(const name of ['document','window','localStorage','Worker','CircuitEditorModel','CircuitDocumentAdapter'])Object.defineProperty(sandbox,name,{get(){throw new Error('Core accessed UI dependency: '+name);}});
  const context=vm.createContext(sandbox);
- for(const name of ['catalog','geometry','document','history','drag','commands','adapter','protocol','simulation','signals','browser-transport','index'])vm.runInContext(await readFile(new URL(`../packages/circuit-core/${name}.js`,import.meta.url),'utf8'),context,{filename:name+'.js'});
- const classic=context.CircuitCore,doc=classic.editing.applyCommand(classic.editing.empty(),{type:'addComponent',kind:'resistor',x:64,y:64});assert.equal(doc.electrical.components.length,1);
+ for(const name of ['catalog','geometry','document','falstad-xml','falstad','history','drag','commands','adapter','protocol','simulation','signals','browser-transport','index'])vm.runInContext(await readFile(new URL(`../packages/circuit-core/${name}.js`,import.meta.url),'utf8'),context,{filename:name+'.js'});
+ const classic=context.CircuitCore;assert.ok(classic.falstad.importText('r 0 0 96 0 0 1000').document);
+ const doc=classic.editing.applyCommand(classic.editing.empty(),{type:'addComponent',kind:'resistor',x:64,y:64});assert.equal(doc.electrical.components.length,1);
  assert.equal(classic.adapter.compile(initial).canonical,canonical);
  console.log('Core package passed: direct ESM and classic imports, real DOM-free worker, shared metadata/post order, commands/history/immutability, drag cancellation, injected transport and real-engine divider results.');
 }

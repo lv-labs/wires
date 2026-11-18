@@ -1,3 +1,4 @@
+import { FalstadImportDialog } from "./FalstadImportDialog"
 import { defaultScopeLayout } from "./scopeLayout"
 import { createScopeViewport } from "./scopeViewport"
 import { TraceProperties } from "./TraceProperties"
@@ -11,7 +12,6 @@ import type {
   Component,
   Entity,
   Target,
-  LabelSettings,
 } from "./core"
 import { useCircuitSession } from "./useCircuitSession"
 import { CircuitSheet } from "./CircuitSheet"
@@ -69,6 +69,7 @@ export function CircuitEditor({
   const editor = useCircuitSession(initialDocument, autosave)
   const [selection, setSelection] = useState<Entity[]>([])
   const [tool, setTool] = useState("select")
+  const [importFalstad, setImportFalstad] = useState(false)
   const [gridMode, setGridMode] = useState<"dots" | "lines" | "off">("lines")
   const [scopeViewport] = useState(createScopeViewport)
   const scopeOpen = editor.document.layout.scopes?.open ?? false
@@ -253,17 +254,13 @@ export function CircuitEditor({
   function closeProperties() {
     setEditing(null)
   }
-  function applyEdit(
-    parameters: Component["parameters"],
-    label: LabelSettings
-  ) {
+  function applyEdit(parameters: Component["parameters"]) {
     editor.session.transaction("Edit component", (draft) => {
       const component = draft.electrical.components.find(
         (item) => item.id === editingComponent?.id
       )
       if (!component) throw new Error("Component no longer exists")
       core.editing.replaceParameters(draft, component.id, parameters)
-      draft.layout.components[component.id].label = label
     })
     closeProperties()
     setNotice("Component updated")
@@ -565,8 +562,9 @@ export function CircuitEditor({
       throw cause
     }
   }
-  function componentActions({ id, kind }: Component) {
-    if (kind === "variableVoltage" || kind === "potentiometer")
+  function componentActions(component: Component) {
+    const { id, kind } = component
+    if (hasSlider(component))
       return [
         {
           label: "Open sliders",
@@ -612,11 +610,26 @@ export function CircuitEditor({
     const request = ++documentRequest.current
     try {
       const content = await file.text()
-      if (request === documentRequest.current)
+      if (request !== documentRequest.current) return
+      if (content.trimStart().startsWith("{")) {
         replaceDocument(
           JSON.parse(content) as CircuitDocument,
           `Opened ${file.name}`
         )
+      } else {
+        const result = core.falstad.importText(content, {
+          id: crypto.randomUUID(),
+          title: file.name.replace(/\.[^.]+$/, ""),
+        })
+        const messages = result.diagnostics.map(
+          (d) => `${d.line ? `Line ${d.line}: ` : ""}${d.message}`
+        )
+        if (!result.document) throw new Error(messages.join("; "))
+        replaceDocument(
+          result.document,
+          `Imported ${file.name}${messages.length ? ` — ${[...new Set(result.diagnostics.map((d) => d.message))].join("; ")}` : ""}`
+        )
+      }
     } catch (cause) {
       if (request === documentRequest.current)
         setNotice(`Could not open circuit: ${String(cause)}`)
@@ -668,7 +681,6 @@ export function CircuitEditor({
           key={editingComponent.id}
           component={editingComponent}
           components={editor.document.electrical.components}
-          label={editor.document.layout.components[editingComponent.id].label}
           onApply={applyEdit}
           onClose={() => closeProperties()}
           frame={frame}
@@ -713,7 +725,7 @@ export function CircuitEditor({
         <input
           ref={fileInput}
           type="file"
-          accept=".json,application/json"
+          accept=".json,.txt,.cir,.xml,application/json,text/plain,application/xml,text/xml"
           hidden
           onChange={(event) => {
             void openFile(event.target.files?.[0])
@@ -762,6 +774,16 @@ export function CircuitEditor({
         </Button>
       </header>
 
+      {importFalstad && (
+        <FalstadImportDialog
+          onClose={() => setImportFalstad(false)}
+          onImport={(document) => {
+            documentRequest.current++
+            replaceDocument(document, "Imported Falstad circuit")
+            setImportFalstad(false)
+          }}
+        />
+      )}
       <div ref={workspace} className="relative flex min-h-0 flex-1 flex-col">
         <CircuitSheet
           document={editor.document}
@@ -773,6 +795,13 @@ export function CircuitEditor({
           tool={tool}
           onToolChange={setTool}
           onAddProbe={addProbe}
+          onWireDisplay={(ids, field, value) =>
+            editor.session.transaction("Wire reading", (draft) => {
+              for (const id of ids)
+                if (draft.layout.wires[id])
+                  draft.layout.wires[id][field] = value
+            })
+          }
           onEdit={beginEdit}
           onConfigureSlider={(id) => {
             cancelSliderAdjustment()
@@ -785,12 +814,14 @@ export function CircuitEditor({
           onReleaseComponent={releaseComponent}
           onSaveDocument={saveDocument}
           onOpenDocument={() => fileInput.current?.click()}
+          onImportFalstad={() => setImportFalstad(true)}
           onNewDocument={newDocument}
           onLoadExample={loadExample}
           exampleNames={exampleNames}
           canUndo={editor.session.canUndo}
           canRedo={editor.session.canRedo}
           gridMode={gridMode}
+          simulationRunning={!!editor.simulation.runRequested}
           onGridModeChange={setGridMode}
           scopeOpen={scopeOpen}
           onToggleScope={() => setScopeOpen((open) => !open)}

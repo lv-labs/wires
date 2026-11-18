@@ -11,6 +11,16 @@ export const componentSliders = {
     defaultLabel: "Potentiometer",
     historyLabel: "Adjust potentiometer wiper",
   },
+  photoresistor: {
+    field: "position",
+    defaultLabel: "Light Brightness",
+    historyLabel: "Adjust light brightness",
+  },
+  thermistor: {
+    field: "position",
+    defaultLabel: "Temperature",
+    historyLabel: "Adjust temperature",
+  },
 } as const
 
 export type SliderKind = keyof typeof componentSliders
@@ -50,7 +60,18 @@ export function setProperty(
 export const potPositionRange = { min: 0.001, max: 0.999 } as const
 
 export function clampSliderValue(kind: string, field: string, value: number) {
+  if (["photoresistor", "thermistor"].includes(kind) && field === "position")
+    return Math.max(0, Math.min(1, value))
   return kind === "potentiometer" && field === "position"
     ? Math.max(potPositionRange.min, Math.min(potPositionRange.max, value))
     : value
+}
+
+// Slider position always increases left→right, even for descending voltage ranges.
+export function sliderPosition(value: number, left: number, right: number) {
+  const position = (value - left) / (right - left)
+  return position === 0 ? 0 : position
+}
+export function sliderVoltage(position: number, left: number, right: number) {
+  return left + position * (right - left)
 }

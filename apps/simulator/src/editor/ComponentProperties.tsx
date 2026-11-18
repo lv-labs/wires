@@ -1,5 +1,5 @@
 import { useId, useState } from "react"
-import type { FormEvent } from "react"
+import type { ChangeEvent, FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -11,24 +11,45 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { core } from "./core"
-import type { Component, Frame, LabelSettings } from "./core"
-import { TransistorModelFields, isCustomTransistor } from "./TransistorModelFields"
+import type { Component, Frame } from "./core"
+import {
+  TransistorModelFields,
+  isCustomTransistor,
+} from "./TransistorModelFields"
 import type { TransistorModel } from "./TransistorModelFields"
 import { DiodeModelFields, isCustomDiode } from "./DiodeModelFields"
 import type { DiodeModel } from "./DiodeModelFields"
-import { ledColourPresets, ledHexToRgb, ledRgbToHex, normaliseLedHex } from "./ledColour"
+import {
+  ledColourPresets,
+  ledHexToRgb,
+  ledRgbToHex,
+  normaliseLedHex,
+} from "./ledColour"
 import { EditorDialog } from "./EditorDialog"
+import {
+  propertyNumber,
+  propertyCaption,
+  propertyChoices,
+  propertyOrder,
+  mosfetPropertyVisible,
+  spdtPositionLabels,
+  normaliseSpdtSettings,
+} from "./componentPropertyFields"
 import { format } from "./componentValue"
-import { componentSliders, hasSlider, potPositionRange } from "./componentSliders"
+import {
+  componentSliders,
+  hasSlider,
+  potPositionRange,
+} from "./componentSliders"
 
 const labels: Record<string, string> = {
   label: "Slider label",
   resistance: "Resistance · Ω",
   capacitance: "Capacitance · F",
-  initialVoltage: "Initial voltage · V",
+  initialVoltage: "Initial voltage on reset · V",
   maxReverseVoltage: "Maximum reverse voltage · V",
   inductance: "Inductance · H",
-  initialCurrent: "Initial current · A",
+  initialCurrent: "Initial current on reset · A",
   ratio: "Turns ratio · secondary / primary",
   coupling: "Coupling · greater than 0, less than 1",
   turns1: "First primary turns · signed",
@@ -113,8 +134,10 @@ function parseNumber(input: string, label: string) {
 }
 
 function choices(component: Component, key: string): string[] | undefined {
-  if (key === "model" && component.kind === "diode") return core.catalog.diodeModels
-  if (key === "integration") return ["Backward Euler", "Trapezoidal"]
+  const options = propertyChoices(component, key)
+  if (options) return options
+  if (key === "model" && component.kind === "diode")
+    return core.catalog.diodeModels
   if (key === "mode" && ["logicInput", "logicOutput"].includes(component.kind))
     return ["Logic (L/H)", "Numeric (0/1)", "Ternary (0/1/2)"]
   if (key === "state" && component.kind === "logicInput")
@@ -122,16 +145,15 @@ function choices(component: Component, key: string): string[] | undefined {
   if (key === "position") {
     if (component.kind === "mbbSwitch") return ["A", "A + B", "B", "A + B"]
     if (component.kind === "spdtSwitch") {
-      const count=Number(component.parameters.throwCount??2)
-      return [...Array.from({length:count},(_,i)=>i<2?["A","B"][i]:`Throw ${i+1}`),...((component.parameters.centerOff??false)&&count===2?["Off"]:[])]
+      return spdtPositionLabels(component.parameters)
     }
     if (component.kind === "dpdtSwitch") return ["A", "B"]
   }
 }
 
-function optionValue(key: string, index: number) {
-  if (key === "integration") return ["backwardEuler", "trapezoidal"][index]
-  if (key === "mode") return ["logic", "numeric", "ternary"][index]
+function optionValue(component: Component, key: string, index: number) {
+  if (key === "mode" && ["logicInput", "logicOutput"].includes(component.kind))
+    return ["logic", "numeric", "ternary"][index]
   return String(index)
 }
 
@@ -139,24 +161,64 @@ export function ComponentProperties({
   component,
   components = [],
   onApply,
-  label = {},
   onClose,
   frame,
   actions,
 }: {
   component: Component
   components?: Component[]
-  label?: LabelSettings
-  onApply: (parameters: Component["parameters"], label: LabelSettings) => void
+  onApply: (parameters: Component["parameters"]) => void
   onClose: () => void
   frame: Frame | null
   actions: { label: string; run: () => void | Promise<void> }[]
 }) {
+  const spdt = component.kind === "spdtSwitch"
+  const [spdtDraft, setSpdtDraft] = useState(() => ({
+    count: String(component.parameters.throwCount ?? 2),
+    position: String(component.parameters.position ?? 0),
+    momentary: component.parameters.momentary === true,
+  }))
+  function changeThrowCount(count: string) {
+    setSpdtDraft((previous) => {
+      const next = { ...previous, count }
+      if (
+        Number.isInteger(Number(count)) &&
+        Number(count) >= 2 &&
+        Number(count) <= 10
+      ) {
+        const settings = normaliseSpdtSettings({
+          ...component.parameters,
+          throwCount: Number(count),
+          position: Number(previous.position),
+          momentary: previous.momentary,
+        })
+        next.position = String(settings.position)
+        next.momentary = Boolean(settings.momentary)
+      }
+      return next
+    })
+  }
+  const mosfet = core.catalog.mosfetKind(component.kind)
+  const [mosfetOptions, setMosfetOptions] = useState<Record<string, unknown>>(
+    () => ({
+      ...core.catalog.mosfetOptions,
+      bodyDiode: false,
+      ...component.parameters,
+    })
+  )
   const transistor = core.catalog.transistorKind(component.kind)
-  const [transistorModel, setTransistorModel] = useState<TransistorModel>(() => (component.parameters.model ?? "default") as TransistorModel)
+  const [transistorModel, setTransistorModel] = useState<TransistorModel>(
+    () => (component.parameters.model ?? "default") as TransistorModel
+  )
   const diode = core.catalog.diodeKind(component.kind)
-  const [diodeParameters] = useState(() => diode ? core.catalog.diodeEditorParameters(component.kind, component.parameters) : null)
-  const [diodeModel, setDiodeModel] = useState<DiodeModel>(() => diodeParameters?.model as DiodeModel)
+  const [diodeParameters] = useState(() =>
+    diode
+      ? core.catalog.diodeEditorParameters(component.kind, component.parameters)
+      : null
+  )
+  const [diodeModel, setDiodeModel] = useState<DiodeModel>(
+    () => diodeParameters?.model as DiodeModel
+  )
   const initialLedColour = ledRgbToHex(diodeParameters ?? component.parameters)
   const [ledColour, setLedColour] = useState(initialLedColour)
   const normalisedLedColour = normaliseLedHex(ledColour)
@@ -187,32 +249,85 @@ export function ComponentProperties({
     component.kind === "potentiometer"
       ? { label: "", ...component.parameters }
       : core.catalog.switchKind(component.kind)
-        ? { ...core.catalog.switchDefaults(component.kind), ...component.parameters }
-      : component.kind === "text"
-        ? { drawBar: false, ...component.parameters }
-      : core.catalog.transistorKind(component.kind)
-        ? { swapTerminals: false, drawCircle: false, ...component.parameters }
-        : core.catalog.mosfetKind(component.kind)
-          ? { ...core.catalog.mosfetOptions, bodyDiode: false, ...component.parameters }
-      : core.catalog.gateKind(component.kind)
-        ? { inputCount: 2, propagationDelay: 0, schmittInputs: false, invertInputs: false, ...component.parameters }
-        : diodeParameters ?? component.parameters
+        ? {
+            ...core.catalog.switchDefaults(component.kind),
+            ...component.parameters,
+          }
+        : component.kind === "text"
+          ? { drawBar: false, ...component.parameters }
+          : core.catalog.transistorKind(component.kind)
+            ? {
+                swapTerminals: false,
+                drawCircle: false,
+                ...component.parameters,
+              }
+            : mosfet
+              ? mosfetOptions
+              : core.catalog.gateKind(component.kind)
+                ? {
+                    inputCount: 2,
+                    propagationDelay: 0,
+                    schmittInputs: false,
+                    invertInputs: false,
+                    ...component.parameters,
+                  }
+                : (diodeParameters ??
+                  (output
+                    ? {
+                        ...core.catalog.definitions[component.kind].parameters,
+                        ...component.parameters,
+                      }
+                    : component.parameters))
   const fields = Object.entries(editableParameters)
-    .filter(([key]) => !(component.kind === "spdtSwitch" && key === "centerOff") && key !== "waveform" && !((diode || transistor) && key === "model") && !(component.kind === "led" && ["red", "green", "blue"].includes(key)))
+    .sort(
+      ([a], [b]) =>
+        propertyOrder(component.kind, a) - propertyOrder(component.kind, b)
+    )
+    .filter(
+      ([key]) =>
+        !(component.kind === "spdtSwitch" && key === "centerOff") &&
+        (!mosfet || mosfetPropertyVisible(key, mosfetOptions)) &&
+        key !== "waveform" &&
+        !((diode || transistor) && key === "model") &&
+        !(component.kind === "led" && ["red", "green", "blue"].includes(key))
+    )
     .map(([key, value]) => ({
       key,
-      value,
+      value:
+        typeof value === "number"
+          ? propertyNumber(component, key, value)
+          : value,
       caption:
-        (component.kind === "potentiometer" && key === "position" ? "Wiper position · 0.001 to 0.999 (0.1–99.9%)" : undefined) ??
-        (["switch", "pushSwitch"].includes(component.kind) && ["closed", "normallyClosed"].includes(key) ? "Contact state · at rest when momentary" : undefined) ??
+        propertyCaption(component, key) ??
+        (component.kind === "potentiometer" && key === "position"
+          ? "Wiper position · 0.001 to 0.999 (0.1–99.9%)"
+          : undefined) ??
+        (["switch", "pushSwitch"].includes(component.kind) &&
+        ["closed", "normallyClosed"].includes(key)
+          ? "Contact state · at rest when momentary"
+          : undefined) ??
         output?.fields[key]?.label ??
         labels[key] ??
         key
           .replace(/([A-Z])/g, " $1")
           .replace(/^./, (first) => first.toUpperCase()),
-      options: choices(component, key),
+      options: choices(
+        spdt
+          ? {
+              ...component,
+              parameters: {
+                ...component.parameters,
+                throwCount: Number(spdtDraft.count),
+              },
+            }
+          : component,
+        key
+      ),
     }))
-  const name = component.kind === "pushSwitch" ? "Switch" : core.catalog.definitions[component.kind]?.name ?? component.kind
+  const name =
+    component.kind === "pushSwitch"
+      ? "Switch"
+      : (core.catalog.definitions[component.kind]?.name ?? component.kind)
   const pins = frame?.pinVoltages[component.id]
   const current = frame?.componentCurrents?.[component.id]
   const measurements = frame?.componentMeasurements?.[component.id]
@@ -221,13 +336,18 @@ export function ComponentProperties({
     event.preventDefault()
     const data = new FormData(event.currentTarget)
     try {
-      const parameters = { ...(diodeParameters ?? component.parameters) }
+      const parameters = {
+        ...(mosfet ? mosfetOptions : (diodeParameters ?? component.parameters)),
+      }
       if (transistor) {
         let model = structuredClone(transistorModel)
         if (isCustomTransistor(model) && data.has("transistorModelName")) {
           model.name = String(data.get("transistorModelName")).trim()
           for (const key of Object.keys(core.catalog.transistorModelFields))
-            model[key] = parseNumber(String(data.get(`transistorModel-${key}`)), core.catalog.transistorModelFields[key].label)
+            model[key] = parseNumber(
+              String(data.get(`transistorModel-${key}`)),
+              core.catalog.transistorModelFields[key].label
+            )
         }
         core.catalog.resolveTransistorModel(model)
         parameters.model = model
@@ -236,33 +356,100 @@ export function ComponentProperties({
         let model = structuredClone(diodeModel)
         if (isCustomDiode(model) && data.has("diodeModelName")) {
           model.name = String(data.get("diodeModelName")).trim()
-          for (const key of ["saturationCurrent", "breakdownVoltage", ...(model.mode === "simple" ? ["forwardVoltage", "forwardCurrent"] : ["seriesResistance", "emissionCoefficient"])])
-            (model as unknown as Record<string, unknown>)[key] = parseNumber(String(data.get(`diodeModel-${key}`)), key)
+          for (const key of [
+            "saturationCurrent",
+            "breakdownVoltage",
+            ...(model.mode === "simple"
+              ? ["forwardVoltage", "forwardCurrent"]
+              : ["seriesResistance", "emissionCoefficient"]),
+          ])
+            (model as unknown as Record<string, unknown>)[key] = parseNumber(
+              String(data.get(`diodeModel-${key}`)),
+              key
+            )
         }
         core.catalog.resolveDiodeModel(model)
         parameters.model = model
       }
       for (const { key, caption, value } of fields) {
-        if (["switch", "pushSwitch"].includes(component.kind) && ["closed", "normallyClosed"].includes(key))
+        if (component.kind === "threePhaseMotor" && key === "mutualInductance")
+          continue // Coupling uses the final values of both inductances below.
+        if (key === "integration")
+          parameters[key] = data.has(key) ? "trapezoidal" : "backwardEuler"
+        else if (
+          ["switch", "pushSwitch"].includes(component.kind) &&
+          ["closed", "normallyClosed"].includes(key)
+        )
           parameters[key] = data.get(key) === "closed"
         else if (typeof value === "boolean") parameters[key] = data.has(key)
-        else if (typeof value === "number")
-          parameters[key] = parseNumber(String(data.get(key)), caption)
-        else if (typeof value === "string")
+        else if (typeof value === "number") {
+          const entered = parseNumber(String(data.get(key)), caption)
+          // Avoid round-off changes when an existing value is left untouched.
+          parameters[key] =
+            entered === value && typeof parameters[key] === "number"
+              ? parameters[key]
+              : propertyNumber(component, key, entered, true)
+        } else if (typeof value === "string")
           parameters[key] = String(data.get(key))
       }
-      if (component.kind === "potentiometer" &&
-          (Number(parameters.position) < potPositionRange.min || Number(parameters.position) > potPositionRange.max))
-        throw new Error("Potentiometer position must be between 0.001 and 0.999 (0.1–99.9%).")
+      if (component.kind === "threePhaseMotor") {
+        const coupling = parseNumber(
+          String(data.get("mutualInductance")),
+          "Coupling coefficient"
+        )
+        if (!(coupling > 0 && coupling < 1))
+          throw new Error(
+            "Coupling coefficient must be greater than 0 and less than 1."
+          )
+        const original = component.parameters
+        if (
+          coupling !==
+            propertyNumber(
+              component,
+              "mutualInductance",
+              Number(original.mutualInductance)
+            ) ||
+          parameters.statorInductance !== original.statorInductance ||
+          parameters.rotorInductance !== original.rotorInductance
+        )
+          parameters.mutualInductance = propertyNumber(
+            { ...component, parameters },
+            "mutualInductance",
+            coupling,
+            true
+          )
+      }
+      if (
+        component.kind === "potentiometer" &&
+        (Number(parameters.position) < potPositionRange.min ||
+          Number(parameters.position) > potPositionRange.max)
+      )
+        throw new Error(
+          "Potentiometer position must be between 0.001 and 0.999 (0.1–99.9%)."
+        )
       if (component.kind === "led") {
         const rgb = ledHexToRgb(ledColour)
         // Keep full precision from existing documents when the colour is unchanged.
-        if (normalisedLedColour !== initialLedColour) Object.assign(parameters, rgb)
+        if (normalisedLedColour !== initialLedColour)
+          Object.assign(parameters, rgb)
       }
       if (source) {
         const values: Record<string, unknown> = { kind: waveform }
         for (const key of waveFields) {
           const value = parseNumber(waveValues[key], waveformLabels[key])
+          const original = source[key]
+          const displayed =
+            key === "phase"
+              ? (Number(original ?? 0) * 180) / Math.PI
+              : key === "dutyCycle"
+                ? Number(original) * 100
+                : original
+          if (source.kind === waveform && value === displayed) {
+            // Preserve exact radians/duty fractions and absent optional phase
+            // when opening a source and applying without changing that field.
+            if (original !== undefined) values[key] = original
+            continue
+          }
           values[key] =
             key === "phase"
               ? (value * Math.PI) / 180
@@ -278,11 +465,7 @@ export function ComponentProperties({
         parameters.mode !== "ternary"
       )
         throw new Error("Ternary state requires ternary mode.")
-      onApply(parameters, core.catalog.graphic(component.kind) ? label : {
-        position: String(data.get("labelPosition")) as LabelSettings["position"],
-        showValue: data.has("labelShowValue"),
-        showDetails: data.has("labelShowDetails"),
-      })
+      onApply(spdt ? normaliseSpdtSettings(parameters) : parameters)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     }
@@ -290,26 +473,83 @@ export function ComponentProperties({
 
   return (
     <EditorDialog title={name} onClose={onClose}>
-      <form onSubmit={submit} className="grid gap-3 text-sm">
-        {transistor && <TransistorModelFields key={typeof transistorModel === "string" ? transistorModel : transistorModel.name}
-          model={transistorModel} onChange={setTransistorModel} components={components} />}
-        {diode && <DiodeModelFields key={typeof diodeModel === "string" ? diodeModel : diodeModel.name}
-          kind={component.kind} model={diodeModel} onChange={setDiodeModel} components={components} />}
+      <form
+        onSubmit={submit}
+        className="grid gap-3 text-sm"
+        onChange={(event) => {
+          setError("")
+          const input = event.target
+          if (
+            component.kind === "variableVoltage" &&
+            input instanceof HTMLInputElement &&
+            ["minVoltage", "maxVoltage"].includes(input.name)
+          ) {
+            const form = event.currentTarget
+            const minimum = form.elements.namedItem(
+              "minVoltage"
+            ) as HTMLInputElement | null
+            const voltage = form.elements.namedItem(
+              "voltage"
+            ) as HTMLInputElement | null
+            if (minimum && voltage) voltage.value = minimum.value
+            setError("")
+          }
+        }}
+      >
+        {transistor && (
+          <TransistorModelFields
+            key={
+              typeof transistorModel === "string"
+                ? transistorModel
+                : transistorModel.name
+            }
+            model={transistorModel}
+            onChange={setTransistorModel}
+            components={components}
+          />
+        )}
+        {diode && (
+          <DiodeModelFields
+            key={typeof diodeModel === "string" ? diodeModel : diodeModel.name}
+            kind={component.kind}
+            model={diodeModel}
+            onChange={setDiodeModel}
+            components={components}
+          />
+        )}
         {component.kind === "led" && (
           <fieldset className="grid gap-3 rounded border p-3">
             <legend className="px-1">LED colour</legend>
             <div className="grid gap-1.5">
               <span>Preset colour</span>
-              <div className="flex flex-wrap items-center gap-1" role="group" aria-label="LED colour presets">
-                {ledColourPresets.map(preset => {
-                  const selected = normalisedLedColour === preset.hex.toUpperCase()
+              <div
+                className="flex flex-wrap items-center gap-1"
+                role="group"
+                aria-label="LED colour presets"
+              >
+                {ledColourPresets.map((preset) => {
+                  const selected =
+                    normalisedLedColour === preset.hex.toUpperCase()
                   return (
-                    <Button key={preset.hex} type="button" variant="ghost" size="icon-lg"
-                      aria-label={preset.name} aria-pressed={selected} title={preset.name}
+                    <Button
+                      key={preset.hex}
+                      type="button"
+                      variant="ghost"
+                      size="icon-lg"
+                      aria-label={preset.name}
+                      aria-pressed={selected}
+                      title={preset.name}
                       className={selected ? "ring-2 ring-ring" : ""}
-                      onClick={() => { setLedColour(preset.hex.toUpperCase()); setError("") }}>
-                      <span aria-hidden="true" className="size-5 rounded-full border border-foreground/15"
-                        style={{ background: preset.hex }} />
+                      onClick={() => {
+                        setLedColour(preset.hex.toUpperCase())
+                        setError("")
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="size-5 rounded-full border border-foreground/15"
+                        style={{ background: preset.hex }}
+                      />
                     </Button>
                   )
                 })}
@@ -318,11 +558,25 @@ export function ComponentProperties({
             <label className="grid gap-1">
               Hex colour
               <div className="flex items-center gap-2">
-                <span aria-hidden="true" className="size-8 shrink-0 rounded border"
-                  style={{ backgroundColor: normalisedLedColour ?? "transparent" }} />
-                <Input value={ledColour} placeholder="#FF0000" maxLength={7} required
-                  spellCheck={false} autoComplete="off"
-                  onChange={event => { setLedColour(event.target.value); setError("") }} />
+                <span
+                  aria-hidden="true"
+                  className="size-8 shrink-0 rounded border"
+                  style={{
+                    backgroundColor: normalisedLedColour ?? "transparent",
+                  }}
+                />
+                <Input
+                  value={ledColour}
+                  placeholder="#FF0000"
+                  maxLength={7}
+                  required
+                  spellCheck={false}
+                  autoComplete="off"
+                  onChange={(event) => {
+                    setLedColour(event.target.value)
+                    setError("")
+                  }}
+                />
               </div>
             </label>
           </fieldset>
@@ -367,13 +621,37 @@ export function ComponentProperties({
         )}
         {fields.map(({ key, value, caption, options }, index) => {
           const primary = index === 0 && !source ? "" : undefined
-          if (["switch", "pushSwitch"].includes(component.kind) && ["closed", "normallyClosed"].includes(key))
+          if (key === "integration")
+            return (
+              <div key={key} className="flex items-center gap-2">
+                <Checkbox
+                  name={key}
+                  id={`${fieldId}-${key}`}
+                  defaultChecked={value === "trapezoidal"}
+                />
+                <label htmlFor={`${fieldId}-${key}`}>
+                  Trapezoidal approximation
+                </label>
+              </div>
+            )
+          if (
+            ["switch", "pushSwitch"].includes(component.kind) &&
+            ["closed", "normallyClosed"].includes(key)
+          )
             return (
               <label key={key} className="grid gap-1">
                 {caption}
-                <NativeSelect name={key} defaultValue={value ? "closed" : "open"} className="w-full">
-                  <NativeSelectOption value="open">Normally open</NativeSelectOption>
-                  <NativeSelectOption value="closed">Normally closed</NativeSelectOption>
+                <NativeSelect
+                  name={key}
+                  defaultValue={value ? "closed" : "open"}
+                  className="w-full"
+                >
+                  <NativeSelectOption value="open">
+                    Normally open
+                  </NativeSelectOption>
+                  <NativeSelectOption value="closed">
+                    Normally closed
+                  </NativeSelectOption>
                 </NativeSelect>
               </label>
             )
@@ -383,7 +661,29 @@ export function ComponentProperties({
                 <Checkbox
                   name={key}
                   id={`${fieldId}-${key}`}
-                  defaultChecked={value}
+                  {...(spdt && key === "momentary"
+                    ? {
+                        checked: spdtDraft.momentary,
+                        disabled: Number(spdtDraft.count) > 2,
+                        onCheckedChange: (checked: boolean) =>
+                          setSpdtDraft((previous) => ({
+                            ...previous,
+                            momentary: checked,
+                          })),
+                      }
+                    : mosfet && Object.hasOwn(core.catalog.mosfetOptions, key)
+                      ? {
+                          checked: Boolean(mosfetOptions[key]),
+                          onCheckedChange: (checked: boolean) =>
+                            setMosfetOptions((previous) => ({
+                              ...previous,
+                              [key]: checked,
+                              ...(key === "showBulk" && checked
+                                ? { digitalSymbol: false }
+                                : {}),
+                            })),
+                        }
+                      : { defaultChecked: value })}
                 />
                 <label htmlFor={`${fieldId}-${key}`}>{caption}</label>
               </div>
@@ -397,17 +697,41 @@ export function ComponentProperties({
                 <NativeSelect
                   className="w-full"
                   name={key}
-                  defaultValue={String(value)}
+                  {...(spdt && key === "position"
+                    ? {
+                        value: spdtDraft.position,
+                        onChange: (event: ChangeEvent<HTMLSelectElement>) =>
+                          setSpdtDraft((previous) => ({
+                            ...previous,
+                            position: event.target.value,
+                          })),
+                      }
+                    : { defaultValue: String(value) })}
                 >
                   {options.map((label, option) => (
                     <NativeSelectOption
                       key={option}
-                      value={key === "model" ? label : optionValue(key, option)}
+                      value={
+                        key === "model"
+                          ? label
+                          : optionValue(component, key, option)
+                      }
                     >
                       {label}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
+              ) : spdt && key === "throwCount" ? (
+                <Input
+                  name={key}
+                  type="number"
+                  min={2}
+                  max={10}
+                  step={1}
+                  value={spdtDraft.count}
+                  required
+                  onChange={(event) => changeThrowCount(event.target.value)}
+                />
               ) : key === "label" && hasSlider(component) ? (
                 <Input
                   name={key}
@@ -416,48 +740,26 @@ export function ComponentProperties({
                   maxLength={output?.fields[key]?.maxLength}
                   data-primary={primary}
                 />
-              ) : typeof value === "string" ? (
+              ) : typeof value === "string" &&
+                ["text", "lookup"].includes(key) ? (
                 <Textarea
                   name={key}
                   defaultValue={value}
                   maxLength={output?.fields[key]?.maxLength}
-                  rows={["text", "lookup"].includes(key) ? 5 : 2}
+                  rows={5}
                 />
               ) : (
                 <Input
                   name={key}
                   defaultValue={value}
-                  required
+                  maxLength={output?.fields[key]?.maxLength}
+                  required={typeof value === "number"}
                   data-primary={primary}
                 />
               )}
             </label>
           )
         })}
-        {!core.catalog.graphic(component.kind) && (
-          <fieldset className="grid gap-2 rounded border p-3">
-            <legend className="px-1">Sheet label</legend>
-            <label className="grid gap-1">
-              Position
-              <NativeSelect name="labelPosition" defaultValue={label.position ?? "auto"}>
-                {(["auto", "left", "right", "above", "below"] as const).map((position) => (
-                  <NativeSelectOption key={position} value={position}>
-                    {position === "auto" ? "Automatic" : position[0].toUpperCase() + position.slice(1)}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </label>
-            {([
-              ["labelShowValue", "Show value", label.showValue],
-              ["labelShowDetails", "Show additional information", label.showDetails],
-            ] as const).map(([name, caption, checked]) => (
-              <div key={name} className="flex items-center gap-2">
-                <Checkbox name={name} id={`${fieldId}-${name}`} defaultChecked={checked !== false} />
-                <label htmlFor={`${fieldId}-${name}`}>{caption}</label>
-              </div>
-            ))}
-          </fieldset>
-        )}
         {error && (
           <p role="alert" className="text-destructive">
             {error}

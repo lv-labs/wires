@@ -5,7 +5,7 @@ import type { CircuitDocument, Component, Frame } from "./core"
 import { core } from "./core"
 import { sliderField, setProperty } from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
-import { componentValue } from "./componentValue"
+import { sheetValue } from "./componentValue"
 import { SheetLabel } from "./SheetLabel"
 
 export function SymbolBody({
@@ -69,7 +69,10 @@ export const SymbolLayer = memo(function SymbolLayer({
         const pose = document.layout.components[component.id]
         const isSelected = selected.includes(component.id)
         const current = frame?.componentCurrents?.[component.id] ?? 0
-        const measured = frame?.componentMeasurements?.[component.id] ?? {}
+        const measured = {
+          ...frame?.componentMeasurements?.[component.id],
+          voltage: frame?.pinVoltages[component.id]?.in ?? NaN,
+        }
         const displayComponent =
           sliderPreview?.id === component.id &&
           sliderPreview.kind === component.kind
@@ -81,17 +84,10 @@ export const SymbolLayer = memo(function SymbolLayer({
             sliderField(sliderPreview),
             sliderPreview.value
           )
-        const value = componentValue(displayComponent, {
+        const value = sheetValue(displayComponent, {
           pinVoltages: frame?.pinVoltages[component.id],
           measurement: measured,
         })
-        const parts = String(value ?? "").split(" · ")
-        // Op-amp output limits are supplementary information rather than a value.
-        const detailsOnly = component.kind === "opamp"
-        const label = [
-          ...(pose.label?.showValue !== false && !detailsOnly ? parts.slice(0, 1) : []),
-          ...(pose.label?.showDetails !== false ? parts.slice(detailsOnly ? 0 : 1) : []),
-        ].join(" · ")
         return (
           <g
             key={component.id}
@@ -116,8 +112,10 @@ export const SymbolLayer = memo(function SymbolLayer({
               />
             </g>
             {/* Sheet labels are positioned outside the symbol's pose transform. */}
-            {!core.catalog.graphic(component.kind) && label && (
-              <SheetLabel pose={pose} kind={component.kind}>{label}</SheetLabel>
+            {!core.catalog.graphic(component.kind) && value && (
+              <SheetLabel pose={pose} kind={component.kind}>
+                {value}
+              </SheetLabel>
             )}
           </g>
         )

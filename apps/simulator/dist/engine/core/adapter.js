@@ -95,7 +95,7 @@
   function outputRecord(d,x){
     const p=d.parameters,enc=encodeURIComponent;
     const records={
-      variableVoltage:()=>({flags:0,parameters:` 6 ${p.voltage} ${p.maxVoltage} ${p.minVoltage} 0 0.5 ${enc(p.label)||'%00'}`}),
+      variableVoltage:()=>({flags:0,parameters:` 6 ${p.voltage} ${Math.max(p.minVoltage,p.maxVoltage)} ${Math.min(p.minVoltage,p.maxVoltage)} 0 0.5 ${enc(p.label)||'%00'}`}),
       sweepSource:()=>({flags:(p.logarithmic?1:0)|(p.bidirectional?2:0),parameters:` ${p.minFrequency} ${p.maxFrequency} ${p.amplitude} ${p.sweepTime}`}),
       antennaSource:()=>({flags:0,parameters:''}),
       amSource:()=>({flags:0,parameters:` ${p.carrierFrequency} ${p.signalFrequency} ${p.amplitude}`}),
@@ -104,6 +104,8 @@
       sparkGap:()=>({flags:0,parameters:` ${p.onResistance} ${p.offResistance} ${p.breakdownVoltage} ${p.holdingCurrent}`}),
       memristor:()=>({flags:0,parameters:` ${p.onResistance} ${p.offResistance} ${p.initialDopedWidth} ${p.totalWidth} ${p.mobility} 0`}),
       tunnelDiode:()=>({flags:0,parameters:''}),
+      // Fuse artwork and sensor slider labels belong to the React editor. The
+      // headless worker retains its fixed drawing flags/placeholder UI labels.
       fuse:()=>({flags:0,parameters:` ${p.resistance} ${p.i2t} 0 false`}),
       photoresistor:()=>({flags:0,parameters:` ${p.position} Light`}),
       thermistor:()=>({flags:0,parameters:` ${p.resistance25} ${p.resistance50} ${p.minTemperature} ${p.maxTemperature} ${p.position} Temperature`}),
@@ -464,7 +466,7 @@
     const canonical = JSON.stringify(projection);
     const hubs = new Map(nets.map((net, i) => [net.key, [32 + i * 64, -1024]]));
     check(32 + Math.max(devices.length, nets.length) * 512 < 2147483647, 'Circuit exceeds coordinate limit');
-    const records = [], connections = [], mapping = [];
+    const records = [], connections = [], mapping = [], terminalConnections = [];
     let groundIndex = null;
     devices.forEach((device, index) => {
       const model = modelFor(device);
@@ -576,11 +578,13 @@
       model.pins.forEach((pin, post) => {
         const [hx, hy] = hubs.get(device.pins[pin]);
         const [px,py]=semiconductorPosts?semiconductorPosts[post]:device.kind==='tappedTransformer'?[[x,32],[x,96],[x+64,32],[x+64,64],[x+64,96]][post]:device.kind==='customTransformer'?[[x,32],[x,64],[x,80],[x,112],[x+64,32],[x+64,112]][post]:device.kind==='transmissionLine'?[[x,64],[x+64,64],[x,32],[x+64,32]][post]:device.kind==='mbbSwitch'?[[x,32],[x+64,16],[x+64,48]][post]:chipPosts?chipPosts[post]:device.kind==='analogSwitch'?[[x,32],[x+64,32],[x+32,48]][post]:device.kind==='analogSpdtSwitch'?[[x,32],[x+64,16],[x+64,48],[x+32,16]][post]:transformer?[[x,32],[x+64,32],[x,64],[x+64,64]][post]:device.kind==='spdtSwitch'?[[x,32],[x+64,16],[x+64,48]][post]:device.kind==='dpdtSwitch'?[[x,32],[x+64,48],[x+64,16],[x,80],[x+64,96],[x+64,64]][post]:bipolar(device.kind)?[[x,32],[x+64,device.kind==='pnp'?48:16],[x+64,device.kind==='pnp'?16:48]][post]:fet(device.kind)?[[x,32],[x+64,48],[x+64,16]][post]:logic(device.kind)&&three?[[x,48],[x,16],[x+64,32]][post]:device.kind==='opamp'?[[x,16],[x,48],[x+32,32]][post]:pot?[[x,32],[x+64,32],[x+32,0]][post]:[x,32+post*32];
+        terminalConnections.push({componentId:device.id,pinId:pin,offset:connections.length});
         connections.push(`w ${px} ${py} ${hx} ${hy} 0`);
       });
     });
     return {documentId: document.id, timeStep: document.simulation.timeStep,
-      text: [...records, ...connections].join('\n'), mapping, nets, canonical, diagnostics};
+      text: [...records, ...connections].join('\n'), mapping, nets, canonical, diagnostics,
+      terminalConnections:terminalConnections.map(c=>({...c,index:records.length+c.offset}))};
   }
 
   // Revalidate canonical electrical input inside the addressed worker. Rebuild an
@@ -645,7 +649,12 @@
           componentMeasurements.push([entry.id,structuredClone(elm.measurements)]);
         }
       }
-      return {documentId: compiled.documentId, frameSequence: sequence, time: raw.time, timeStep: raw.timeStep,
+      const pinCurrents={};
+      for(const terminal of compiled.terminalConnections||[]) {
+        const value=raw.elements[terminal.index]?.current;
+        if(Number.isFinite(value))(pinCurrents[terminal.componentId]||={})[terminal.pinId]=-value;
+      }
+      return {pinCurrents,documentId: compiled.documentId, frameSequence: sequence, time: raw.time, timeStep: raw.timeStep,
         pinVoltages: Object.fromEntries(pinVoltages), componentCurrents: Object.fromEntries(componentCurrents),
         diagnostics: structuredClone(compiled.diagnostics),...(componentMeasurements.length?{componentMeasurements:Object.fromEntries(componentMeasurements)}:{}),...(raw.stopRequested?{stopRequested:true}:{})};
     }

@@ -1,6 +1,8 @@
 import './catalog.js';
 import './geometry.js';
 import './document.js';
+import './falstad-xml.js';
+import './falstad.js';
 import './history.js';
 import './drag.js';
 import './commands.js';
@@ -11,5 +13,5 @@ import './signals.js';
 import './browser-transport.js';
 import './index.js';
 const core=globalThis.CircuitCore;
-export const {catalog,geometry,document,history,editing,adapter,protocol,simulation,signals,browserTransport}=core;
+export const {catalog,geometry,document,falstad,history,editing,adapter,protocol,simulation,signals,browserTransport}=core;
 export default core;

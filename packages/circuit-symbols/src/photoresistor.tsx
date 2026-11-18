@@ -12,11 +12,19 @@ export const metadata = {
   },
   parameters: {
     position: 0.34,
+    label: "Light Brightness",
   },
 } as const;
 export const output = {
   type: "374",
   fields: {
+    label: {
+      label: "Slider label",
+      type: "string",
+      maxLength: 80,
+      optional: true,
+      default: "Light Brightness",
+    },
     position: {
       label: "Sensor position · 0 to 1",
       type: "number",

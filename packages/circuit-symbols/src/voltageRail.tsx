@@ -1,14 +1,13 @@
-import { Lead, WaveformGlyph } from "../svg";
+import { Lead, WaveformGlyph, Upright } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "voltageRail";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "V",
   name: "DC source (1 terminal)",
   pins: {
-    p: [0, 32],
+    p: [0,0],
   },
   parameters: {
     waveform: {
@@ -62,9 +61,9 @@ export function Symbol({
 }: SymbolProps) {
   return (
     <>
-      <circle r={16} />
-      <Lead from={metadata.pins.p} to={[0, 16]} />
-      <g transform="scale(.8)">
+      <Lead from={metadata.pins.p} to={[0, -50]} />
+      <g transform="translate(0 -100)">
+        <circle r={50} />
         <WaveformGlyph waveform={parameters.waveform} pose={pose} />
       </g>
     </>

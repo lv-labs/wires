@@ -849,11 +849,11 @@
     "sweepSource": {
       "name": "A/C sweep",
       "prefix": "V",
-      "drawingScale": 3.125,
+      "drawingScale": 1,
       "pins": {
         "p": [
           0,
-          100
+          0
         ]
       },
       "type": "170",
@@ -2717,13 +2717,12 @@
       }
     },
     "voltageRail": {
-      "drawingScale": 3.125,
       "prefix": "V",
       "name": "DC source (1 terminal)",
       "pins": {
         "p": [
           0,
-          100
+          0
         ]
       },
       "parameters": {

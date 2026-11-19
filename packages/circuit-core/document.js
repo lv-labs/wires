@@ -15,6 +15,17 @@
     Catalog.validateSharedTransistorModels(e.components);
     const components = ids(e.components), junctions = ids(e.junctions); ids(e.wires);
     const point = p => p && Number.isFinite(p.x) && Number.isFinite(p.y);
+    if(l.drawings!==undefined){
+      assert(Array.isArray(l.drawings)&&l.drawings.length<=10000,'Invalid sheet drawings');ids(l.drawings);
+      const color=value=>value==='none'||value==='currentColor'||typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);
+      for(const d of l.drawings){
+        const counts={line:2,box:4,ellipse:3,text:1};
+        assert(['line','box','ellipse','polygon','text'].includes(d.kind)&&Array.isArray(d.points)&&d.points.every(point)&&(d.kind==='polygon'?d.points.length>=3&&d.points.length<=1000:d.points.length===counts[d.kind]),'Invalid drawing geometry');
+        assert(color(d.stroke)&&color(d.fill)&&Number.isFinite(d.strokeWidth)&&d.strokeWidth>=0&&d.strokeWidth<=50&&['solid','dashed','dotted'].includes(d.strokeStyle),'Invalid drawing style');
+        assert(d.rotation===undefined||Number.isFinite(d.rotation),'Invalid drawing rotation');
+        if(d.kind==='text')assert(typeof d.text==='string'&&d.text.length<=4096&&Number.isFinite(d.fontSize)&&d.fontSize>=8&&d.fontSize<=300,'Invalid drawing text');
+      }
+    }
     for (const c of e.components) {
       assert(Object.hasOwn(definitions, c.kind) && c.modelVersion === 1, 'Unsupported editor component model');
       const p = l.components?.[c.id]; assert(point(p) && [0, 90, 180, 270].includes(p.rotation) && typeof p.mirror === 'boolean', 'Invalid component pose');

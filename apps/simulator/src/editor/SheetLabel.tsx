@@ -41,5 +41,5 @@ export function SheetLabel({ pose, kind, children }: {
     element.setAttribute("text-anchor", anchor)
   }, [pose, kind, children])
   return <text ref={text} dominantBaseline="central" fill="currentColor" stroke="none"
-    fontSize={31.25} opacity={0.7} pointerEvents="none">{children}</text>
+    fontSize={40} opacity={0.7} pointerEvents="none">{children}</text>
 }

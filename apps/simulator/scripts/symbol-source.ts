@@ -34,31 +34,7 @@ export function validateSymbolSource(
 ): asserts source is string {
   if (typeof source !== "string" || source.length > 200000)
     throw new Error("Invalid symbol source")
-  const result = ts.transpileModule(source, {
-    fileName: `${kind}.tsx`,
-    reportDiagnostics: true,
-    compilerOptions: {
-      target: ts.ScriptTarget.ES2023,
-      module: ts.ModuleKind.ESNext,
-      jsx: ts.JsxEmit.ReactJSX,
-    },
-  })
-  const errors =
-    result.diagnostics?.filter(
-      (d) => d.category === ts.DiagnosticCategory.Error
-    ) ?? []
-  if (errors.length)
-    throw new Error(
-      errors
-        .map((d) => {
-          const position =
-            d.file && d.start !== undefined
-              ? d.file.getLineAndCharacterOfPosition(d.start)
-              : null
-          return `${position ? `${position.line + 1}:${position.character + 1} · ` : ""}${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`
-        })
-        .join("\n")
-    )
+  validateTsx(source, `${kind}.tsx`)
   const ast = ts.createSourceFile(
     `${kind}.tsx`,
     source,
@@ -120,4 +96,58 @@ export function validateSymbolSource(
       metadata.drawingScale <= 0)
   )
     throw new Error("drawingScale must be a positive number")
+}
+
+function validateTsx(source: string, fileName: string) {
+  const result = ts.transpileModule(source, {
+    fileName,
+    reportDiagnostics: true,
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2023,
+      module: ts.ModuleKind.ESNext,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  })
+  const errors =
+    result.diagnostics?.filter(
+      (d) => d.category === ts.DiagnosticCategory.Error
+    ) ?? []
+  if (errors.length)
+    throw new Error(
+      errors
+        .map((d) => {
+          const position =
+            d.file && d.start !== undefined
+              ? d.file.getLineAndCharacterOfPosition(d.start)
+              : null
+          return `${position ? `${position.line + 1}:${position.character + 1} · ` : ""}${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`
+        })
+        .join("\n")
+    )
+}
+export function validateWaveformSource(
+  source: unknown
+): asserts source is string {
+  if (typeof source !== "string" || source.length > 200000)
+    throw new Error("Invalid waveform glyph source")
+  validateTsx(source, "waveforms.tsx")
+  const ast = ts.createSourceFile(
+    "waveforms.tsx",
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  )
+  for (const name of ["WaveformGlyph", "SweepGlyph"]) {
+    const exported = ast.statements.some(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) &&
+        statement.name?.text === name &&
+        statement.body &&
+        ts
+          .getModifiers(statement)
+          ?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+    )
+    if (!exported) throw new Error(`Keep the named ${name} function export`)
+  }
 }

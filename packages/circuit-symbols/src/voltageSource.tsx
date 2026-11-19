@@ -1,9 +1,9 @@
-import { Lead, WaveformGlyph } from "../svg";
+import { WaveformGlyph } from "../waveforms";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "voltageSource";
 export const metadata = {
-
   prefix: "V",
   name: "DC source (2 terminals)",
   pins: {
@@ -42,8 +42,7 @@ export function Symbol({
       <Lead from={metadata.pins.p} to={[0, -50]} />
       <Lead from={metadata.pins.n} to={[0, 50]} />
 
-        <WaveformGlyph waveform={parameters.waveform} pose={pose} />
-
+      <WaveformGlyph waveform={parameters.waveform} pose={pose} />
     </>
   );
 }

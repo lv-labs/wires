@@ -512,3 +512,8 @@
     padding: 10px;
   }
 }
+.symbol-workbench .source-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 18px 12px;
+}

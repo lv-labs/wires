@@ -1,13 +1,13 @@
-import { Lead, WaveformGlyph, Upright } from "../svg";
+import { WaveformGlyph } from "../waveforms";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "voltageRail";
 export const metadata = {
-
   prefix: "V",
   name: "DC source (1 terminal)",
   pins: {
-    p: [0,0],
+    p: [0, 0],
   },
   parameters: {
     waveform: {

@@ -27,11 +27,14 @@
     }
     const included = ref => selected(ref) || stubs.has(referenceKey(ref));
     for (const probe of d.probes) {
+      if (probe.kind === 'voltage' && !selection.has(token('probe', probe.id))) continue;
       const valid = probe.kind === 'current' ? e.components.some(c => c.id === probe.componentId) : included(probe.positive) && (probe.reference === 'ground' || included(probe.negative));
       if (!valid) continue;
       const p = clone(probe); if (p.kind === 'voltage') { p.positive = endpoint(p.positive); if (p.reference !== 'ground') p.negative = endpoint(p.negative); }
       fragment.probes.push(p); if (d.layout.probes?.[p.id]) { l.probes ||= {}; l.probes[p.id] = clone(d.layout.probes[p.id]); }
     }
+    const drawings=(d.layout.drawings||[]).filter(item=>selection.has(token('drawing',item.id)));
+    if(drawings.length)l.drawings=clone(drawings);
     return validate(fragment);
   }
   function pasteSelection(d, fragment, {componentReferences=true}={}) {
@@ -52,6 +55,7 @@
       if (kind === 'probe') d.probes.push(item); else d.electrical[list].push(item);
       if (fragment.layout[list]?.[original.id]) { d.layout[list] ||= {}; d.layout[list][item.id] = clone(fragment.layout[list][original.id]); }
     }
+    for(const original of fragment.layout.drawings||[]){const item={...clone(original),id:crypto.randomUUID()};(d.layout.drawings||=[]).push(item);selection.add(token('drawing',item.id));}
     return selection;
   }
   function applyDragDocument(document,next){
@@ -134,6 +138,13 @@
         for (const operation of orientations) if (operation.axis) flipPose(pose, operation.axis); else pose.rotation = (pose.rotation + operation.rotate + 360) % 360;
       }
     }, false);
+    if(reorienting)for(const drawing of document.layout.drawings||[])if(selection.has(token('drawing',drawing.id))){
+      const b=Geometry.drawingBounds(drawing),cx=(b.x+b.right)/2,cy=(b.y+b.bottom)/2;
+      for(const op of [...(rotation?[{rotate:rotation}]:[]),...orientations]){
+        drawing.points=drawing.points.map(p=>{let x=p.x-cx,y=p.y-cy;if(op.axis==='x')y=-y;else if(op.axis==='y')x=-x;else [x,y]=Geometry.rotateOffset(x,y,op.rotate||0);return {x:cx+x,y:cy+y};});
+        if(drawing.kind==='text')drawing.rotation=((drawing.rotation||0)+(op.rotate||0)+360)%360;
+      }
+    }
     if (contacts || reorienting) connectContacts(document, ids);
   }
   function retarget(document, wire, old) {
@@ -565,6 +576,7 @@
             if(!keep){if(d.layout.probes)delete d.layout.probes[p.id];return false;}
             if(p.kind==='voltage'){p.positive=keepEnd(p.positive);if(p.negative)p.negative=keepEnd(p.negative);}return true;
           });
+          if(d.layout.drawings)d.layout.drawings=d.layout.drawings.filter(item=>!selection.has(token('drawing',item.id)));
           d.electrical.components=d.electrical.components.filter(c=>!cs.has(c.id));d.electrical.junctions=d.electrical.junctions.filter(j=>!js.has(j.id));
           for(const id of cs)delete d.layout.components[id];for(const id of js)delete d.layout.junctions[id];
         });
@@ -591,10 +603,12 @@
   function executeCommand(model,command){
     if(!command||typeof command!=='object'||typeof command.type!=='string')throw new Error('Expected an editing command');
     const selection=()=>new Set((command.selection||[]).map(ref=>{
-      if(!ref||!['component','wire','junction','probe'].includes(ref.kind)||typeof ref.id!=='string')throw new Error('Invalid command selection');
+      if(!ref||!['component','wire','junction','probe','drawing'].includes(ref.kind)||typeof ref.id!=='string')throw new Error('Invalid command selection');
       return token(ref.kind,ref.id);
     }));
     switch(command.type){
+      case 'addDrawing':{const id=command.drawing.id||crypto.randomUUID();model.transaction('Draw '+command.drawing.kind,d=>{(d.layout.drawings||=[]).push({...clone(command.drawing),id});});return id;}
+      case 'setDrawing':return model.transaction('Edit drawing',d=>{const index=(d.layout.drawings||[]).findIndex(item=>item.id===command.drawing.id);if(index<0)throw new Error('Drawing no longer exists');d.layout.drawings[index]=clone(command.drawing);});
       case 'addComponent':return model.addComponent(command.kind,command.x,command.y,command.rotation??0,command.mirror??false);
       case 'connect':return model.connect(command.from,command.to,command.bends||[]);
       case 'remove':return model.remove(selection());

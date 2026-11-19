@@ -46,7 +46,9 @@ coordinates. Stroke widths, sheet labels, wire markers and probes use sheet
 units. When redrawing an older symbol in 50/10 units, remove `drawingScale` and
 update its local pins and artwork together, then regenerate the catalog.
 
-Text, box and line annotations use native sheet-unit dimensions. Their default
+Legacy text, box and line annotation symbols use native sheet-unit dimensions.
+New annotations are authored through the Draw menu and stored in `layout.drawings`,
+outside the electrical symbol registry. Their default
 sizes have been increased to match the new grid. Saved circuit positions and
 explicit annotation sizes are not automatically resized by this authoring change.
 
@@ -115,3 +117,35 @@ existing `${...}` expressions. Shared helper paths and waveform glyphs follow th
 same format. Reapply this formatting with `node tools/format_symbol_paths.mjs`, or
 check it with `node tools/format_symbol_paths.mjs --check`. The formatter verifies
 that command, numeric and expression tokens remain unchanged.
+
+## Waveform glyphs and source previews
+
+Voltage source and voltage rail symbols use the shared `waveforms.tsx` module.
+It contains the sine, square, triangle, sawtooth and pulse paths plus DC polarity
+artwork. `svg.tsx` retains the general SVG helpers; voltage symbols import
+`WaveformGlyph` from `../waveforms`.
+
+In the workbench, select a voltage source and use **Waveform** to preview DC,
+sine, square, triangle, sawtooth or pulse. **Preview parameters** exposes voltage
+for DC and amplitude, frequency, offset, phase and (where applicable) duty cycle
+for AC modes. These are preview overrides and do not change saved defaults.
+
+The source panel offers **Symbol** and **Shared waveform glyphs** tabs. Glyph
+edits preview inside the selected source using in-memory modules; no files are
+written until **Save shared glyphs**. Saving this tab updates `waveforms.tsx` for
+both source symbols. Saving the Symbol tab writes only that symbol file. Drafts
+and stale-file protection apply independently to both tabs.
+
+The A/C sweep symbol uses `SweepGlyph` in `waveforms.tsx`. It reuses the authored
+sine path, compressing it from one to three visible cycles as in Falstad. Idle,
+paused and workbench previews animate up/down over two seconds. Running circuits
+use the engine’s measured sweep frequency, including logarithmic and bidirectional
+sweep settings. Shared glyph editing is also available when the sweep is selected.
+
+LEDs use the circle indicator during normal display and the diode body on hover,
+selection or placement. Lit indicators have a colour/current-driven halo; off
+LEDs and the highlighted diode view do not allocate blur filters. **View → LED
+glow → Glow intensity** adjusts the halo from Off to 100% of the authored glow
+and persists the preference locally. The workbench’s LED preview has the same
+slider and preference. Existing on/off preferences are preserved. Glow is a presentation setting and
+does not change circuit parameters or simulation results.

@@ -72,6 +72,7 @@ let paths = 0,
   changed = 0;
 for (const name of [
   "svg.tsx",
+  "waveforms.tsx",
   ...readdirSync(new URL("src/", root))
     .filter((name) => name.endsWith(".tsx"))
     .map((name) => "src/" + name),

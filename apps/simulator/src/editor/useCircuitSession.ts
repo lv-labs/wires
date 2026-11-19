@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import switchedRc from "../../../../docs/new-simulator/examples/switched-rc.json"
 import { core } from "./core"
 import type { CircuitDocument, Command, Run, RunState } from "./core"
+import { defaultSimulationSpeed, simulationPacing } from "./simulationSpeed"
 
 const editingOptions = { wireSections: true, componentReferences: false }
 
@@ -26,6 +27,7 @@ export function useCircuitSession(
     core.editing.create(document, setDocument, editingOptions)
   )
   const [simulation, setSimulation] = useState<RunState>({ status: "loading" })
+  const [simulationSpeed, setSimulationSpeed] = useState(defaultSimulationSpeed)
   const [scope] = useState(() => core.signals.create({ capacity: 20000 }))
   const [scopeData, setScopeData] = useState(() => scope.window(0.002))
   const scopeSpan = useRef(0.002)
@@ -53,10 +55,7 @@ export function useCircuitSession(
       })
     }
     const coordinator = core.simulation.create({
-      // Preserve the established simulation cadence: advance ten solver steps every 16 ms.
-      // The core default is intentionally larger for headless consumers.
-      batchSteps: 10,
-      intervalMs: 16,
+      ...simulationPacing(defaultSimulationSpeed),
       workerFactory: core.browserTransport.factory({
         url: new URL(
           `${import.meta.env.BASE_URL}engine/revision-worker.js`,
@@ -86,6 +85,10 @@ export function useCircuitSession(
       run.current = null
     }
   }, [scope])
+  useEffect(() => {
+    const { batchSteps, intervalMs } = simulationPacing(simulationSpeed)
+    run.current?.setRunPacing(batchSteps, intervalMs)
+  }, [scope, simulationSpeed])
   useEffect(() => {
     let current = true
     const channels = core.geometry.scopeChannels(document).channels.slice(0, 32)
@@ -156,6 +159,8 @@ export function useCircuitSession(
     session,
     execute,
     simulation,
+    simulationSpeed,
+    setSimulationSpeed,
     run,
     error,
     savedLocally,

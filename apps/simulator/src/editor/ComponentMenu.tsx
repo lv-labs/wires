@@ -26,11 +26,19 @@ const { CircuitComponentMenu } = globalThis as typeof globalThis & {
   }
 }
 function cleanLabels(items: MenuEntry[]): MenuEntry[] {
-  return items.filter((item) => !("tool" in item && item.tool === "pushSwitch")).map((item) => ({
-    ...item,
-    label: item.label.replace(/^Add\s+/i, ""),
-    ...("children" in item ? { children: cleanLabels(item.children) } : {}),
-  }))
+  return items
+    .filter(
+      (item) =>
+        !(
+          "tool" in item &&
+          ["pushSwitch", "text", "box", "line"].includes(item.tool ?? "")
+        )
+    )
+    .map((item) => ({
+      ...item,
+      label: item.label.replace(/^Add\s+/i, ""),
+      ...("children" in item ? { children: cleanLabels(item.children) } : {}),
+    }))
 }
 
 const entries = cleanLabels(

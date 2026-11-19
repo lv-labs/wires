@@ -10,6 +10,9 @@ class Matrix {
   constructor(a = 1, b = 0, c = 0, d = 1, e = 0, f = 0) {
     Object.assign(this, { a, b, c, d, e, f });
   }
+  multiply(m) {
+    return new Matrix(this.a*m.a+this.c*m.b,this.b*m.a+this.d*m.b,this.a*m.c+this.c*m.d,this.b*m.c+this.d*m.d,this.a*m.e+this.c*m.f+this.e,this.b*m.e+this.d*m.f+this.f);
+  }
   inverse() {
     const det = this.a * this.d - this.b * this.c;
     return new Matrix(
@@ -34,6 +37,13 @@ class Point {
   }
 }
 class Shape {}
+class Element {
+  constructor() { this.attributes = {}; this.children = []; }
+  setAttribute(k,v) { this.attributes[k]=v; }
+  removeAttribute(k) { delete this.attributes[k]; }
+  append(child) { this.children.push(child); }
+  replaceChildren() { this.children=[]; }
+}
 const exports = {};
 const code = ts.transpileModule(
   readFileSync(
@@ -49,6 +59,8 @@ const code = ts.transpileModule(
 ).outputText;
 vm.runInNewContext(code, {
   exports,
+  document: {createElementNS: () => new Element()},
+  getComputedStyle: () => ({strokeWidth:"7",fillRule:"evenodd",strokeLinecap:"round",strokeLinejoin:"round",strokeMiterlimit:"4",strokeDasharray:"none",strokeDashoffset:"0"}),
   DOMPoint: Point,
   SVGGeometryElement: Shape,
 });
@@ -127,3 +139,23 @@ assert.equal(
 console.log(
   "Switch hit areas passed: empty interiors, padded edges, multi-pole height, all rotations/mirrors, zoom-independent tolerance, and precise non-switch hits.",
 );
+
+const artwork = new Shape();
+artwork.getScreenCTM = () => new Matrix(2,0,0,2,40,60);
+artwork.cloneNode = () => new Element();
+const switchBody = body(new Matrix(2,0,0,2,40,60), box);
+switchBody.querySelectorAll = () => [artwork];
+const overlay = new Element();
+overlay.getScreenCTM = () => new Matrix(2,0,0,2);
+overlay.ownerSVGElement = svg([switchBody]);
+exports.drawArtworkHitAreas(overlay);
+assert.equal(overlay.children.length,2,"Overlay includes padded bounds and precise artwork");
+const padding = overlay.children[0].children[0].attributes;
+assert.equal(padding.x,"-103");
+assert.equal(padding.width,"206","Six-screen-pixel padding follows zoom");
+assert.equal(overlay.children[1].attributes.transform,"matrix(1 0 0 1 20 30)");
+const geometry = overlay.children[1].children[0].attributes;
+assert.equal(geometry.fill,"#ec4899");
+assert.equal(geometry["stroke-width"],"7","Overlay preserves actual rendered stroke width");
+assert.equal(geometry["fill-rule"],"evenodd");
+console.log("Artwork hit overlay passed: switch padding, coordinate transforms, geometric fills and rendered strokes.");

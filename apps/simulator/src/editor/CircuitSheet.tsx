@@ -37,13 +37,27 @@ import type {
   Point,
   Target,
 } from "./core"
+import { LedGlowControl } from "./LedGlowControl"
+import { useLedGlow } from "./useLedGlow"
 import { SymbolBody, SymbolLayer } from "./SymbolLayer"
 import { WireLayer } from "./WireLayer"
+import { DrawingLayer, DrawingShape, DrawingHandles } from "./DrawingLayer"
+import { SelectionHitboxes } from "./SelectionHitboxes"
+import { DrawingProperties } from "./DrawingProperties"
+import {
+  makeDrawing,
+  moveDrawingPoint,
+  defaultDrawingStyle,
+  drawingTools,
+} from "./drawings"
+import type { Drawing, DrawingKind, DrawingStyle } from "./core"
 import { ComponentMenu } from "./ComponentMenu"
 import { hasSlider } from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
 
 type Gesture =
+  | { kind: "drawing"; origin: Point; shape: DrawingKind }
+  | { kind: "drawingVertex"; drawing: Drawing; index: number }
   | {
       kind: "drag"
       origin: Point
@@ -206,7 +220,13 @@ export const CircuitSheet = memo(function CircuitSheet({
     top: number
   }) => void
 }) {
+  const [ledGlow, setLedGlow] = useLedGlow()
+  const [drawingStyle, setDrawingStyle] =
+    useState<DrawingStyle>(defaultDrawingStyle)
+  const [styleOpen, setStyleOpen] = useState(false)
+  const [drawingDraft, setDrawingDraft] = useState<Drawing | null>(null)
   const [showWireVoltage, setShowWireVoltage] = useState(true)
+  const [showSelectionHitboxes, setShowSelectionHitboxes] = useState(false)
   const [showWireCurrent, setShowWireCurrent] = useState(true)
   const [crosshairMode, setCrosshairMode] = useState<"off" | "small" | "full">(
     () => {
@@ -325,6 +345,7 @@ export const CircuitSheet = memo(function CircuitSheet({
     wireContinuation.current = null
     gesture.current = null
     setPreview(null)
+    setDrawingDraft(null)
     setBox(null)
     if (continuation) resumeRoute(continuation)
     else {
@@ -474,6 +495,7 @@ export const CircuitSheet = memo(function CircuitSheet({
     setRoute(null)
     setHover(null)
     setPlacement(null)
+    setDrawingDraft(null)
     onToolChange(next)
   }
   function cancel() {
@@ -499,7 +521,8 @@ export const CircuitSheet = memo(function CircuitSheet({
     if (
       !fragment.electrical.components.length &&
       !fragment.electrical.junctions.length &&
-      !fragment.electrical.wires.length
+      !fragment.electrical.wires.length &&
+      !fragment.layout.drawings?.length
     )
       return false
     clipboard.current = fragment
@@ -512,6 +535,7 @@ export const CircuitSheet = memo(function CircuitSheet({
     const points = [
       ...Object.values(fragment.layout.components),
       ...Object.values(fragment.layout.junctions),
+      ...(fragment.layout.drawings ?? []).flatMap((item) => item.points),
     ]
     const anchor = snapped(
       points.reduce((min, point) => ({
@@ -551,6 +575,13 @@ export const CircuitSheet = memo(function CircuitSheet({
       ...document.electrical.wires.flatMap((wire) =>
         core.geometry.route(document, wire)
       ),
+      ...(document.layout.drawings ?? []).flatMap((item) => {
+        const b = core.geometry.drawingBounds(item)
+        return [
+          { x: b.x, y: b.y },
+          { x: b.right, y: b.bottom },
+        ]
+      }),
       ...bounds.flatMap((b) => [
         { x: b.x, y: b.y },
         { x: b.right, y: b.bottom },
@@ -689,6 +720,23 @@ export const CircuitSheet = memo(function CircuitSheet({
     const key = event.key.toLowerCase()
     const command = event.ctrlKey || event.metaKey
     if (
+      drawingDraft?.kind === "polygon" &&
+      !target.closest("input,textarea,select,[contenteditable=true]")
+    ) {
+      if (key === "Enter") {
+        event.preventDefault()
+        finishPolygon()
+        return
+      }
+      if (key === "Backspace") {
+        event.preventDefault()
+        setDrawingDraft((d) =>
+          d ? { ...d, points: d.points.slice(0, -1) } : null
+        )
+        return
+      }
+    }
+    if (
       key === "w" &&
       !command &&
       !target.closest("input, textarea, select, [role=menu], [role=dialog]") &&
@@ -812,7 +860,10 @@ export const CircuitSheet = memo(function CircuitSheet({
       event.preventDefault()
       cancel()
       const entity = selectForCommand().find(
-        (item) => item.kind === "component" || item.kind === "probe"
+        (item) =>
+          item.kind === "component" ||
+          item.kind === "probe" ||
+          item.kind === "drawing"
       )
       if (entity) onEdit(entity)
       return
@@ -1056,6 +1107,36 @@ export const CircuitSheet = memo(function CircuitSheet({
     }
     lastBodyClick.current = { id, time: Date.now(), x: point.x, y: point.y }
   }
+  function commitDrawing(drawing: Drawing) {
+    const id = execute({
+      type: "addDrawing",
+      drawing: { ...drawing, id: crypto.randomUUID() },
+    })
+    setDrawingDraft(null)
+    if (typeof id === "string") onSelection([{ kind: "drawing", id }])
+    return id
+  }
+  function finishPolygon() {
+    if (drawingDraft?.kind === "polygon" && drawingDraft.points.length >= 3)
+      commitDrawing(drawingDraft)
+    else onNotice("A polygon needs at least three points")
+  }
+  function beginDrawingHandle(
+    drawing: Drawing,
+    index: number,
+    event: PointerEvent<SVGCircleElement>
+  ) {
+    if (tool !== "select" || event.button !== 0 || spacePan.current) return
+    event.preventDefault()
+    event.stopPropagation()
+    svg.current?.focus()
+    svg.current?.setPointerCapture(event.pointerId)
+    gesture.current = {
+      kind: "drawingVertex",
+      drawing: structuredClone(drawing),
+      index,
+    }
+  }
   function down(e: PointerEvent<SVGSVGElement>) {
     e.currentTarget.focus()
     const screen = local(e.clientX, e.clientY),
@@ -1079,6 +1160,46 @@ export const CircuitSheet = memo(function CircuitSheet({
       return
     }
     if (e.button !== 0) return
+    if (tool.startsWith("draw:")) {
+      e.preventDefault()
+      const shape = tool.slice(5) as DrawingKind,
+        point = snapped(p)
+      if (shape === "text") {
+        const id = commitDrawing(
+          makeDrawing("text", point, point, drawingStyle)
+        )
+        changeTool("select")
+        if (typeof id === "string") onEdit({ kind: "drawing", id })
+      } else if (shape === "polygon") {
+        if (drawingDraft?.kind === "polygon") {
+          if (
+            drawingDraft.points.length >= 3 &&
+            core.geometry.distance(point, drawingDraft.points[0]) < 1
+          )
+            finishPolygon()
+          else if (
+            !drawingDraft.points.some(
+              (last, i) =>
+                i === drawingDraft.points.length - 1 &&
+                core.geometry.distance(last, point) < 1
+            )
+          )
+            setDrawingDraft({
+              ...drawingDraft,
+              points: [...drawingDraft.points, point],
+            })
+        } else
+          setDrawingDraft({
+            ...makeDrawing("polygon", point, point, drawingStyle),
+            points: [point],
+          })
+      } else {
+        gesture.current = { kind: "drawing", origin: point, shape }
+        setDrawingDraft(makeDrawing(shape, point, point, drawingStyle))
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }
+      return
+    }
     if (placement) {
       place(p)
       return
@@ -1185,6 +1306,28 @@ export const CircuitSheet = memo(function CircuitSheet({
     const gridPoint = snapped(p)
     setCursor(gridPoint)
     const g = gesture.current
+    if (g?.kind === "drawing") {
+      setDrawingDraft(makeDrawing(g.shape, g.origin, gridPoint, drawingStyle))
+      return
+    }
+    if (g?.kind === "drawingVertex") {
+      const draft = structuredClone(document)
+      const index =
+        draft.layout.drawings?.findIndex((item) => item.id === g.drawing.id) ??
+        -1
+      if (index >= 0)
+        draft.layout.drawings![index] = moveDrawingPoint(
+          g.drawing,
+          g.index,
+          gridPoint
+        )
+      setPreview(draft)
+      return
+    }
+    if (tool.startsWith("draw:")) {
+      setHover(null)
+      return
+    }
     if (g?.kind === "pan")
       setCamera({
         ...camera,
@@ -1294,7 +1437,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       return
     }
     const chosen = selectForCommand()
-    if (chosen.some(({ kind }) => kind === "component"))
+    if (chosen.some(({ kind }) => kind === "component" || kind === "drawing"))
       execute({
         type: "transform",
         selection: chosen,
@@ -1337,8 +1480,42 @@ export const CircuitSheet = memo(function CircuitSheet({
         y: crosshairWorld.y * camera.scale + camera.y,
       }
     : null
+  const selectedDrawing =
+    selection.length === 1 && selection[0].kind === "drawing"
+      ? shown.layout.drawings?.find((item) => item.id === selection[0].id)
+      : undefined
+  const drawingPreview =
+    drawingDraft?.kind === "polygon"
+      ? { ...drawingDraft, points: [...drawingDraft.points, cursor] }
+      : drawingDraft
   return (
     <>
+      {styleOpen && (
+        <DrawingProperties
+          title="New drawing appearance"
+          styleOnly
+          drawing={{
+            ...makeDrawing(
+              "text",
+              { x: 0, y: 0 },
+              { x: 100, y: 100 },
+              drawingStyle
+            ),
+            ...drawingStyle,
+          }}
+          onClose={() => setStyleOpen(false)}
+          onApply={(drawing) => {
+            setDrawingStyle({
+              stroke: drawing.stroke,
+              fill: drawing.fill,
+              strokeWidth: drawing.strokeWidth,
+              strokeStyle: drawing.strokeStyle,
+              fontSize: drawing.fontSize,
+            })
+            setStyleOpen(false)
+          }}
+        />
+      )}
       <div className="flex min-h-9 items-center gap-3 border-b px-2 py-1">
         <Menubar className="h-8 rounded-none border-0 p-0">
           <MenubarMenu>
@@ -1508,6 +1685,12 @@ export const CircuitSheet = memo(function CircuitSheet({
                 </MenubarSubContent>
               </MenubarSub>
               <MenubarSeparator />
+              <MenubarSub>
+                <MenubarSubTrigger>LED glow</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <LedGlowControl value={ledGlow} onChange={setLedGlow} />
+                </MenubarSubContent>
+              </MenubarSub>
               <MenubarCheckboxItem
                 checked={showWireVoltage}
                 onCheckedChange={setShowWireVoltage}
@@ -1531,8 +1714,56 @@ export const CircuitSheet = memo(function CircuitSheet({
                 Grid: off {gridMode === "off" ? "✓" : ""}
               </MenubarItem>
               <MenubarSeparator />
+              <MenubarSub>
+                <MenubarSubTrigger>Developer</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarCheckboxItem
+                    checked={showSelectionHitboxes}
+                    onCheckedChange={setShowSelectionHitboxes}
+                  >
+                    Show selection hitboxes
+                  </MenubarCheckboxItem>
+                </MenubarSubContent>
+              </MenubarSub>
+              <MenubarSeparator />
               <MenubarItem disabled={!canStep} onClick={onStepSimulation}>
                 Step simulation (10)
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger>Draw</MenubarTrigger>
+            <MenubarContent>
+              {drawingTools.map(({ kind, label }) => (
+                <MenubarItem
+                  key={kind}
+                  onClick={() => {
+                    changeTool(`draw:${kind}`)
+                    onNotice(
+                      kind === "polygon"
+                        ? "Click vertices; Enter or double-click to finish; Esc cancels"
+                        : kind === "text"
+                          ? "Click to place text"
+                          : "Drag to draw; Esc cancels"
+                    )
+                    requestAnimationFrame(() => svg.current?.focus())
+                  }}
+                >
+                  {label}
+                </MenubarItem>
+              ))}
+              <MenubarSeparator />
+              {selectedDrawing && (
+                <MenubarItem
+                  onClick={() =>
+                    onEdit({ kind: "drawing", id: selectedDrawing.id })
+                  }
+                >
+                  Selected drawing appearance…
+                </MenubarItem>
+              )}
+              <MenubarItem onClick={() => setStyleOpen(true)}>
+                New drawing appearance…
               </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
@@ -1559,6 +1790,15 @@ export const CircuitSheet = memo(function CircuitSheet({
             }}
           />
         </Menubar>
+        {tool.startsWith("draw:") && (
+          <span role="status" className="text-xs">
+            {tool === "draw:polygon"
+              ? "Click vertices · Enter or double-click to finish · Esc cancels"
+              : tool === "draw:text"
+                ? "Click to place text · Esc cancels"
+                : "Drag to draw · Esc cancels"}
+          </span>
+        )}
         {(tool === "wire" || route) && (
           <span role="status" className="text-xs">
             {route
@@ -1639,6 +1879,15 @@ export const CircuitSheet = memo(function CircuitSheet({
             Duplicate
           </MenubarItem>
           <MenubarItem onClick={removeSelection}>Delete</MenubarItem>
+          {itemMenu?.entity.kind === "drawing" && (
+            <MenubarItem
+              onClick={() => {
+                if (itemMenu) onEdit(itemMenu.entity)
+              }}
+            >
+              Drawing appearance…
+            </MenubarItem>
+          )}
           {itemMenu?.entity.kind === "component" &&
             (() => {
               const component = document.electrical.components.find(
@@ -1736,7 +1985,7 @@ export const CircuitSheet = memo(function CircuitSheet({
         ref={svg}
         tabIndex={0}
         aria-label="Circuit sheet. Select and drag; G connected move, M detached move, R rotate, X/Y flip, W start or place wire and continue, Escape cancel and clear selection."
-        className={`min-h-[450px] w-full flex-1 touch-none outline-none${tool === "wire" || route ? " cursor-crosshair" : ""}`}
+        className={`min-h-[450px] w-full flex-1 touch-none outline-none${tool === "wire" || route ? "cursor-crosshair" : ""}`}
         onContextMenu={(e) => {
           e.preventDefault()
           cancel()
@@ -1766,11 +2015,21 @@ export const CircuitSheet = memo(function CircuitSheet({
         }}
         onPointerCancel={cancel}
         onDoubleClick={(e) => {
+          if (tool === "draw:polygon") {
+            e.preventDefault()
+            finishPolygon()
+            return
+          }
           if (placement || tool !== "select" || route) return
           const point = world(local(e.clientX, e.clientY))
           const hit = selectionHit(point)
-          if (hit?.kind !== "component" && hit?.kind !== "probe") return
-          if (hit.kind === "probe") {
+          if (
+            hit?.kind !== "component" &&
+            hit?.kind !== "probe" &&
+            hit?.kind !== "drawing"
+          )
+            return
+          if (hit.kind === "probe" || hit.kind === "drawing") {
             e.preventDefault()
             cancel()
             onEdit(hit)
@@ -1798,6 +2057,35 @@ export const CircuitSheet = memo(function CircuitSheet({
             return
           }
           const active = gesture.current
+          if (active?.kind === "drawing") {
+            const point = snapped(world(local(e.clientX, e.clientY)))
+            gesture.current = null
+            if (
+              core.geometry.distance(point, active.origin) >=
+                core.geometry.grid &&
+              (active.shape === "line" ||
+                (point.x !== active.origin.x && point.y !== active.origin.y))
+            )
+              commitDrawing(
+                makeDrawing(active.shape, active.origin, point, drawingStyle)
+              )
+            else setDrawingDraft(null)
+            if (e.currentTarget.hasPointerCapture(e.pointerId))
+              e.currentTarget.releasePointerCapture(e.pointerId)
+            return
+          }
+          if (active?.kind === "drawingVertex") {
+            const point = snapped(world(local(e.clientX, e.clientY)))
+            gesture.current = null
+            setPreview(null)
+            execute({
+              type: "setDrawing",
+              drawing: moveDrawingPoint(active.drawing, active.index, point),
+            })
+            if (e.currentTarget.hasPointerCapture(e.pointerId))
+              e.currentTarget.releasePointerCapture(e.pointerId)
+            return
+          }
           if (active?.kind === "box") {
             const end = world(local(e.clientX, e.clientY))
             const picked = core.geometry.boxSelection(
@@ -1869,6 +2157,17 @@ export const CircuitSheet = memo(function CircuitSheet({
         <g
           transform={`translate(${camera.x} ${camera.y}) scale(${camera.scale})`}
         >
+          <DrawingLayer
+            drawings={shown.layout.drawings ?? []}
+            selected={selection
+              .filter((item) => item.kind === "drawing")
+              .map((item) => item.id)}
+          />
+          {drawingPreview && (
+            <g pointerEvents="none" opacity={0.65}>
+              <DrawingShape drawing={drawingPreview} />
+            </g>
+          )}
           <WireLayer
             document={shown}
             selection={selection}
@@ -1878,11 +2177,25 @@ export const CircuitSheet = memo(function CircuitSheet({
             running={simulationRunning}
           />
           <SymbolLayer
+            ledGlow={ledGlow}
+            running={simulationRunning}
             document={shown}
             frame={frame}
             sliderPreview={sliderPreview}
             selected={selectedComponents}
           />
+          {selectedDrawing && tool === "select" && (
+            <DrawingHandles
+              drawing={selectedDrawing}
+              scale={camera.scale}
+              onHandle={(index, event) =>
+                beginDrawingHandle(selectedDrawing, index, event)
+              }
+            />
+          )}
+          {showSelectionHitboxes && (
+            <SelectionHitboxes document={shown} scale={camera.scale} />
+          )}
           {shown.probes
             .filter(
               (probe) =>
@@ -1968,7 +2281,11 @@ export const CircuitSheet = memo(function CircuitSheet({
               strokeWidth={6.25}
               opacity={0.65}
             >
-              <SymbolBody component={previewComponent} pose={placement} />
+              <SymbolBody
+                component={previewComponent}
+                pose={placement}
+                highlighted
+              />
             </g>
           )}
           {hover && (

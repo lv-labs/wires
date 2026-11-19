@@ -1,17 +1,19 @@
 import {editing as CircuitEditorModel, adapter as CircuitDocumentAdapter} from '../packages/circuit-core/index.mjs';
 import assert from 'node:assert/strict';
 const M=CircuitEditorModel,A=CircuitDocumentAdapter,copy=structuredClone;
+// Keep wiring fixtures horizontal as the authored resistor orientation changes.
+const resistorRotation=(360-Math.round(Math.atan2(M.definitions.resistor.pins.b[1],M.definitions.resistor.pins.b[0])*180/Math.PI))%360;
 const selected=new Set([M.token('component','moving')]);
 function fixture(kind='corner'){
  const d=M.empty();
  for(const [id,x,y] of [['moving',0,0],['fixed',800,300]]){
-  d.electrical.components.push({id,kind:'resistor',reference:id,modelVersion:1,parameters:{resistance:1000}});d.layout.components[id]={x,y,rotation:270,mirror:false};
+  d.electrical.components.push({id,kind:'resistor',reference:id,modelVersion:1,parameters:{resistance:1000}});d.layout.components[id]={x,y,rotation:resistorRotation,mirror:false};
  }
  const pin={kind:'pin',componentId:'moving',pinId:'b'},fixed={kind:'pin',componentId:'fixed',pinId:'a'};
  function node(id,x,y){d.electrical.junctions.push({id});d.layout.junctions[id]={x,y};return {kind:'junction',junctionId:id};}
  function wire(id,from,to,bends=[]){d.electrical.wires.push({id,from,to});d.layout.wires[id]={bends};}
  if(kind==='pin'){d.layout.components.fixed.y=0;wire('lead',pin,fixed);}
- else if(kind==='contact'){d.layout.components.fixed={x:200,y:0,rotation:270,mirror:false};wire('lead',pin,fixed);}
+ else if(kind==='contact'){d.layout.components.fixed={x:200,y:0,rotation:resistorRotation,mirror:false};wire('lead',pin,fixed);}
  else{
   const corner=node('corner',400,0),next=node('next',400,300);wire('lead',pin,corner);wire('vertical',corner,next);wire('right',next,fixed);
   if(kind==='branch')wire('branch',corner,node('loose',600,0));

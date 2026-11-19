@@ -30,14 +30,28 @@
       runRequested = false;
       cancelTick();
     }
-    function schedule(delay = intervalMs) {
+    function schedule(prompt = false) {
       if (!runRequested || disposed || timer !== null || stepPending || livePending ||
+          (!batchSteps && !prompt) ||
           !current() || !['paused', 'running'].includes(status)) return;
       timer = scheduleTask(() => {
         timer = null;
         if (runRequested && !disposed && !stepPending && !livePending && current() && status === 'running')
-          step(batchSteps, true).catch(() => {});
-      }, delay);
+          step(batchSteps || 1, true).catch(() => {});
+      }, prompt ? 0 : intervalMs);
+    }
+    function setRunPacing(steps, interval) {
+      assertOpen();
+      if (!Number.isSafeInteger(steps) || steps < 0 || steps > 10000 ||
+          !Number.isFinite(interval) || interval < 0)
+        throw failure('INVALID_RUN_OPTIONS', 'Invalid batch size or interval');
+      const reschedule = interval !== intervalMs || Boolean(steps) !== Boolean(batchSteps);
+      batchSteps = steps;
+      intervalMs = interval;
+      if (reschedule) {
+        cancelTick();
+        schedule();
+      }
     }
     function current(record = active) {
       return record && !record.dead && record.documentId === desiredDocumentId &&
@@ -106,7 +120,7 @@
           if (replacement?.token === token) replacement = null;
           lastFrame = null; status = idleStatus(); lastError = null;
           previous?.worker.terminate();
-          publish(); schedule();
+          publish(); schedule(batchSteps === 0);
           return {activated: true, ...identity(record)};
         } catch (cause) {
           if (disposed || token !== generation) return {superseded: true};
@@ -182,7 +196,7 @@
           publish();
           // A drag must not repeatedly postpone physics by a full display interval.
           // Replace an older timer with a prompt solve once the latest edit lands.
-          if(!livePending && token===generation && status==='running'){cancelTick();schedule(0);}
+          if(!livePending && token===generation && status==='running'){cancelTick();schedule(true);}
           else schedule();
         }
       })();
@@ -265,7 +279,7 @@
       if(result.componentId!==componentId)throw failure('INVALID_REPLY','Recorder reply target mismatch');
       return copy(result);
     }
-    return {setDocument, readCapture, setSampleChannels: channels=>{assertOpen();sampleChannels=Adapter.normalizeSampleChannels(channels);}, step: count => step(count), getState: state,
+    return {setDocument, readCapture, setRunPacing, setSampleChannels: channels=>{assertOpen();sampleChannels=Adapter.normalizeSampleChannels(channels);}, step: count => step(count), getState: state,
       run: () => {
         assertOpen();
         // Keep the user's intent even while an edit is being installed or repaired.

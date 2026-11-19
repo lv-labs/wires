@@ -8,7 +8,7 @@ import {
   renderToStaticMarkup,
 } from "./typescript_module.mjs";
 const load = createTypeScriptLoader();
-const { validateSymbolSource } = load(
+const { validateSymbolSource, validateWaveformSource } = load(
   new URL("../apps/simulator/scripts/symbol-source.ts", import.meta.url),
 );
 const root = new URL("../packages/circuit-symbols/src/", import.meta.url);
@@ -355,6 +355,93 @@ try {
     assert.ok(
       module.id.startsWith("\0symbol-workbench:"),
       "Drafts use virtual modules, separate from saved files",
+    );
+  }
+  const glyphFile = new URL("../waveforms.tsx", root);
+  const glyphSource = readFileSync(glyphFile, "utf8");
+  validateWaveformSource(glyphSource);
+  const savedGlyphs = await server.ssrLoadModule(
+    "/@fs" + fileURLToPath(glyphFile),
+  );
+  const dcGlyph = renderToStaticMarkup(
+    React.createElement(savedGlyphs.WaveformGlyph, {
+      waveform: { kind: "dc" },
+    }),
+  );
+  assert.throws(
+    () =>
+      validateWaveformSource(
+        glyphSource.replace(
+          "export function WaveformGlyph",
+          "function WaveformGlyph",
+        ),
+      ),
+    /WaveformGlyph/,
+  );
+  assert.throws(
+    () => validateWaveformSource(glyphSource + "\n<broken"),
+    /\d+:\d+/,
+  );
+  assert.equal((await request("/waveformGlyphs")).source, glyphSource);
+  assert.equal(
+    (
+      await request("/waveformGlyphs", "POST", {
+        source: "stale",
+        draft: glyphSource,
+      })
+    ).status,
+    409,
+  );
+  const { waveformChoices, previewWaveform } = await server.ssrLoadModule(
+    "/src/symbol-workbench/waveformPreview.ts",
+  );
+  assert.equal(previewWaveform("dc").voltage, 5);
+  assert.equal(previewWaveform("square").dutyCycle, 0.5);
+  assert.equal(previewWaveform("sine", { amplitude: 4 }).amplitude, 4);
+  for (const kind of ["voltageSource", "voltageRail"]) {
+    const source = readFileSync(new URL(kind + ".tsx", root), "utf8");
+    const glyphDraft = glyphSource.replace(
+      /(sine:\s*`\s*)M\s+-?\d+(?:\.\d+)?\s+[-\d.]+/,
+      "$1M -123 0",
+    );
+    const result = await request(`/${kind}/preview`, "POST", {
+      draft: source,
+      glyphDraft,
+    });
+    assert.equal(result.status, 200);
+    const transformed = await server.transformRequest(result.url);
+    assert.ok(
+      transformed.code.includes(":glyph.tsx"),
+      "Voltage source imports its in-memory glyph draft",
+    );
+    const module = await server.ssrLoadModule(result.url);
+    for (const [waveformKind] of waveformChoices) {
+      const drawing = renderToStaticMarkup(
+        React.createElement(module.Symbol, {
+          parameters: {
+            ...module.metadata.parameters,
+            waveform: previewWaveform(waveformKind),
+          },
+        }),
+      );
+      assert.ok(!drawing.includes("NaN"));
+      if (waveformKind === "dc")
+        assert.ok(drawing.includes(dcGlyph), "DC uses the authored glyph");
+      else
+        assert.ok(
+          !drawing.includes(dcGlyph),
+          "AC uses its waveform instead of the DC glyph",
+        );
+      if (waveformKind === "sine")
+        assert.ok(
+          drawing.includes("M -123 0"),
+          "Unsaved glyph changes render in the source body",
+        );
+    }
+    assert.equal(
+      readFileSync(glyphFile, "utf8"),
+      glyphSource,
+      "Preview never writes the shared glyph file",
     );
   }
   console.log(

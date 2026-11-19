@@ -52,3 +52,69 @@ export function symbolBodyHit(
   }
   return null
 }
+
+/** Draw the additional DOM hit regions in the overlay's coordinate system. */
+export function drawArtworkHitAreas(overlay: SVGGElement): void {
+  const svg = overlay.ownerSVGElement
+  const overlayMatrix = overlay.getScreenCTM()
+  if (!svg || !overlayMatrix) return
+  const inverse = overlayMatrix.inverse()
+  const ns = "http://www.w3.org/2000/svg"
+  overlay.replaceChildren()
+  const append = (shape: SVGGraphicsElement, area: SVGElement) => {
+    const matrix = shape.getScreenCTM()
+    if (!matrix) return
+    const group = document.createElementNS(ns, "g")
+    const m = inverse.multiply(matrix)
+    group.setAttribute(
+      "transform",
+      `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`
+    )
+    group.append(area)
+    overlay.append(group)
+  }
+  const rectangle = (box: DOMRect, padX = 0, padY = 0) => {
+    const rect = document.createElementNS(ns, "rect")
+    rect.setAttribute("x", String(box.x - padX))
+    rect.setAttribute("y", String(box.y - padY))
+    rect.setAttribute("width", String(box.width + 2 * padX))
+    rect.setAttribute("height", String(box.height + 2 * padY))
+    return rect
+  }
+  for (const body of svg.querySelectorAll<SVGGElement>("[data-symbol-body]")) {
+    const matrix = body.getScreenCTM()
+    if (body.dataset.symbolHitArea === "bounds" && matrix) {
+      append(
+        body,
+        rectangle(
+          body.getBBox(),
+          6 / Math.hypot(matrix.a, matrix.b),
+          6 / Math.hypot(matrix.c, matrix.d)
+        )
+      )
+    }
+    for (const shape of body.querySelectorAll<SVGGraphicsElement>(
+      "path,rect,circle,ellipse,line,polyline,polygon,text"
+    )) {
+      if (shape instanceof SVGGeometryElement) {
+        // isPointInFill tests geometric fill even for artwork painted with fill="none".
+        const area = shape.cloneNode(false) as SVGElement
+        const style = getComputedStyle(shape)
+        area.removeAttribute("id")
+        area.removeAttribute("transform")
+        area.removeAttribute("class")
+        area.removeAttribute("style")
+        area.setAttribute("fill", "#ec4899")
+        area.setAttribute("fill-rule", style.fillRule)
+        area.setAttribute("stroke", "#ec4899")
+        area.setAttribute("stroke-width", style.strokeWidth)
+        area.setAttribute("stroke-linecap", style.strokeLinecap)
+        area.setAttribute("stroke-linejoin", style.strokeLinejoin)
+        area.setAttribute("stroke-miterlimit", style.strokeMiterlimit)
+        area.setAttribute("stroke-dasharray", style.strokeDasharray)
+        area.setAttribute("stroke-dashoffset", style.strokeDashoffset)
+        append(shape, area)
+      } else append(shape, rectangle(shape.getBBox()))
+    }
+  }
+}

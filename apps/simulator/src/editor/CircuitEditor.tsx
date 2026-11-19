@@ -1,19 +1,21 @@
 import { FalstadImportDialog } from "./FalstadImportDialog"
 import { defaultScopeLayout } from "./scopeLayout"
 import { createScopeViewport } from "./scopeViewport"
+import { DrawingProperties } from "./DrawingProperties"
 import { TraceProperties } from "./TraceProperties"
 import { ScopeWorkspace } from "./ScopeWorkspace"
 import { scopeWindow } from "./scopeDisplay"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Slider } from "@/components/ui/slider"
 import { core } from "./core"
-import type {
-  CircuitDocument,
-  Component,
-  Entity,
-  Target,
-} from "./core"
+import type { CircuitDocument, Component, Entity, Target } from "./core"
 import { useCircuitSession } from "./useCircuitSession"
+import {
+  defaultSimulationSpeed,
+  maxSimulationSpeed,
+  snapSimulationSpeed,
+} from "./simulationSpeed"
 import { CircuitSheet } from "./CircuitSheet"
 import { ComponentProperties } from "./ComponentProperties"
 import { ComponentSliderPanel } from "./ComponentSliderPanel"
@@ -209,6 +211,9 @@ export function CircuitEditor({
       junction: new Set(electrical.junctions.map(({ id }) => id)),
       wire: new Set(electrical.wires.map(({ id }) => id)),
       probe: new Set(probes.map(({ id }) => id)),
+      drawing: new Set(
+        (editor.document.layout.drawings ?? []).map(({ id }) => id)
+      ),
     }
     setSelection((current) => {
       const valid = current.filter(({ kind, id }) => ids[kind].has(id))
@@ -237,6 +242,10 @@ export function CircuitEditor({
       ? editor.document.electrical.components.find(
           ({ id }) => id === editing.id
         )
+      : undefined
+  const editingDrawing =
+    editing?.kind === "drawing"
+      ? editor.document.layout.drawings?.find((item) => item.id === editing.id)
       : undefined
   const editingProbe =
     editing?.kind === "probe"
@@ -676,6 +685,18 @@ export function CircuitEditor({
       className="flex min-h-0 flex-1 flex-col"
       aria-label="Circuit editor"
     >
+      {editingDrawing && (
+        <DrawingProperties
+          key={editingDrawing.id}
+          drawing={editingDrawing}
+          onClose={closeProperties}
+          onApply={(drawing) => {
+            editor.execute({ type: "setDrawing", drawing })
+            closeProperties()
+            setNotice("Drawing updated")
+          }}
+        />
+      )}
       {editingComponent && (
         <ComponentProperties
           key={editingComponent.id}
@@ -740,38 +761,71 @@ export function CircuitEditor({
               : "Save JSON to keep your work"}
           </span>
         )}
-        {editor.simulation.runRequested ? (
-          <Button size="sm" onClick={() => void editor.run.current?.pause()}>
-            Stop
-          </Button>
-        ) : (
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <div className="w-28 shrink-0 text-xs text-muted-foreground">
+            <span>Simulation Speed</span>
+            <Slider
+              min={0}
+              max={maxSimulationSpeed}
+              value={editor.simulationSpeed}
+              thumbAlignment="center"
+              getAriaLabel={() => "Simulation Speed"}
+              getAriaValueText={(formatted, value) =>
+                value === defaultSimulationSpeed ? "Falstad default" : formatted
+              }
+              onValueChange={(value, details) => {
+                if (typeof value !== "number") return
+                const pointer =
+                  details.reason === "drag" || details.reason === "track-press"
+                editor.setSimulationSpeed(
+                  pointer ? snapSimulationSpeed(value) : value
+                )
+              }}
+              className="[&_[data-slot=slider-control]]:h-5"
+            >
+              <span
+                aria-hidden="true"
+                data-slot="simulation-speed-default-marker"
+                className="pointer-events-none absolute top-1/2 mt-1.5 h-1 w-0.5 rounded-full bg-muted-foreground ltr:-translate-x-1/2 rtl:translate-x-1/2"
+                style={{
+                  insetInlineStart: `${(defaultSimulationSpeed / maxSimulationSpeed) * 100}%`,
+                }}
+              />
+            </Slider>
+          </div>
+          {editor.simulation.runRequested ? (
+            <Button size="sm" onClick={() => void editor.run.current?.pause()}>
+              Stop
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              disabled={
+                !editor.simulation.accepted ||
+                ["loading", "error", "empty"].includes(editor.simulation.status)
+              }
+              onClick={() => void editor.run.current?.run()}
+            >
+              Start
+            </Button>
+          )}
           <Button
+            variant="outline"
             size="sm"
             disabled={
               !editor.simulation.accepted ||
-              ["loading", "error", "empty"].includes(editor.simulation.status)
+              editor.simulation.status === "loading"
             }
-            onClick={() => void editor.run.current?.run()}
+            onClick={() =>
+              void editor.run.current
+                ?.reset()
+                .then(() => editor.run.current?.step(1))
+                .catch(() => {})
+            }
           >
-            Start
+            Reset
           </Button>
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={
-            !editor.simulation.accepted ||
-            editor.simulation.status === "loading"
-          }
-          onClick={() =>
-            void editor.run.current
-              ?.reset()
-              .then(() => editor.run.current?.step(1))
-              .catch(() => {})
-          }
-        >
-          Reset
-        </Button>
+        </div>
       </header>
 
       {importFalstad && (
@@ -912,7 +966,7 @@ export function CircuitEditor({
             ? error || "Waiting for valid circuit"
             : editor.simulation.status === "loading"
               ? "Resetting"
-              : editor.simulation.runRequested
+              : editor.simulation.runRequested && editor.simulationSpeed > 0
                 ? "Running"
                 : "Paused"}
         </span>

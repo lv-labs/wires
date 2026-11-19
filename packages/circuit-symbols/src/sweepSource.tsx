@@ -1,9 +1,9 @@
-import { Lead, UprightText } from "../svg";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
+import { SweepGlyph } from "../waveforms";
 
 export const kind = "sweepSource";
 export const metadata = {
-
   prefix: "V",
   name: "A/C sweep",
   pins: {
@@ -53,12 +53,31 @@ export const output = {
   sign: -1,
 };
 
-export function Symbol({ pose }: SymbolProps) {
+export function Symbol({
+  parameters = metadata.parameters,
+  pose,
+  measured = {},
+  running = false,
+}: SymbolProps) {
   return (
     <>
       <Lead from={metadata.pins.p} to={[0, -50]} />
       <g transform="translate(0 -100)">
         <circle r={50} />
+        <SweepGlyph
+          pose={pose}
+          minFrequency={Number(
+            parameters.minFrequency ?? metadata.parameters.minFrequency,
+          )}
+          maxFrequency={Number(
+            parameters.maxFrequency ?? metadata.parameters.maxFrequency,
+          )}
+          frequency={
+            running && typeof measured.frequency === "number"
+              ? measured.frequency
+              : undefined
+          }
+        />
       </g>
     </>
   );

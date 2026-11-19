@@ -7,6 +7,9 @@ export type SymbolProps = {
   parameters?: Record<string, unknown>;
   pose?: Pose;
   current?: number;
+  running?: boolean;
+  highlighted?: boolean;
+  glow?: boolean | number;
   measured?: Record<string, Measurement>;
   graphicSize?: { width: number; height: number };
 };
@@ -47,6 +50,8 @@ export function UprightText({
   pose,
   x = 0,
   y = 0,
+  fontSize,
+  style,
   ...props
 }: Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   pose?: Pose;
@@ -55,7 +60,22 @@ export function UprightText({
 }) {
   return (
     <Upright pose={pose} x={x} y={y}>
-      <text x={x} y={y} stroke="none" fill="currentColor" {...props} />
+      <text
+        x={x}
+        y={y}
+        stroke="none"
+        fill="currentColor"
+        fontSize={fontSize}
+        style={
+          typeof fontSize === "number"
+            ? {
+                fontSize: `calc(${fontSize}px * var(--symbol-text-scale, 1))`,
+                ...style,
+              }
+            : style
+        }
+        {...props}
+      />
     </Upright>
   );
 }
@@ -310,72 +330,5 @@ export function SwitchPole({
         `}
       />
     </>
-  );
-}
-
-const waveforms: Record<string, string> = {
-  sine: `M -16 0
-    C -12 -20, -4 -20, 0 0
-    S 12 20, 16 0`,
-  square: `M -16 10
-    V -10
-    H 0
-    V 10
-    H 16
-    V -10`,
-  triangle: `M -16 10
-    L -8 -10
-    L 8 10
-    L 16 -10`,
-  sawtooth: `M -16 10
-    L 0 -10
-    V 10
-    L 16 -10`,
-  pulse: `M -16 10
-    H -8
-    V -10
-    H 0
-    V 10
-    H 16, -10`,
-};
-
-export function WaveformGlyph({
-  waveform,
-  pose,
-}: {
-  waveform: unknown;
-  pose?: Pose;
-}) {
-  const kind =
-    waveform && typeof waveform === "object" && "kind" in waveform
-      ? String(waveform.kind)
-      : "dc";
-  if (kind === "dc")
-    return (
-      <>
-        <UprightText
-          pose={pose}
-          y={-9}
-          dominantBaseline="central"
-          textAnchor="middle"
-          fontSize={17}
-        >
-          +
-        </UprightText>
-        <UprightText
-          pose={pose}
-          y={10}
-          dominantBaseline="central"
-          textAnchor="middle"
-          fontSize={17}
-        >
-          −
-        </UprightText>
-      </>
-    );
-  return (
-    <Upright pose={pose}>
-      <path d={waveforms[kind]} />
-    </Upright>
   );
 }

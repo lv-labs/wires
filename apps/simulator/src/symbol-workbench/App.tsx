@@ -4,8 +4,13 @@ import type { SymbolProps } from "../../../../packages/circuit-symbols/svg"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import { waveformChoices, previewWaveform } from "./waveformPreview"
+import type { WaveformKind } from "./waveformPreview"
 import { usePreviewViewport } from "./usePreviewViewport"
 import { CodeEditor } from "./CodeEditor"
+import { LedGlowControl } from "../editor/LedGlowControl"
+import { useLedGlow } from "../editor/useLedGlow"
 import { core } from "../editor/core"
 import { libraryGroups } from "./libraryGroups"
 import {
@@ -41,12 +46,16 @@ function Artwork({
   mirror = false,
   parameters,
   current = 0,
+  highlighted = false,
+  glow = 1,
 }: {
   entry: Entry
   rotation?: number
   mirror?: boolean
   parameters?: Record<string, unknown>
   current?: number
+  highlighted?: boolean
+  glow?: boolean | number
 }) {
   const scale = entry.metadata.drawingScale ?? 1
   return (
@@ -62,6 +71,8 @@ function Artwork({
           parameters={{ ...entry.metadata.parameters, ...parameters }}
           pose={{ rotation, mirror }}
           current={current}
+          highlighted={highlighted}
+          glow={glow}
         />
       </g>
     </g>
@@ -149,6 +160,9 @@ class PreviewBoundary extends Component<
 export default function App() {
   const [kind, setKind] = useState("resistor"),
     [query, setQuery] = useState("")
+  const [ledGlow, setLedGlow] = useLedGlow()
+  const [ledHovered, setLedHovered] = useState(false)
+  const [sourceTab, setSourceTab] = useState<"symbol" | "glyphs">("symbol")
   const [workspaces, setWorkspaces] = useState<Record<string, Workspace>>({})
   const [previews, setPreviews] = useState<Record<string, Preview>>({})
   const [failures, setFailures] = useState<Record<string, Failure | undefined>>(
@@ -171,11 +185,19 @@ export default function App() {
   const viewport = usePreviewViewport(svg, artwork, kind)
   const canvasSize = viewport.size,
     zoom = viewport.camera.scale
-  const original = library.find((e) => e.kind === kind)!,
-    workspace = workspaces[kind]
-  const source = workspace?.draft,
-    loaded = !!workspace
+  const original = library.find((e) => e.kind === kind)!
   const entry = previews[kind]?.entry ?? original
+  const hasWaveform = !!entry.metadata.parameters?.waveform
+  const usesGlyphs = hasWaveform || kind === "sweepSource"
+  const resource =
+    sourceTab === "glyphs" && usesGlyphs ? "waveformGlyphs" : kind
+  const workspace = workspaces[resource]
+  const symbolSource = workspaces[kind]?.draft
+  const glyphSource = usesGlyphs ? workspaces.waveformGlyphs?.draft : undefined
+  const loaded = !!workspaces[kind] && !!workspaces[resource]
+  const previewCode = JSON.stringify([symbolSource, glyphSource])
+  const waveform = (parameters.waveform ??
+    entry.metadata.parameters?.waveform) as Record<string, unknown> | undefined
   const cursor = pointer
     ? snapPreviewPoint(
         (pointer.x - viewport.camera.x) / zoom,
@@ -200,34 +222,37 @@ export default function App() {
   const currentDirty = !!workspace && workspace.source !== workspace.draft
   const dirty = Object.values(workspaces).some((w) => w.source !== w.draft)
   const failure = failures[kind],
-    error = failure && failure.source === source ? failure.message : null
-  const previewMatches =
-    !!workspace &&
-    (previews[kind]?.source === source ||
-      (workspace.source === source && !previews[kind]))
+    error = failure && failure.source === previewCode ? failure.message : null
+  const previewMatches = previews[kind]?.source === previewCode
   useEffect(() => {
     if (loaded) return
     const controller = new AbortController()
-    fetch(`/__symbols/${kind}`, { signal: controller.signal })
-      .then(async (response) => {
+    const resources = [...new Set([kind, resource])].filter(
+      (key) => !workspaces[key]
+    )
+    Promise.all(
+      resources.map(async (key) => {
+        const response = await fetch(`/__symbols/${key}`, {
+          signal: controller.signal,
+        })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error)
-        return data.source as string
+        return [key, { source: data.source, draft: data.source }] as const
       })
-      .then((text) => {
-        setWorkspaces((all) => ({
-          ...all,
-          [kind]: { source: text, draft: text },
-        }))
+    )
+      .then((items) => {
+        setWorkspaces((all) => ({ ...all, ...Object.fromEntries(items) }))
         setStatus("Source loaded")
       })
       .catch((error) => {
         if (!controller.signal.aborted) setStatus(String(error))
       })
     return () => controller.abort()
-  }, [kind, loaded])
+    // Only load on resource changes; text edits keep their existing draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, resource, loaded])
   useEffect(() => {
-    if (source === undefined) return
+    if (symbolSource === undefined) return
     let active = true
     const controller = new AbortController()
     const timer = setTimeout(async () => {
@@ -236,7 +261,10 @@ export default function App() {
         const response = await fetch(`/__symbols/${kind}/preview`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ draft: source }),
+          body: JSON.stringify({
+            draft: symbolSource,
+            glyphDraft: glyphSource,
+          }),
           signal: controller.signal,
         })
         const data = await response.json()
@@ -245,14 +273,17 @@ export default function App() {
         if (typeof module.Symbol !== "function" || !module.metadata?.pins)
           throw new Error("Preview needs named Symbol and metadata exports")
         if (!active) return
-        setPreviews((all) => ({ ...all, [kind]: { source, entry: module } }))
+        setPreviews((all) => ({
+          ...all,
+          [kind]: { source: previewCode, entry: module },
+        }))
         setFailures((all) => ({ ...all, [kind]: undefined }))
       } catch (error) {
         if (active && !controller.signal.aborted)
           setFailures((all) => ({
             ...all,
             [kind]: {
-              source,
+              source: previewCode,
               message: String(error instanceof Error ? error.message : error),
             },
           }))
@@ -265,7 +296,7 @@ export default function App() {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [kind, source])
+  }, [kind, symbolSource, glyphSource, previewCode])
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
       if (dirty && !saveInFlight.current) event.preventDefault()
@@ -276,6 +307,8 @@ export default function App() {
   function select(next: string) {
     if (busy) return
     setKind(next)
+    setLedHovered(false)
+    setSourceTab("symbol")
     setRotation(0)
     setMirror(false)
     setCurrent(0)
@@ -291,7 +324,7 @@ export default function App() {
     setBusy(true)
     setStatus("Saving source and regenerating pin catalog…")
     try {
-      const response = await fetch(`/__symbols/${kind}`, {
+      const response = await fetch(`/__symbols/${resource}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: workspace.source, draft: sent }),
@@ -300,9 +333,11 @@ export default function App() {
       if (!response.ok) throw new Error(data.error)
       setWorkspaces((all) => ({
         ...all,
-        [kind]: { ...all[kind], source: data.source },
+        [resource]: { ...all[resource], source: data.source },
       }))
-      setStatus(`Saved ${kind}.tsx and regenerated pin catalog`)
+      setStatus(
+        `Saved ${resource === "waveformGlyphs" ? "shared waveforms.tsx" : kind + ".tsx"} and regenerated pin catalog`
+      )
     } catch (error) {
       setStatus(String(error))
     } finally {
@@ -317,12 +352,12 @@ export default function App() {
     )
       return
     try {
-      const response = await fetch(`/__symbols/${kind}`)
+      const response = await fetch(`/__symbols/${resource}`)
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)
       setWorkspaces((all) => ({
         ...all,
-        [kind]: { source: data.source, draft: data.source },
+        [resource]: { source: data.source, draft: data.source },
       }))
       setStatus("Source reloaded")
     } catch (error) {
@@ -364,7 +399,13 @@ export default function App() {
           disabled={!currentDirty || busy || !!error || !previewMatches}
           onClick={() => void save()}
         >
-          {busy ? "Saving…" : currentDirty ? "Save symbol" : "Saved"}
+          {busy
+            ? "Saving…"
+            : currentDirty
+              ? resource === "waveformGlyphs"
+                ? "Save shared glyphs"
+                : "Save symbol"
+              : "Saved"}
         </Button>
       </header>
       <aside className="library">
@@ -405,7 +446,10 @@ export default function App() {
                   >
                     <svg viewBox="-200 -200 400 400">
                       <PreviewBoundary key={previews[e.kind]?.source ?? e.kind}>
-                        <Artwork entry={previews[e.kind]?.entry ?? e} />
+                        <Artwork
+                          entry={previews[e.kind]?.entry ?? e}
+                          glow={ledGlow}
+                        />
                       </PreviewBoundary>
                     </svg>
                     <span>{e.metadata.name}</span>
@@ -541,14 +585,20 @@ export default function App() {
               stroke="var(--border)"
               strokeWidth={1 / zoom}
             />
-            <g ref={artwork}>
+            <g
+              ref={artwork}
+              onPointerEnter={() => {
+                if (kind === "led") setLedHovered(true)
+              }}
+              onPointerLeave={() => setLedHovered(false)}
+            >
               <PreviewBoundary
                 key={`${kind}:${previews[kind]?.source ?? ""}:${JSON.stringify(parameters)}:${current}`}
                 onError={(message) =>
                   setFailures((all) => ({
                     ...all,
                     [kind]: {
-                      source: previews[kind]?.source ?? source ?? "",
+                      source: previews[kind]?.source ?? previewCode,
                       message,
                     },
                   }))
@@ -560,6 +610,8 @@ export default function App() {
                   mirror={mirror}
                   parameters={parameters}
                   current={current}
+                  highlighted={ledHovered}
+                  glow={ledGlow}
                 />
                 {pins && (
                   <PinMarkers
@@ -648,6 +700,30 @@ export default function App() {
           − / 0
         </div>
         <div className="preview-controls">
+          {hasWaveform && (
+            <label>
+              Waveform
+              <NativeSelect
+                aria-label="Preview waveform"
+                value={String(waveform?.kind ?? "dc")}
+                onChange={(event) =>
+                  setParameters((previous) => ({
+                    ...previous,
+                    waveform: previewWaveform(
+                      event.target.value as WaveformKind,
+                      waveform
+                    ),
+                  }))
+                }
+              >
+                {waveformChoices.map(([value, label]) => (
+                  <NativeSelectOption key={value} value={value}>
+                    {label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </label>
+          )}
           <label title="Snap spacing in SVG source units">
             Snap
             <Input
@@ -682,9 +758,54 @@ export default function App() {
           <label>
             <Checkbox checked={pins} onCheckedChange={setPins} /> Pins
           </label>
+          {kind === "led" && (
+            <LedGlowControl value={ledGlow} onChange={setLedGlow} />
+          )}
           <details>
             <summary>Preview parameters</summary>
             <div className="parameter-fields">
+              {hasWaveform &&
+                Object.entries(
+                  previewWaveform(
+                    (waveform?.kind ?? "dc") as WaveformKind,
+                    waveform
+                  )
+                )
+                  .filter(([, value]) => typeof value === "number")
+                  .map(([field, value]) => (
+                    <label key={`waveform-${field}`}>
+                      {(
+                        {
+                          voltage: "DC voltage (V)",
+                          amplitude: "Amplitude (V)",
+                          frequency: "Frequency (Hz)",
+                          offset: "DC offset (V)",
+                          phase: "Phase (rad)",
+                          dutyCycle: "Duty cycle",
+                        } as Record<string, string>
+                      )[field] ?? field}
+                      <Input
+                        aria-label={`Preview waveform ${field}`}
+                        type="number"
+                        step="any"
+                        value={String(value)}
+                        onChange={(event) => {
+                          const value = Number(event.target.value)
+                          if (Number.isFinite(value))
+                            setParameters((previous) => ({
+                              ...previous,
+                              waveform: {
+                                ...previewWaveform(
+                                  (waveform?.kind ?? "dc") as WaveformKind,
+                                  waveform
+                                ),
+                                [field]: value,
+                              },
+                            }))
+                        }}
+                      />
+                    </label>
+                  ))}
               {Object.entries(entry.metadata.parameters ?? {})
                 .filter(([, v]) =>
                   ["boolean", "number", "string"].includes(typeof v)
@@ -733,7 +854,11 @@ export default function App() {
         <div className="source-heading">
           <div>
             <div className="section-label">SOURCE · TSX</div>
-            <code>src/{kind}.tsx</code>
+            <code>
+              {resource === "waveformGlyphs"
+                ? "waveforms.tsx (shared)"
+                : `src/${kind}.tsx`}
+            </code>
           </div>
           <Button
             variant="outline"
@@ -743,19 +868,43 @@ export default function App() {
             Reload
           </Button>
         </div>
+        {usesGlyphs && (
+          <div className="source-tabs" role="group" aria-label="Source to edit">
+            <Button
+              variant={sourceTab === "symbol" ? "secondary" : "ghost"}
+              disabled={busy}
+              onClick={() => setSourceTab("symbol")}
+            >
+              Symbol
+            </Button>
+            <Button
+              variant={sourceTab === "glyphs" ? "secondary" : "ghost"}
+              disabled={busy}
+              onClick={() => setSourceTab("glyphs")}
+            >
+              Shared waveform glyphs
+            </Button>
+          </div>
+        )}
         <p className="source-guidance">
-          Paste JSX shapes inside <code>Symbol()</code>. Keep the existing leads
-          and metadata.
+          {resource === "waveformGlyphs" ? (
+            "Edit waveform paths or DC polarity artwork. These glyphs are shared by voltage sources; select a waveform in the preview controls."
+          ) : (
+            <>
+              Paste JSX shapes inside <code>Symbol()</code>. Keep the existing
+              leads and metadata.
+            </>
+          )}
         </p>
         {workspace ? (
           <CodeEditor
-            key={kind}
+            key={resource}
             source={workspace.draft}
             disabled={busy}
             onChange={(draft) =>
               setWorkspaces((all) => ({
                 ...all,
-                [kind]: { ...all[kind], draft },
+                [resource]: { ...all[resource], draft },
               }))
             }
           />
@@ -781,7 +930,7 @@ export default function App() {
               if (workspace)
                 setWorkspaces((all) => ({
                   ...all,
-                  [kind]: { ...workspace, draft: workspace.source },
+                  [resource]: { ...workspace, draft: workspace.source },
                 }))
             }}
           >

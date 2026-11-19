@@ -4,7 +4,7 @@ import * as implementation from "../../../../packages/circuit-core/index.mjs"
 export type Point = { x: number; y: number }
 export type Orientation = { axis: "x" | "y" } | { rotate: number }
 export type Entity = {
-  kind: "component" | "wire" | "junction" | "probe"
+  kind: "component" | "wire" | "junction" | "probe" | "drawing"
   id: string
 }
 export type Target =
@@ -63,6 +63,21 @@ export type ScopeLayout = {
   height: number
   dock?: ScopeDockNode | null
 }
+export type DrawingKind = "text" | "line" | "box" | "ellipse" | "polygon"
+export type DrawingStyle = {
+  stroke: string
+  fill: string
+  strokeWidth: number
+  strokeStyle: "solid" | "dashed" | "dotted"
+  fontSize: number
+}
+export type Drawing = DrawingStyle & {
+  id: string
+  kind: DrawingKind
+  points: Point[]
+  text: string
+  rotation?: number
+}
 export type CircuitDocument = {
   schemaVersion: number
   id: string
@@ -79,6 +94,7 @@ export type CircuitDocument = {
       string,
       { bends: Point[]; showVoltage?: boolean; showCurrent?: boolean }
     >
+    drawings?: Drawing[]
     scopes?: ScopeLayout
     probes?: Record<string, Point>
   }
@@ -94,6 +110,8 @@ export type CircuitDocument = {
   simulation: { timeStep: number }
 }
 export type Command =
+  | { type: "addDrawing"; drawing: Drawing }
+  | { type: "setDrawing"; drawing: Drawing }
   | {
       type: "addComponent"
       kind: string
@@ -150,6 +168,7 @@ export type Run = {
   pause(): Promise<unknown>
   step(count?: number): Promise<unknown>
   reset(): Promise<unknown>
+  setRunPacing(steps: number, intervalMs: number): void
   setSampleChannels(channels: SampleChannel[]): unknown
   readCapture(
     id: string
@@ -195,6 +214,14 @@ export const core = implementation as {
     }
   }
   geometry: {
+    distance(a: Point, b: Point): number
+    drawingBounds(drawing: Drawing): {
+      x: number
+      y: number
+      right: number
+      bottom: number
+    }
+    drawingHit(drawing: Drawing, point: Point, scale?: number): boolean
     grid: number
     snap(n: number): number
     placementPose(
@@ -209,6 +236,7 @@ export const core = implementation as {
       component: Component
     ): { x: number; y: number; right: number; bottom: number }
     graphicSize(component: Component): { width: number; height: number }
+    componentHitBox(component: Component): Point
     probePoint(
       d: CircuitDocument,
       probe: CircuitDocument["probes"][number]

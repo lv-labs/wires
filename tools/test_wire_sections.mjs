@@ -5,6 +5,8 @@ import {outputFamilyKinds,outputFamilyCircuit} from './output_family_fixtures.mj
 import {passiveMenuKinds,passiveMenuCircuit} from './passive_menu_fixtures.mjs';
 import {expansionKinds,expansionCircuit} from './component_expansion_fixtures.mjs';
 const M=CircuitEditorModel,A=CircuitDocumentAdapter,point=(x,y)=>({kind:'point',point:{x,y}}),endpoint=(m,x,y)=>{const j=m.document.electrical.junctions.find(j=>m.document.layout.junctions[j.id].x===x&&m.document.layout.junctions[j.id].y===y);assert.ok(j);return {kind:'junction',junctionId:j.id};};
+// Keep wiring fixtures horizontal as the authored resistor orientation changes.
+const resistorRotation=(360-Math.round(Math.atan2(M.definitions.resistor.pins.b[1],M.definitions.resistor.pins.b[0])*180/Math.PI))%360;
 const create=d=>M.create(d||M.empty(),()=>{},{wireSections:true});
 function valid(m){M.validate(m.document);assert.ok(m.document.electrical.wires.every(w=>M.route(m.document,w).length<=2));const n=structuredClone(m.document);M.normalizeWires(n);assert.deepEqual(n,m.document,'Normalization is idempotent');}
 // Several creation gestures become one straight selectable section.
@@ -37,14 +39,14 @@ function valid(m){M.validate(m.document);assert.ok(m.document.electrical.wires.e
 // Delete only the component: preserve wire geometry/shared pin nets and voltage
 // probes at old pins; remove the component's current probe; undo is exact.
 {
- const d=M.empty();d.electrical.components.push({id:'r',kind:'resistor',reference:'R',modelVersion:1,parameters:{resistance:1000}});d.layout.components.r={x:200,y:200,rotation:270,mirror:false};
+ const d=M.empty();d.electrical.components.push({id:'r',kind:'resistor',reference:'R',modelVersion:1,parameters:{resistance:1000}});d.layout.components.r={x:200,y:200,rotation:resistorRotation,mirror:false};
  for(const [id,x,y] of [['left',-100,200],['right',600,200],['branch',100,500]]){d.electrical.junctions.push({id});d.layout.junctions[id]={x,y};}
  for(const [id,pinId,junctionId] of [['wa','a','left'],['wb','b','right'],['wc','a','branch']]){d.electrical.wires.push({id,from:{kind:'pin',componentId:'r',pinId},to:{kind:'junction',junctionId}});d.layout.wires[id]={bends:[]};}
  d.probes.push({id:'voltage',kind:'voltage',positive:{kind:'pin',componentId:'r',pinId:'a'},reference:'ground',label:'V'},{id:'current',kind:'current',componentId:'r',label:'I'});d.layout.probes={voltage:{x:0,y:0},current:{x:0,y:0}};
  const m=create(d),before=m.document,routes=new Map(before.electrical.wires.map(w=>[w.id,M.route(before,w)]));m.remove(new Set([M.token('component','r')]));valid(m);assert.equal(m.document.electrical.components.length,0);assert.equal(m.document.electrical.wires.length,3);
  for(const w of m.document.electrical.wires){assert.deepEqual(M.route(m.document,w),routes.get(w.id));assert.ok(![w.from,w.to].some(r=>r.kind==='pin'));}
  const wa=m.document.electrical.wires.find(w=>w.id==='wa'),wc=m.document.electrical.wires.find(w=>w.id==='wc'),wb=m.document.electrical.wires.find(w=>w.id==='wb');assert.deepEqual(wa.from,wc.from);assert.notDeepEqual(wa.from,wb.from,'The deleted resistor gap is not bridged');assert.equal(m.document.probes.length,1);assert.deepEqual(m.document.probes[0].positive,wa.from);m.undo();assert.deepEqual(m.document,before);m.redo();valid(m);
- m.addComponent('resistor',200,200,270);valid(m);assert.ok(m.document.electrical.wires.some(w=>w.from.kind==='pin'||w.to.kind==='pin'),'A replacement component reconnects loose ends');
+ m.addComponent('resistor',200,200,resistorRotation);valid(m);assert.ok(m.document.electrical.wires.some(w=>w.from.kind==='pin'||w.to.kind==='pin'),'A replacement component reconnects loose ends');
 }
 // Existing document and family networks keep exactly the same electrical nets:
 // splitting/merging is geometry cleanup, never automatic crossing connectivity.
@@ -73,7 +75,7 @@ console.log('Wire sections passed: gesture-independent collinear merge, corner/b
 console.log('Overlap regressions passed: reverse/contained spans, updated junction dots, probes, idempotence and drag undo/redo.');
 // Actual component drag reverses the lead across a stationary connected section.
 {
- const d=M.empty();d.electrical.components.push({id:'r',kind:'resistor',reference:'R1',modelVersion:1,parameters:{resistance:1000}});d.layout.components.r={x:200,y:200,rotation:270,mirror:false};
+ const d=M.empty();d.electrical.components.push({id:'r',kind:'resistor',reference:'R1',modelVersion:1,parameters:{resistance:1000}});d.layout.components.r={x:200,y:200,rotation:resistorRotation,mirror:false};
  for(const [id,x,y] of [['old',600,200],['branch',200,200],['end',200,500]]){d.electrical.junctions.push({id});d.layout.junctions[id]={x,y};}
  for(const [id,from,to] of [['lead',{kind:'pin',componentId:'r',pinId:'a'},{kind:'junction',junctionId:'old'}],['back',{kind:'junction',junctionId:'old'},{kind:'junction',junctionId:'branch'}],['branchWire',{kind:'junction',junctionId:'branch'},{kind:'junction',junctionId:'end'}]]){d.electrical.wires.push({id,from,to});d.layout.wires[id]={bends:[]};}
  const m=create(d),before=m.document;m.transaction('Drag component',d=>M.move(d,new Set([M.token('component','r')]),300,0));valid(m);

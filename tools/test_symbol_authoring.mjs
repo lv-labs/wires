@@ -85,9 +85,10 @@ for (let poleCount = 1; poleCount <= 8; poleCount++) for (const position of [0, 
     assert.equal(Math.abs(point[0]), 100);
     assert.ok(paths.some(path => path.startsWith(`M ${point[0]} ${point[1]} L `)), `dpdtSwitch ${poleCount}: lead matches pin`);
   }
+  const contacts = [...markup.matchAll(/<circle cx="([^"]+)"/g)].map(match => Number(match[1]));
   for (let i = 0; i < poleCount; i++) {
     const y = pins['common' + (i + 1)][1];
-    assert.ok(paths.includes(`M -40 ${y} L 40 ${y + (position === 0 ? 50 : -50)}`), 'Each pole follows the selected contact');
+    assert.ok(paths.includes(`M ${contacts[i * 3]} ${y} L ${contacts[i * 3 + 1]} ${y + (position === 0 ? 50 : -50)}`), 'Each pole follows the selected contact');
   }
   assert.equal((markup.match(/stroke-dasharray="10 10"/g) || []).length, poleCount > 1 ? 1 : 0);
 }

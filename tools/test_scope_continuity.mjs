@@ -10,8 +10,12 @@ function workerFactory(options){let state={documentId:null,circuitRevision:0,run
  const send=(operation,extra={})=>{const reply=protocol.handle({protocolVersion:1,sessionId:options.sessionId,requestId:++requestId,operation,base:state,...extra});state=reply.state;if(!reply.ok)throw new Error(reply.error.message);return reply.result;};
  return {ready:Promise.resolve(send('initialize')),terminate(){},async request(op,args){return send(op,args);}};
 }
-const sim=CircuitSimulation.create({autoRun:false,workerFactory,onState:s=>buffer.followState(s),onFrame:f=>assert.ok(buffer.append(f))});
+const sim=CircuitSimulation.create({autoRun:false,retainSampleBatches:false,workerFactory,onState:s=>{
+  assert.equal(s.frame?.sampleBatch,undefined,'Presentation state excludes scope sample batches');
+  buffer.followState(s);
+},onFrame:f=>assert.ok(buffer.append(f))});
 sim.setSampleChannels(channels);await sim.setDocument(doc);await sim.step(10);
+assert.equal(sim.getState().frame.sampleBatch,undefined);
 const first=buffer.window(1),epoch=sim.getState().acquisitionEpoch,solver=sim.getState().accepted.runEpoch;
 const moved=structuredClone(doc);moved.layout.components.r1.x+=64;await sim.setDocument(moved);assert.equal(buffer.count,10);assert.equal(sim.getState().accepted.runEpoch,solver);await sim.step(5);assert.equal(buffer.count,15);assert.deepEqual(buffer.window(1).times.slice(0,10),first.times);
 const placed=structuredClone(moved);placed.electrical.components.push({id:'loose',reference:'R99',kind:'resistor',modelVersion:1,parameters:{resistance:1000}});placed.layout.components.loose={x:0,y:0,rotation:0,mirror:false};

@@ -35,10 +35,10 @@ import {
 } from "react"
 import type { CSSProperties, PointerEvent, ReactNode, RefObject } from "react"
 import { createPortal } from "react-dom"
-import { GripIcon } from "lucide-react"
+import { GripIcon, GripVerticalIcon } from "lucide-react"
 import { ScopeContextMenu } from "./ScopeContextMenu"
 import type { ScopeMode, TracePatch } from "./ScopeContextMenu"
-import { scopeWindow, nearestScopeSample } from "./scopeDisplay"
+import { scopeBounds, scopeWindow, nearestScopeSample } from "./scopeDisplay"
 import { ScopePane } from "./ScopePane"
 import type { ScopeTrace } from "./ScopePane"
 
@@ -73,6 +73,8 @@ const initialLayout = (): Layout => ({
   weight: 1,
 })
 const stationaryViewport = { x: 0, y: 0, scale: 1, top: 0 }
+const scopeGripClass =
+  "flex w-5 shrink-0 cursor-grab touch-none items-center justify-center border-r border-border/70 bg-muted/25 text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-none active:cursor-grabbing"
 /** Pointer capture keeps resizing local, including when the pointer leaves the handle. */
 function DragHandle({
   label,
@@ -181,6 +183,7 @@ export function ScopeWorkspace({
   sheet,
   onCursorCommit,
   onLeave,
+  onHoverTrace,
   onProperties,
   viewport,
   onTraceSettings,
@@ -197,7 +200,8 @@ export function ScopeWorkspace({
   sheet: RefObject<HTMLDivElement | null>
   onCursorCommit: (time: number | null) => void
   onLeave: () => void
-  onProperties: (id: string, span: number) => void
+  onHoverTrace: (id: string | null) => void
+  onProperties: (id: string, span: number, scale?: number) => void
   viewport: ScopeViewportStore
   onTraceSettings: (id: string, patch: TracePatch) => void
   onTimeWindow: (division: number) => void
@@ -212,7 +216,27 @@ export function ScopeWorkspace({
     mode: "hover" | "sample"
     sample: number | null
   } | null>(null)
+  const hoverFrame = useRef<number | null>(null)
+  const pendingHover = useRef<{ id: string; fraction: number } | null>(null)
+  const cancelHoverFrame = useCallback(() => {
+    if (hoverFrame.current !== null) cancelAnimationFrame(hoverFrame.current)
+    hoverFrame.current = null
+    pendingHover.current = null
+  }, [])
+  useEffect(() => cancelHoverFrame, [cancelHoverFrame])
   const [dragging, setDragging] = useState(false)
+  const [hoveredScope, setHoveredScope] = useState<{
+    id: string
+    trace?: string
+  } | null>(null)
+  const paneScales = useRef(new Map<string, ReadonlyMap<string, number>>())
+  const reportScales = useCallback(
+    (id: string, scales: ReadonlyMap<string, number> | null) => {
+      if (scales) paneScales.current.set(id, scales)
+      else paneScales.current.delete(id)
+    },
+    []
+  )
   const gestures = useMemo(
     () => ({ begin: () => setDragging(true), end: () => setDragging(false) }),
     []
@@ -269,6 +293,23 @@ export function ScopeWorkspace({
   )
   const layoutFor = (id: string) =>
     Object.hasOwn(layouts, id) ? layouts[id] : initialLayout()
+  const hoveredGroup =
+    hoveredScope && (open || layoutFor(hoveredScope.id).mode !== "docked")
+      ? groups.get(hoveredScope.id)
+      : undefined
+  const hoveredTrace =
+    hoveredScope &&
+    (hoveredGroup?.find((trace) => trace.id === hoveredScope.trace) ||
+      hoveredGroup?.find((trace) => trace.id === activeTraces[hoveredScope.id]) ||
+      hoveredGroup?.[0])
+  const hoveredTraceId = hoveredTrace?.id ?? null
+  useLayoutEffect(() => {
+    onHoverTrace(hoveredTraceId)
+  }, [hoveredTraceId, onHoverTrace])
+  useLayoutEffect(() => () => onHoverTrace(null), [onHoverTrace])
+  useEffect(() => {
+    if (hoveredScope && !hoveredGroup) setHoveredScope(null)
+  }, [hoveredGroup, hoveredScope])
   const docked = [...groups.keys()]
     .filter((id) => layoutFor(id).mode === "docked")
     .sort(
@@ -328,12 +369,15 @@ export function ScopeWorkspace({
     return () => observer.disconnect()
   }, [sheet])
 
-  function updateLayout(id: string, change: Partial<Layout>) {
-    setLayouts((current) => ({
-      ...current,
-      [id]: { ...(current[id] || initialLayout()), ...change },
-    }))
-  }
+  const updateLayout = useCallback(
+    (id: string, change: Partial<Layout>) => {
+      setLayouts((current) => ({
+        ...current,
+        [id]: { ...(current[id] || initialLayout()), ...change },
+      }))
+    },
+    [setLayouts]
+  )
   function position(
     layout: Pick<Layout, "width" | "height">,
     x: number,
@@ -393,36 +437,60 @@ export function ScopeWorkspace({
   }
   const hoverWindow =
     holding?.mode === "hover"
-      ? scopeWindow([], times, layoutFor(holding.id).timeDivision * 10)
+      ? scopeBounds(times, layoutFor(holding.id).timeDivision * 10)
       : null
   const effectiveCursor =
     holding?.mode === "sample"
       ? holding.sample
       : hoverWindow && holding
         ? nearestScopeSample(
-            hoverWindow.times,
+            times,
             hoverWindow.start +
-              holding.fraction * (hoverWindow.end - hoverWindow.start)
+              holding.fraction * (hoverWindow.end - hoverWindow.start),
+            hoverWindow.index
           )
         : cursor
   const hoverCursor = useCallback((id: string, fraction: number) => {
-    setHolding({ id, fraction, mode: "hover", sample: null })
+    pendingHover.current = { id, fraction }
+    if (hoverFrame.current !== null) return
+    hoverFrame.current = requestAnimationFrame(() => {
+      const hover = pendingHover.current
+      hoverFrame.current = null
+      pendingHover.current = null
+      if (hover)
+        setHolding((current) =>
+          current?.mode === "hover" &&
+          current.id === hover.id &&
+          current.fraction === hover.fraction
+            ? current
+            : { ...hover, mode: "hover", sample: null }
+        )
+    })
   }, [])
   const leaveCursor = useCallback(() => {
+    cancelHoverFrame()
     setHolding(null)
     onLeave()
-  }, [onLeave])
+  }, [cancelHoverFrame, onLeave])
+  const changeTimeScale = useCallback(
+    (id: string, timeDivision: number) => {
+      updateLayout(id, { timeDivision })
+      leaveCursor()
+    },
+    [updateLayout, leaveCursor]
+  )
   const holdCursor = useCallback(
     (id: string, fraction: number | null) => {
+      cancelHoverFrame()
       if (fraction !== null) {
-        const window = scopeWindow(
-          [],
+        const window = scopeBounds(
           times,
           (Object.hasOwn(layouts, id) ? layouts[id].timeDivision : 0.0002) * 10
         )
         const sample = nearestScopeSample(
-          window.times,
-          window.start + fraction * (window.end - window.start)
+          times,
+          window.start + fraction * (window.end - window.start),
+          window.index
         )
         setHolding({ id, fraction, mode: "sample", sample })
         onCursorCommit(sample)
@@ -432,7 +500,7 @@ export function ScopeWorkspace({
         )
       }
     },
-    [times, layouts, onCursorCommit]
+    [cancelHoverFrame, times, layouts, onCursorCommit]
   )
   function renderPane(id: string) {
     return (
@@ -451,6 +519,9 @@ export function ScopeWorkspace({
         selectedTrace={activeTraces[id]}
         onSelectTrace={selectTrace}
         onProperties={onProperties}
+        onDisplayScales={reportScales}
+        onTimeScale={changeTimeScale}
+        onTraceSettings={onTraceSettings}
         onCursor={hoverCursor}
         onLeave={leaveCursor}
       />
@@ -460,15 +531,29 @@ export function ScopeWorkspace({
     const traces = groups.get(id)
     if (!traces?.length) return
     onDeleteScope(traces.map((trace) => trace.id))
-    setHolding(null)
+    leaveCursor()
     setMenu(null)
     setFront(null)
-    onLeave()
   }
 
   function contextEvents(id: string) {
     return {
       tabIndex: 0,
+      onPointerOver: (event: PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType === "touch") return
+        const trace =
+          event.target instanceof Element
+            ? event.target
+                .closest<SVGElement | HTMLElement>("[data-select-trace]")
+                ?.dataset.selectTrace
+            : undefined
+        setHoveredScope((current) =>
+          current?.id === id && current.trace === trace ? current : { id, trace }
+        )
+      },
+      onPointerLeave: () => {
+        setHoveredScope((current) => (current?.id === id ? null : current))
+      },
       onPointerDownCapture: (event: React.PointerEvent<HTMLDivElement>) => {
         setFront(id)
         if (
@@ -729,7 +814,7 @@ export function ScopeWorkspace({
         <div
           key={id}
           data-docked-scope={id}
-          className="relative flex h-full min-h-0 min-w-0 flex-col outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary data-[selected=true]:ring-inset"
+          className="relative flex h-full min-h-0 min-w-0 outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary data-[selected=true]:ring-inset"
           data-selected={front === id}
           {...contextEvents(id)}
           style={{
@@ -738,7 +823,7 @@ export function ScopeWorkspace({
         >
           <DragHandle
             label={`Reorder or undock scope ${groups.get(id)?.[0].label}`}
-            className="flex h-7 shrink-0 cursor-grab touch-none items-center gap-2 border-b px-2 text-xs active:cursor-grabbing"
+            className={scopeGripClass}
             onStart={(handle, event) => beginScopeDrag(id, handle, event)}
             onDelta={(_, __, event) => moveScopeDrag(event)}
             onFinish={finishScopeDrag}
@@ -750,15 +835,9 @@ export function ScopeWorkspace({
                 )
             }}
           >
-            <GripIcon className="size-3 shrink-0" />
-            <span className="truncate">
-              {groups
-                .get(id)
-                ?.map((trace) => trace.label)
-                .join(" · ")}
-            </span>
+            <GripVerticalIcon className="size-3.5" aria-hidden="true" />
           </DragHandle>
-          <div className="min-h-0 flex-1">{renderPane(id)}</div>
+          <div className="min-h-0 min-w-0 flex-1">{renderPane(id)}</div>
           {preview && (
             <div
               className="pointer-events-none absolute z-40 border-2 border-primary bg-primary/15"
@@ -926,7 +1005,7 @@ export function ScopeWorkspace({
               }}
             >
               <div
-                className="pointer-events-auto absolute flex min-h-0 flex-col overflow-hidden rounded-lg border bg-background shadow-xl outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary"
+                className="pointer-events-auto absolute flex min-h-0 overflow-hidden rounded-lg border bg-background shadow-xl outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary"
                 data-selected={front === id}
                 {...contextEvents(id)}
                 data-scope-workspace
@@ -957,7 +1036,7 @@ export function ScopeWorkspace({
               >
                 <DragHandle
                   label={`Move scope ${groups.get(id)?.[0].label}`}
-                  className="flex h-7 shrink-0 cursor-grab touch-none items-center gap-2 border-b px-2 text-xs active:cursor-grabbing"
+                  className={scopeGripClass}
                   onStart={(handle, event) => {
                     beginScopeDrag(id, handle, event)
                     floatStart.current = { ...layout, ...point }
@@ -1005,15 +1084,9 @@ export function ScopeWorkspace({
                     )
                   }}
                 >
-                  <GripIcon className="size-3 shrink-0" />
-                  <span className="truncate">
-                    {groups
-                      .get(id)
-                      ?.map((c) => c.label)
-                      .join(" · ")}
-                  </span>
+                  <GripVerticalIcon className="size-3.5" aria-hidden="true" />
                 </DragHandle>
-                <div className="relative min-h-0 flex-1">
+                <div className="relative min-h-0 min-w-0 flex-1">
                   {inView && renderPane(id)}
                 </div>
                 <DragHandle
@@ -1140,10 +1213,8 @@ export function ScopeWorkspace({
             setActiveTraces((current) => ({ ...current, [menu.id]: id }))
             onTraceSettings(id, patch)
           }}
-          onTime={(value) => {
-            updateLayout(menu.id, { timeDivision: value })
-            onLeave()
-          }}
+          getDisplayScale={(id) => paneScales.current.get(menu.id)?.get(id)}
+          onTime={(value) => changeTimeScale(menu.id, value)}
           onMode={(mode) => changeMode(menu.id, mode)}
           onCombine={(id) => {
             setAssignments((current) => ({
@@ -1195,6 +1266,9 @@ const ScopeContent = memo(function ScopeContent({
   selectedTrace,
   onSelectTrace,
   onProperties,
+  onDisplayScales,
+  onTimeScale,
+  onTraceSettings,
   onCursor,
   onLeave,
 }: {
@@ -1207,7 +1281,10 @@ const ScopeContent = memo(function ScopeContent({
   onHold: (id: string, fraction: number | null) => void
   selectedTrace?: string
   onSelectTrace: (group: string, trace: string) => void
-  onProperties: (trace: string, span: number) => void
+  onProperties: (trace: string, span: number, scale?: number) => void
+  onDisplayScales: (id: string, scales: ReadonlyMap<string, number> | null) => void
+  onTimeScale: (id: string, division: number) => void
+  onTraceSettings: (id: string, patch: TracePatch) => void
   onCursor: (id: string, fraction: number) => void
   onLeave: () => void
 }) {
@@ -1228,19 +1305,33 @@ const ScopeContent = memo(function ScopeContent({
     [id, onCursor]
   )
   const properties = useCallback(
-    (trace: string) => onProperties(trace, timeDivision * 10),
+    (trace: string, scale?: number) =>
+      onProperties(trace, timeDivision * 10, scale),
     [onProperties, timeDivision]
   )
+  const displayScales = useCallback(
+    (scales: ReadonlyMap<string, number>) => onDisplayScales(id, scales),
+    [id, onDisplayScales]
+  )
+  const timeScale = useCallback(
+    (division: number) => onTimeScale(id, division),
+    [id, onTimeScale]
+  )
+  useLayoutEffect(() => () => onDisplayScales(id, null), [id, onDisplayScales])
   return (
     <ScopePane
       id={id}
       {...window}
+      timeDivision={timeDivision}
       cursor={cursor}
       liveFraction={liveFraction}
       onHold={hold}
       selectedTrace={selectedTrace}
       onSelectTrace={select}
       onRenameChannel={properties}
+      onDisplayScales={displayScales}
+      onTimeScale={timeScale}
+      onTraceSettings={onTraceSettings}
       onCursor={hover}
       onLeave={onLeave}
     />

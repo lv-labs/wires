@@ -31,6 +31,11 @@ and a right-to-left box selects touched items. Use G for connected drag, M for
 detached move, R/Shift+R to rotate, and X/Y to flip. Ctrl/⌘ Z undoes an edit and
 Shift + Ctrl/⌘ Z redoes it.
 
+Press U or choose **Edit → Expand Selection** to grow the selection through
+connected wiring. A selected wire or junction expands to the rest of its wired
+net, then to the components attached to that net. A selected component expands
+to the wired nets on its pins. Press U again to keep expanding.
+
 Press A to open Add, then choose a component and click to place it. Placement
 stays active until Escape or a tool change. Press W to start a wire at the cursor,
 snapping to a nearby pin, junction, or wire, including one with a voltage probe.
@@ -49,9 +54,13 @@ actions available for that part. Run controls and the oscilloscope use the
 retained worker.
 
 The React sheet shows component values and saves circuits without reference
-designators. New voltage probes get names such as Wire and Wire 2. Use the
-pencil in the oscilloscope legend or edit a probe label on the sheet to name its
-trace.
+designators. New voltage probes get names such as Wire and Wire 2. Edit a probe
+on the sheet to set its name and decimal places. Turn on **Show label** to
+display its name above the centered voltage reading. Use **Add to
+scope** in the probe's context menu to plot it. Use **Drag (G)** to move the
+label or **Move (M)** to pick up the tip and place it on a new wire, pin or
+junction. Traces added from that probe follow the tip to the new net. Trace
+properties are available from the oscilloscope.
 
 The **Sliders** panel opens when you place a variable voltage source or
 potentiometer. Reopen it from **View → Sliders** or **Open sliders** in the

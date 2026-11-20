@@ -33,6 +33,8 @@
       const p = clone(probe); if (p.kind === 'voltage') { p.positive = endpoint(p.positive); if (p.reference !== 'ground') p.negative = endpoint(p.negative); }
       fragment.probes.push(p); if (d.layout.probes?.[p.id]) { l.probes ||= {}; l.probes[p.id] = clone(d.layout.probes[p.id]); }
     }
+    const includedProbes = new Set(fragment.probes.map(p => p.id));
+    for (const p of fragment.probes) if (p.sourceProbeId && !includedProbes.has(p.sourceProbeId)) delete p.sourceProbeId;
     const drawings=(d.layout.drawings||[]).filter(item=>selection.has(token('drawing',item.id)));
     if(drawings.length)l.drawings=clone(drawings);
     return validate(fragment);
@@ -51,7 +53,14 @@
           const prefix = definitions[item.kind].prefix; let number = 1; while (references.has(prefix + number)) number++; item.reference = prefix + number; references.add(item.reference);
         } else delete item.reference;
       } else if (kind === 'wire') { item.from = ref(item.from); item.to = ref(item.to); }
-      else if (kind === 'probe') { if (item.kind === 'current') item.componentId = maps.component.get(item.componentId); else { item.positive = ref(item.positive); if (item.reference !== 'ground') item.negative = ref(item.negative); } }
+      else if (kind === 'probe') {
+        if (item.kind === 'current') item.componentId = maps.component.get(item.componentId);
+        else {
+          item.positive = ref(item.positive);
+          if (item.reference !== 'ground') item.negative = ref(item.negative);
+          if (item.sourceProbeId) item.sourceProbeId = maps.probe.get(item.sourceProbeId);
+        }
+      }
       if (kind === 'probe') d.probes.push(item); else d.electrical[list].push(item);
       if (fragment.layout[list]?.[original.id]) { d.layout[list] ||= {}; d.layout[list][item.id] = clone(fragment.layout[list][original.id]); }
     }
@@ -516,6 +525,25 @@
       if (!componentReferences) for (const component of next.electrical.components) delete component.reference;
       if(wireSections)normalizeWires(next);return validate(next);
     }}),transaction=history.transaction;
+    function addVoltage(target, label, { marker = false, negative, sourceProbeId } = {}) {
+      const id = crypto.randomUUID();
+      transaction(marker ? 'Place voltage probe' : 'Add voltage to scope', d => {
+        const resolve = connectionResolver(d);
+        const positive = resolve(target);
+        if (label === undefined) {
+          let number = 1; while (d.probes.some(p => p.label === 'V' + number)) number++;
+          label = 'V' + number;
+        }
+        const reference = negative ? { reference: 'pins', negative: resolve(negative) } : { reference: 'ground' };
+        d.probes.push({
+          id, kind: 'voltage', positive, label, ...reference,
+          ...(marker ? { scope: false } : {}),
+          ...(sourceProbeId ? { sourceProbeId } : {}),
+        });
+        if (marker) (d.layout.probes ||= {})[id] = { x: 50, y: -100 };
+      });
+      return id;
+    }
     const model={
       get document(){return history.document;},get canUndo(){return history.canUndo;},get canRedo(){return history.canRedo;},transaction,undo:history.undo,redo:history.redo,
       replace: next => transaction('Open circuit', draft => { for (const key of Object.keys(draft)) delete draft[key]; Object.assign(draft, alignGrid(clone(validate(next)))); }),
@@ -535,16 +563,10 @@
         }); return componentId;
       },
       addProbe(target, label) {
-        const id = crypto.randomUUID();
-        transaction('Place voltage probe', d => {
-          const positive = connectionResolver(d)(target);
-          if (label === undefined) {
-            let number = 1; while (d.probes.some(p => p.label === 'V' + number)) number++;
-            label = 'V' + number;
-          }
-          d.probes.push({ id, kind: 'voltage', positive, reference: 'ground', label });
-          (d.layout.probes ||= {})[id] = { x: 50, y: -100 };
-        }); return id;
+        return addVoltage(target, label, { marker: true });
+      },
+      addScopeVoltage(target, label, negative, sourceProbeId) {
+        return addVoltage(target, label, { negative, sourceProbeId });
       },
       connect(from, to, bends = []) {
         return transaction('Connect wire', d => {
@@ -576,6 +598,8 @@
             if(!keep){if(d.layout.probes)delete d.layout.probes[p.id];return false;}
             if(p.kind==='voltage'){p.positive=keepEnd(p.positive);if(p.negative)p.negative=keepEnd(p.negative);}return true;
           });
+          const remainingProbes = new Set(d.probes.map(p => p.id));
+          for (const p of d.probes) if (p.sourceProbeId && !remainingProbes.has(p.sourceProbeId)) delete p.sourceProbeId;
           if(d.layout.drawings)d.layout.drawings=d.layout.drawings.filter(item=>!selection.has(token('drawing',item.id)));
           d.electrical.components=d.electrical.components.filter(c=>!cs.has(c.id));d.electrical.junctions=d.electrical.junctions.filter(j=>!js.has(j.id));
           for(const id of cs)delete d.layout.components[id];for(const id of js)delete d.layout.junctions[id];
@@ -615,6 +639,7 @@
       case 'transform':return model.transaction(command.label||'Transform selection',d=>transformSelection(d,selection(),command.dx??0,command.dy??0,{disconnect:command.disconnect??false,rotation:command.rotation??0,orientations:command.orientations||[],contacts:true}));
       case 'moveSegment':return model.transaction(command.label||'Reroute wire',d=>moveSegment(d,command.wireId,command.segment??0,command.dx??0,command.dy??0));
       case 'reconnect':return model.transaction('Reconnect wire end',d=>reconnect(d,command.junctionId,command.target));
+      case 'moveProbe':return model.transaction('Move voltage probe',d=>retargetProbe(d,command.id,command.target));
       case 'setParameters':return model.transaction('Edit parameters',d=>{
         const c=d.electrical.components.find(c=>c.id===command.componentId);if(!c)throw new Error('Unknown component');
         if(!command.parameters||typeof command.parameters!=='object'||Array.isArray(command.parameters))throw new Error('Expected parameter fields');
@@ -631,6 +656,9 @@
     const probe = document.probes.find(p => p.id === id && p.kind === 'voltage');
     if (!probe) throw new Error('Unknown voltage probe');
     probe.positive = connectionResolver(document)(target);
+    for (const trace of document.probes) {
+      if (trace.sourceProbeId === id) trace.positive = clone(probe.positive);
+    }
     return document;
   }
   const {createDragSession}=Drag.createTools({normalizeWires,connectContacts,transformSelection,connectWireContacts});

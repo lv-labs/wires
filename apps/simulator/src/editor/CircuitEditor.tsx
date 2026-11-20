@@ -2,8 +2,11 @@ import { FalstadImportDialog } from "./FalstadImportDialog"
 import { defaultScopeLayout } from "./scopeLayout"
 import { createScopeViewport } from "./scopeViewport"
 import { DrawingProperties } from "./DrawingProperties"
+import { ProbeProperties } from "./ProbeProperties"
 import { TraceProperties } from "./TraceProperties"
+import { splitLegacyProbes } from "./voltageProbes"
 import { ScopeWorkspace } from "./ScopeWorkspace"
+import type { TracePatch } from "./ScopeContextMenu"
 import { scopeWindow } from "./scopeDisplay"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -45,7 +48,7 @@ const exampleNames = [...examples.keys()].sort((a, b) => a.localeCompare(b))
 
 type PendingAdjustment = SliderAdjustment & { document: CircuitDocument }
 
-function nextTraceName(
+function nextProbeName(
   probes: CircuitDocument["probes"],
   base: string,
   exclude?: string
@@ -59,6 +62,18 @@ function nextTraceName(
   let number = 2
   while (names.has(`${base} ${number}`)) number++
   return `${base} ${number}`
+}
+
+function nextTraceName(
+  probes: CircuitDocument["probes"],
+  base: string,
+  exclude?: string
+) {
+  return nextProbeName(
+    probes.filter(({ scope }) => scope !== false),
+    base,
+    exclude
+  )
 }
 
 export function CircuitEditor({
@@ -100,10 +115,21 @@ export function CircuitEditor({
   )
   const [scopePropertiesSpan, setScopePropertiesSpan] = useState(0.002)
   const [scopeCursor, setScopeCursor] = useState<number | null>(null)
-  const cursorFrame = useRef<number | null>(null)
-  const cursorValue = useRef<number | null>(null)
+  const clearScopeCursor = useCallback(() => setScopeCursor(null), [])
+  const [hoveredTrace, setHoveredTrace] = useState<string | null>(null)
+  const [scopePropertiesScale, setScopePropertiesScale] = useState<number>()
+  const changeTraceSettings = useCallback(
+    (id: string, patch: TracePatch) =>
+      editor.session.transaction("Scope trace settings", (draft) => {
+        const trace = draft.probes.find((probe) => probe.id === id)
+        if (trace) Object.assign(trace, patch)
+      }),
+    [editor.session]
+  )
   const [fitRequest, setFitRequest] = useState(0)
-  const [editing, setEditing] = useState<Entity | null>(null)
+  const [editing, setEditing] = useState<
+    Entity | { kind: "trace"; id: string } | null
+  >(null)
   const [editingPropertySlider, setEditingPropertySlider] = useState<
     PropertySlider | undefined
   >(undefined)
@@ -251,11 +277,19 @@ export function CircuitEditor({
     editing?.kind === "probe"
       ? editor.document.probes.find(({ id }) => id === editing.id)
       : undefined
+  const probeDisplay = editingProbe
+    ? editor.document.layout.probes?.[editingProbe.id]
+    : undefined
+  const editingTrace =
+    editing?.kind === "trace"
+      ? editor.document.probes.find(
+          ({ id, scope }) => id === editing.id && scope !== false
+        )
+      : undefined
   const activeSliderAdjustment =
     sliderAdjustment?.document === editor.document ? sliderAdjustment : null
 
-  function beginEdit(entity: Entity, span = 0.002) {
-    setScopePropertiesSpan(span)
+  function beginEdit(entity: Entity) {
     cancelSliderAdjustment()
     setEditing(entity)
     setSelection([entity])
@@ -378,8 +412,17 @@ export function CircuitEditor({
       setSliderAdjustment(pending)
       if (sliderPreviewInFlight.current) return
       const state = coordinator.getState()
+      const field = sliderField(pending)
+      // A preview advances the revision and invalidates the previous live frame.
+      // Let the new frequency produce a sample before applying the next preview.
+      const waitingForFrequencySample =
+        field === "waveform.frequency" &&
+        state.status === "running" &&
+        editor.simulationSpeed > 0 &&
+        !state.frame
       if (
         !["running", "paused", "error"].includes(state.status) ||
+        waitingForFrequencySample ||
         now - lastSliderPreviewAt.current < 1000 / 30
       ) {
         scheduleSliderPreview()
@@ -392,7 +435,7 @@ export function CircuitEditor({
         ({ id }) => id === pending.id
       )
       if (source?.kind !== pending.kind) return
-      setProperty(source.parameters, sliderField(pending), pending.value)
+      setProperty(source.parameters, field, pending.value)
       lastSliderPreviewAt.current = now
       sliderPreviewInFlight.current = true
       void coordinator
@@ -435,10 +478,37 @@ export function CircuitEditor({
   function addProbe(target: Target) {
     const id = editor.session.addProbe(
       target,
-      nextTraceName(editor.session.document.probes, "Wire")
+      nextProbeName(
+        editor.document.probes.filter(({ scope }) => scope === false),
+        "Wire"
+      )
     )
     setSelection([{ kind: "probe", id }])
+  }
+  function plotVoltage(
+    target: Target,
+    name = "Wire",
+    negative?: Target,
+    sourceProbeId?: string
+  ) {
+    if (target.kind === "point") return
+    editor.session.addScopeVoltage(
+      target,
+      nextTraceName(editor.document.probes, name),
+      negative,
+      sourceProbeId
+    )
     setScopeOpen(true)
+  }
+  function plotProbe(id: string) {
+    const probe = editor.document.probes.find((item) => item.id === id)
+    if (probe?.kind === "voltage" && probe.positive)
+      plotVoltage(
+        probe.positive,
+        probe.label || "Wire",
+        probe.reference === "ground" ? undefined : probe.negative,
+        id
+      )
   }
   function plotComponent(componentId: string, pin?: string) {
     const component = editor.document.electrical.components.find(
@@ -464,25 +534,11 @@ export function CircuitEditor({
     const positive = pin ?? pins[0]
     if (!positive) return
     const negative = pin ? undefined : pins[1]
-    const id = crypto.randomUUID()
-    editor.session.transaction("Add voltage to scope", (draft) => {
-      draft.probes.push({
-        id,
-        kind: "voltage",
-        label: nextTraceName(
-          draft.probes,
-          `${core.catalog.definitions[component.kind].name} ${positive}${negative ? ` − ${negative}` : ""}`
-        ),
-        positive: { kind: "pin", componentId, pinId: positive },
-        ...(negative
-          ? {
-              negative: { kind: "pin" as const, componentId, pinId: negative },
-              reference: "pins",
-            }
-          : { reference: "ground" }),
-      })
-    })
-    setScopeOpen(true)
+    plotVoltage(
+      { kind: "pin", componentId, pinId: positive },
+      `${core.catalog.definitions[component.kind].name} ${positive}${negative ? ` − ${negative}` : ""}`,
+      negative ? { kind: "pin", componentId, pinId: negative } : undefined
+    )
   }
   function plotMeter(componentId: string) {
     const component = editor.document.electrical.components.find(
@@ -645,7 +701,7 @@ export function CircuitEditor({
     }
   }
   function replaceDocument(document: CircuitDocument, message: string) {
-    editor.session.replace(document)
+    editor.session.replace(splitLegacyProbes(core.document.validate(document)))
     setSelection([])
     closeProperties()
     if (pendingSlider.current) cancelSliderAdjustment()
@@ -665,20 +721,6 @@ export function CircuitEditor({
   }
   const title = editor.document.title
   const error = editor.simulation.error?.message || editor.error
-  function updateScopeCursor(value: number | null, immediate = false) {
-    cursorValue.current = value
-    if (value === null || immediate) {
-      if (cursorFrame.current !== null)
-        cancelAnimationFrame(cursorFrame.current)
-      cursorFrame.current = null
-      setScopeCursor(value)
-    } else if (cursorFrame.current === null) {
-      cursorFrame.current = requestAnimationFrame(() => {
-        cursorFrame.current = null
-        setScopeCursor(cursorValue.current)
-      })
-    }
-  }
 
   return (
     <section
@@ -708,21 +750,42 @@ export function CircuitEditor({
           actions={componentActions(editingComponent)}
         />
       )}
-      {editingProbe && (
-        <TraceProperties
+      {editingProbe && probeDisplay && (
+        <ProbeProperties
           key={editingProbe.id}
-          probe={editingProbe}
+          label={editingProbe.label}
+          display={probeDisplay}
+          onClose={closeProperties}
+          onApply={(label, display) => {
+            editor.session.transaction("Voltage probe properties", (draft) => {
+              const marker = draft.probes.find(
+                ({ id }) => id === editingProbe.id
+              )
+              const pose = draft.layout.probes?.[editingProbe.id]
+              if (!marker || !pose) return
+              marker.label = label
+              Object.assign(pose, display)
+            })
+            closeProperties()
+          }}
+        />
+      )}
+      {editingTrace && (
+        <TraceProperties
+          key={editingTrace.id}
+          probe={editingTrace}
           channel={scopeWindow(
             editor.scopeData.channels,
             editor.scopeData.times,
             scopePropertiesSpan
-          ).channels.find((c) => c.id === editingProbe.id)}
+          ).channels.find((c) => c.id === editingTrace.id)}
           span={scopePropertiesSpan}
+          displayedScale={scopePropertiesScale}
           onClose={closeProperties}
           onApply={(settings) => {
             editor.session.transaction("Trace properties", (draft) => {
               const trace = draft.probes.find(
-                (probe) => probe.id === editingProbe.id
+                (probe) => probe.id === editingTrace.id
               )
               if (trace)
                 Object.assign(trace, settings, {
@@ -736,7 +799,7 @@ export function CircuitEditor({
           onDelete={() => {
             editor.execute({
               type: "remove",
-              selection: [{ kind: "probe", id: editingProbe.id }],
+              selection: [{ kind: "probe", id: editingTrace.id }],
             })
             closeProperties()
           }}
@@ -849,6 +912,8 @@ export function CircuitEditor({
           tool={tool}
           onToolChange={setTool}
           onAddProbe={addProbe}
+          onPlotVoltage={plotVoltage}
+          onPlotProbe={plotProbe}
           onWireDisplay={(ids, field, value) =>
             editor.session.transaction("Wire reading", (draft) => {
               for (const id of ids)
@@ -878,6 +943,7 @@ export function CircuitEditor({
           simulationRunning={!!editor.simulation.runRequested}
           onGridModeChange={setGridMode}
           scopeOpen={scopeOpen}
+          hoveredTrace={hoveredTrace}
           onToggleScope={() => setScopeOpen((open) => !open)}
           sliderPanelOpen={sliderPanelOpen}
           sliderPanelRequired={sliderPanelRequired}
@@ -975,7 +1041,7 @@ export function CircuitEditor({
           size="sm"
           onClick={() => {
             editor.clearScope()
-            updateScopeCursor(null)
+            clearScopeCursor()
           }}
         >
           Clear
@@ -999,15 +1065,16 @@ export function CircuitEditor({
             selection: ids.map((id) => ({ kind: "probe", id })),
           })
         }
-        onTraceSettings={(id, patch) =>
-          editor.session.transaction("Scope trace settings", (draft) => {
-            const trace = draft.probes.find((probe) => probe.id === id)
-            if (trace) Object.assign(trace, patch)
-          })
-        }
-        onCursorCommit={(time) => updateScopeCursor(time, true)}
-        onLeave={() => updateScopeCursor(null)}
-        onProperties={(id, span) => beginEdit({ kind: "probe", id }, span)}
+        onTraceSettings={changeTraceSettings}
+        onCursorCommit={setScopeCursor}
+        onLeave={clearScopeCursor}
+        onHoverTrace={setHoveredTrace}
+        onProperties={(id, span, scale) => {
+          setScopePropertiesSpan(span)
+          setScopePropertiesScale(scale)
+          cancelSliderAdjustment()
+          setEditing({ kind: "trace", id })
+        }}
       />
     </section>
   )

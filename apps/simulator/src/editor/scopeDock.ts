@@ -1,5 +1,6 @@
 import type { ScopeDockNode } from "./core"
 export type DockEdge = "left" | "right" | "top" | "bottom"
+export const minimumScopeHeight = 136
 export function removeDock(
   node: ScopeDockNode | null | undefined,
   id: string
@@ -89,7 +90,8 @@ export function dockSize(node: ScopeDockNode | null): {
   width: number
   height: number
 } {
-  if (!node || node.type === "scope") return { width: 260, height: 180 }
+  if (!node || node.type === "scope")
+    return { width: 260, height: minimumScopeHeight }
   const a = dockSize(node.first),
     b = dockSize(node.second)
   return node.axis === "horizontal"

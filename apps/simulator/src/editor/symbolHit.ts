@@ -1,3 +1,18 @@
+function paddedSymbolBounds(body: SVGGElement, matrix: DOMMatrix) {
+  const box = body.getBBox()
+  // Include the open blade's reach even when the blade is closed.
+  const top = Math.min(box.y, Number(body.dataset.symbolHitTop ?? box.y))
+  // Use the same screen-space padding at every zoom level.
+  const padX = 10 / Math.hypot(matrix.a, matrix.b)
+  const padY = 10 / Math.hypot(matrix.c, matrix.d)
+  return {
+    x: box.x - padX,
+    y: top - padY,
+    width: box.width + 2 * padX,
+    height: box.y + box.height - top + 2 * padY,
+  }
+}
+
 /** Hit artwork, with padded body areas for switches, in sheet SVG coordinates. */
 export function symbolBodyHit(
   svg: SVGSVGElement,
@@ -16,15 +31,12 @@ export function symbolBodyHit(
       const matrix = body.getScreenCTM()
       if (matrix) {
         const local = point.matrixTransform(matrix.inverse())
-        const box = body.getBBox()
-        // A constant screen-space allowance keeps switches easy to hit at any zoom.
-        const padX = 6 / Math.hypot(matrix.a, matrix.b)
-        const padY = 6 / Math.hypot(matrix.c, matrix.d)
+        const box = paddedSymbolBounds(body, matrix)
         if (
-          local.x >= box.x - padX &&
-          local.x <= box.x + box.width + padX &&
-          local.y >= box.y - padY &&
-          local.y <= box.y + box.height + padY
+          local.x >= box.x &&
+          local.x <= box.x + box.width &&
+          local.y >= box.y &&
+          local.y <= box.y + box.height
         )
           return body.dataset.symbolBody ?? null
       }
@@ -73,25 +85,18 @@ export function drawArtworkHitAreas(overlay: SVGGElement): void {
     group.append(area)
     overlay.append(group)
   }
-  const rectangle = (box: DOMRect, padX = 0, padY = 0) => {
+  const rectangle = (box: Pick<DOMRect, "x" | "y" | "width" | "height">) => {
     const rect = document.createElementNS(ns, "rect")
-    rect.setAttribute("x", String(box.x - padX))
-    rect.setAttribute("y", String(box.y - padY))
-    rect.setAttribute("width", String(box.width + 2 * padX))
-    rect.setAttribute("height", String(box.height + 2 * padY))
+    rect.setAttribute("x", String(box.x))
+    rect.setAttribute("y", String(box.y))
+    rect.setAttribute("width", String(box.width))
+    rect.setAttribute("height", String(box.height))
     return rect
   }
   for (const body of svg.querySelectorAll<SVGGElement>("[data-symbol-body]")) {
     const matrix = body.getScreenCTM()
     if (body.dataset.symbolHitArea === "bounds" && matrix) {
-      append(
-        body,
-        rectangle(
-          body.getBBox(),
-          6 / Math.hypot(matrix.a, matrix.b),
-          6 / Math.hypot(matrix.c, matrix.d)
-        )
-      )
+      append(body, rectangle(paddedSymbolBounds(body, matrix)))
     }
     for (const shape of body.querySelectorAll<SVGGraphicsElement>(
       "path,rect,circle,ellipse,line,polyline,polygon,text"

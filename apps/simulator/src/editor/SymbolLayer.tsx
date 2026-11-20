@@ -62,6 +62,7 @@ export function SymbolBody({
 export const SymbolLayer = memo(function SymbolLayer({
   document,
   selected,
+  highlighted,
   frame,
   sliderPreview,
   running = false,
@@ -69,6 +70,7 @@ export const SymbolLayer = memo(function SymbolLayer({
 }: {
   document: CircuitDocument
   selected: string[]
+  highlighted?: ReadonlySet<string>
   frame?: Frame | null
   ledGlow?: boolean | number
   sliderPreview?: SliderAdjustment | null
@@ -86,6 +88,7 @@ export const SymbolLayer = memo(function SymbolLayer({
       {document.electrical.components.map((component) => {
         const pose = document.layout.components[component.id]
         const isSelected = selected.includes(component.id)
+        const scopeHighlighted = highlighted?.has(component.id)
         const current = frame?.componentCurrents?.[component.id] ?? 0
         const measured = {
           ...frame?.componentMeasurements?.[component.id],
@@ -110,11 +113,16 @@ export const SymbolLayer = memo(function SymbolLayer({
           <g
             key={component.id}
             className={
-              isSelected ? "text-blue-600 dark:text-blue-400" : undefined
+              scopeHighlighted
+                ? "text-primary"
+                : isSelected
+                  ? "text-blue-600 dark:text-blue-400"
+                  : undefined
             }
             style={
               {
-                "--symbol-stroke": isSelected ? "9.375px" : "6.25px",
+                "--symbol-stroke":
+                  scopeHighlighted || isSelected ? "9.375px" : "6.25px",
               } as React.CSSProperties
             }
           >
@@ -133,6 +141,9 @@ export const SymbolLayer = memo(function SymbolLayer({
                 ["analogSwitch", "analogSpdtSwitch"].includes(component.kind)
                   ? "bounds"
                   : undefined
+              }
+              data-symbol-hit-top={
+                component.kind === "switch" ? -50 : undefined
               }
               transform={`translate(${pose.x} ${pose.y}) rotate(${pose.rotation}) scale(${pose.mirror ? -1 : 1} 1)`}
             >

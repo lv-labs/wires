@@ -1,13 +1,19 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { colourPresets } from "./colourPresets"
 import { EditorDialog } from "./EditorDialog"
 import { core } from "./core"
 import type { CircuitDocument } from "./core"
 import type { ScopeTrace } from "./ScopePane"
 import { formatScope, scopeMeasurements, traceDisplay } from "./scopeDisplay"
+import { TraceNumberControl } from "./TraceNumberControl"
+import {
+  adjacentPositions,
+  adjacentValueDivisions,
+  minimumValueDivision,
+  positionLimit,
+} from "./scopeScales"
 
 export type TraceEdits = {
   label: string
@@ -17,11 +23,11 @@ export type TraceEdits = {
   coupling: string
 }
 
-
 export function TraceProperties({
   probe,
   channel,
   span,
+  displayedScale,
   onApply,
   onDelete,
   onClose,
@@ -29,6 +35,7 @@ export function TraceProperties({
   probe: CircuitDocument["probes"][number]
   channel?: ScopeTrace
   span: number
+  displayedScale?: number
   onApply: (settings: TraceEdits) => void
   onDelete: () => void
   onClose: () => void
@@ -38,17 +45,18 @@ export function TraceProperties({
   const [color, setColor] = useState(
     probe.color || core.signals.color(probe.id)
   )
-  const [scaleMode, setScaleMode] = useState(probe.scale ? "manual" : "auto")
-  const [scale, setScale] = useState(
-    String(
-      probe.scale ||
-        (channel
-          ? traceDisplay(channel).scale
-          : probe.kind === "current"
-            ? 0.001
-            : 1)
-    )
+  const [scale, setScale] = useState(probe.scale)
+  const [autoScale] = useState(
+    () =>
+      (!probe.scale ? displayedScale : undefined) ??
+      (channel
+        ? traceDisplay(channel).automatic
+        : probe.kind === "current"
+          ? 0.001
+          : 1)
   )
+  const value = scale ?? autoScale
+  const [offset, setOffset] = useState(probe.offset ?? 0)
   const [coupling, setCoupling] = useState(probe.coupling || "dc")
   const unit = probe.kind === "current" ? "A" : "V"
   const stats = scopeMeasurements(channel?.values || [])
@@ -68,8 +76,8 @@ export function TraceProperties({
           onApply({
             label: String(fields.get("label") || "").trim(),
             color,
-            scale: scaleMode === "manual" ? Number(scale) : undefined,
-            offset: Number(fields.get("offset")),
+            scale,
+            offset,
             coupling,
           })
         }}
@@ -146,56 +154,47 @@ export function TraceProperties({
             Scale & position
           </legend>
           <div className="grid grid-cols-2 gap-3">
-            <label className="grid content-start gap-1.5">
-              Vertical scale
-              <NativeSelect
-                value={scaleMode}
-                onChange={(event) => setScaleMode(event.target.value)}
-                aria-label="Vertical scale mode"
-              >
-                <NativeSelectOption value="auto">
-                  Auto-fit this trace
-                </NativeSelectOption>
-                <NativeSelectOption value="manual">Manual</NativeSelectOption>
-              </NativeSelect>
-            </label>
-            <label className="grid content-start gap-1.5">
-              Position (div)
-              <Input
-                name="offset"
-                type="number"
-                min="-8"
-                max="8"
-                step="0.1"
-                defaultValue={probe.offset || 0}
-                required
-              />
-            </label>
+            <TraceNumberControl
+              label="Vertical scale"
+              inputLabel={`${unit} per division`}
+              value={value}
+              display={`${formatScope(value, unit)}/div`}
+              min={minimumValueDivision}
+              steps={adjacentValueDivisions(value)}
+              onChange={setScale}
+              auto={{
+                active: scale === undefined,
+                enable: () => setScale(undefined),
+              }}
+            />
+            <TraceNumberControl
+              label="Position"
+              inputLabel="Position in divisions"
+              value={offset}
+              display={`${offset} div`}
+              min={-positionLimit}
+              max={positionLimit}
+              steps={adjacentPositions(offset)}
+              onChange={setOffset}
+            />
           </div>
-          {scaleMode === "manual" && (
-            <label className="grid gap-1.5">
-              {unit} per division
-              <Input
-                aria-label={`${unit} per division`}
-                type="number"
-                min="0.000000000001"
-                step="any"
-                value={scale}
-                onChange={(event) => setScale(event.target.value)}
-                required
-              />
-            </label>
-          )}
-          <label className="grid gap-1.5">
-            Coupling
-            <NativeSelect
-              value={coupling}
-              onChange={(event) => setCoupling(event.target.value)}
-            >
-              <NativeSelectOption value="dc">DC</NativeSelectOption>
-              <NativeSelectOption value="ac">AC</NativeSelectOption>
-            </NativeSelect>
-          </label>
+          <div className="grid gap-1.5">
+            <span>Coupling</span>
+            <div role="group" aria-label="Coupling" className="flex">
+              {["dc", "ac"].map((mode) => (
+                <Button
+                  key={mode}
+                  type="button"
+                  variant="outline"
+                  aria-pressed={mode === coupling}
+                  className="relative flex-1 first:rounded-r-none last:-ml-px last:rounded-l-none focus-visible:z-10 aria-pressed:z-1 aria-pressed:border-primary aria-pressed:bg-primary/15"
+                  onClick={() => setCoupling(mode)}
+                >
+                  {mode.toUpperCase()}
+                </Button>
+              ))}
+            </div>
+          </div>
           {coupling === "ac" && (
             <p className="text-xs text-muted-foreground">
               Removes the visible mean from the waveform. Measurements use the

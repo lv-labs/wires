@@ -11,6 +11,9 @@ assert.equal(scope.append(frame(2,[3,2],{in:[1,2],out:[2,4]})),false,'Unsorted s
 assert.equal(scope.count,3);
 assert.ok(scope.append(frame(2,[3,4,5,6],{in:[-1,0,1,0],out:[-2,0,2,0]})));
 assert.equal(scope.count,5);assert.deepEqual(scope.window(10).times,[2,3,4,5,6],'Ring buffer bounded');
+const wrapped=scope.window(2.5);
+assert.deepEqual(wrapped.times,[4,5,6]);
+assert.deepEqual(wrapped.channels.map(c=>[c.values,c.min,c.max]),[[[0,1,0],0,1],[[0,2,0],0,2]]);
 assert.ok(scope.append(frame(3,[7],{in:[1],out:[2]},{circuitRevision:2})),'Same epoch live revision continues history');
 assert.equal(scope.append(frame(4,[8],{in:[1],out:[2]},{circuitRevision:1})),false,'Old revision rejected');
 scope.setChannels(channels.map(c=>({...c,label:c.id.toUpperCase()})));assert.equal(scope.count,5,'Renaming channels retains samples');
@@ -23,6 +26,11 @@ assert.equal(scope.append(frame(9,[1],{in:[1],out:[2]})),false,'Old channel targ
 assert.throws(()=>scope.setChannels([...channels,channels[0]]),/duplicate/);
 const xs=Array.from({length:1000},(_,i)=>i/1000),ys=xs.map((x,i)=>i===501?100:0),reduced=S.envelope(xs,ys,0,1,50);
 assert.ok(reduced.some(([,y])=>y===100),'Peak retained during pixel decimation');assert.ok(reduced.length<=204);
+assert.deepEqual(
+  S.envelope([0,1,2,3,4,5,6,10],[0,5,1,-4,0,3,1,0],0,10,1),
+  [[0,0],[1,5],[3,-4],[6,1],[10,0]],
+  'Envelope keeps extrema in time order and retains single-sample columns'
+);
 assert.equal(S.autoScale([{min:-.5,max:1.5}]),.5);assert.equal(S.color('in'),S.color('in'));
 console.log('Scope model checks passed: synchronized channels, bounded history, epoch/revision/sequence/target gating, rename/clear, peak envelopes and voltage scale.');
 const guarded=S.create();guarded.setChannels(channels);guarded.expect({sessionId:'new',documentId:'doc',runEpoch:3,circuitRevision:4});

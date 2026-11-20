@@ -78,6 +78,10 @@ export type Drawing = DrawingStyle & {
   text: string
   rotation?: number
 }
+export type ProbeDisplay = {
+  decimals?: number
+  showLabel?: boolean
+}
 export type CircuitDocument = {
   schemaVersion: number
   id: string
@@ -96,7 +100,7 @@ export type CircuitDocument = {
     >
     drawings?: Drawing[]
     scopes?: ScopeLayout
-    probes?: Record<string, Point>
+    probes?: Record<string, Point & ProbeDisplay>
   }
   probes: (TraceSettings & {
     id: string
@@ -106,6 +110,8 @@ export type CircuitDocument = {
     positive?: Target
     negative?: Target
     componentId?: string
+    scope?: false
+    sourceProbeId?: string
   })[]
   simulation: { timeStep: number }
 }
@@ -121,6 +127,7 @@ export type Command =
       mirror?: boolean
     }
   | { type: "reconnect"; junctionId: string; target: Target }
+  | { type: "moveProbe"; id: string; target: Target }
   | { type: "replace"; document: CircuitDocument }
   | {
       type: "transform"
@@ -186,6 +193,12 @@ export type Session = {
     mirror?: boolean
   ): string
   addProbe(target: Target, label?: string): string
+  addScopeVoltage(
+    target: Target,
+    label?: string,
+    negative?: Target,
+    sourceProbeId?: string
+  ): string
   transaction(label: string, edit: (document: CircuitDocument) => void): boolean
   replace(document: CircuitDocument): unknown
   undo(): void
@@ -241,6 +254,11 @@ export const core = implementation as {
       d: CircuitDocument,
       probe: CircuitDocument["probes"][number]
     ): Point
+    probeBounds(
+      d: CircuitDocument,
+      probe: CircuitDocument["probes"][number],
+      voltage?: number
+    ): { x: number; y: number; right: number; bottom: number }
     token(kind: string, id: string): string
     pin(d: CircuitDocument, ref: Target): Point
     route(
@@ -252,9 +270,15 @@ export const core = implementation as {
       d: CircuitDocument,
       p: Point,
       scale: number,
-      ignoreProbes?: boolean
+      ignoreProbes?: boolean,
+      frame?: Frame | null
     ): Hit | null
-    boxSelection(d: CircuitDocument, a: Point, b: Point): Set<string>
+    boxSelection(
+      d: CircuitDocument,
+      a: Point,
+      b: Point,
+      frame?: Frame | null
+    ): Set<string>
     zoom(
       camera: Point & { scale: number },
       p: Point,
@@ -411,6 +435,7 @@ export const core = implementation as {
       onFrame?: (frame: Frame) => void
       batchSteps?: number
       intervalMs?: number
+      retainSampleBatches?: boolean
     }): Run
     presentationFrame(s: RunState): Frame | null
   }

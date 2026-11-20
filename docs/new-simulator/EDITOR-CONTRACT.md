@@ -87,7 +87,8 @@ Preserve the accepted simplified interface; do not restore removed toolbars or s
 
 - **Acquisition:** signed voltage/current channels sampled at every solver step,
   up to 32 channels; 10 steps / 16 ms coordinator cadence remains unchanged.
-  Every new probe gets its own scope, with combine/separate available.
+  Sheet voltage probes display live readings. Use Add to scope to create a trace,
+  which gets its own scope with combine/separate available.
 - **Ownership:** pane owns time/div; each trace owns independent automatic/manual
   V/div or A/div, vertical position, colour, name and coupling. Click its name or
   waveform to select the vertical axis, which follows that trace's colour, units,
@@ -121,8 +122,9 @@ Preserve the accepted simplified interface; do not restore removed toolbars or s
   the selected trace's raw value at that sample. Pointer state is transient.
 - **Persistence:** optional version-1 `layout.scopes` saves combined assignments,
   selected axes, pane time scales/modes/geometry, sheet reference zoom, dock split
-  tree/ratios/order and bottom height/open state. Per-probe metadata saves trace
-  settings. Save/Open/autosave and Undo/Redo use the document model. Drag previews
+  tree/ratios/order and bottom height/open state. Scope trace metadata saves trace
+  settings. Sheet probe layout saves decimal places and label visibility.
+  Save/Open/autosave and Undo/Redo use the document model. Drag previews
   remain local and commit on release; camera updates do not enter circuit history.
   Older circuits without workspace metadata retain defaults; old row-only layouts
   convert to a horizontal dock. Core validation checks the saved representation.

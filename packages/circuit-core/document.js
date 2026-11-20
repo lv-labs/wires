@@ -76,8 +76,11 @@
     for(const route of Object.values(l.wires))for(const field of ['showVoltage','showCurrent'])assert(route[field]===undefined||typeof route[field]==='boolean','Invalid wire display setting');
     assert(Array.isArray(document.probes) && document.simulation && Number.isFinite(document.simulation.timeStep) && document.simulation.timeStep > 0, 'Invalid probes or timestep');
     const probeIds = ids(document.probes);
+    const markerIds = new Set(document.probes.filter(p => p.scope === false).map(p => p.id));
     for (const p of document.probes) assert(p.kind === 'voltage' ? endpoint(p.positive) && (p.reference === 'ground' || endpoint(p.negative)) : p.kind === 'current' && components.has(p.componentId), 'Invalid probe target');
     for (const p of document.probes) {
+      assert(p.scope === undefined || p.scope === false && p.kind === 'voltage' && l.probes && Object.hasOwn(l.probes, p.id), 'Invalid probe scope setting');
+      assert(p.sourceProbeId === undefined || p.kind === 'voltage' && p.scope !== false && markerIds.has(p.sourceProbeId), 'Invalid trace probe source');
       assert(p.color === undefined || typeof p.color === 'string' && p.color.length > 0 && p.color.length <= 200, 'Invalid trace colour');
       assert(p.scale === undefined || Number.isFinite(p.scale) && p.scale > 0, 'Invalid trace vertical scale');
       assert(p.offset === undefined || Number.isFinite(p.offset) && Math.abs(p.offset) <= 8, 'Invalid trace vertical position');
@@ -107,7 +110,14 @@
         assert(pane.sheetScale === undefined || Number.isFinite(pane.sheetScale) && pane.sheetScale > 0, 'Invalid scope sheet reference scale');
       }
     }
-    if (l.probes) { assert(typeof l.probes === 'object' && !Array.isArray(l.probes), 'Invalid probe layout'); for (const [id, pose] of Object.entries(l.probes)) assert(probeIds.has(id) && point(pose), 'Invalid probe layout'); }
+    if (l.probes) {
+      assert(typeof l.probes === 'object' && !Array.isArray(l.probes), 'Invalid probe layout');
+      for (const [id, pose] of Object.entries(l.probes)) {
+        assert(probeIds.has(id) && point(pose), 'Invalid probe layout');
+        assert(pose.decimals === undefined || Number.isInteger(pose.decimals) && pose.decimals >= 0 && pose.decimals <= 6, 'Invalid probe decimal places');
+        assert(pose.showLabel === undefined || typeof pose.showLabel === 'boolean', 'Invalid probe label visibility');
+      }
+    }
     return document;
   }
   function empty() {

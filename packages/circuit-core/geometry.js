@@ -32,6 +32,19 @@
     const anchor = pin(document, probe.positive), offset = document.layout.probes?.[probe.id] || { x: 50, y: -100 };
     return { x: anchor.x + offset.x, y: anchor.y + offset.y };
   }
+  function probeBounds(document, probe, voltage) {
+    const point = probePoint(document, probe);
+    const display = document.layout.probes?.[probe.id];
+    const decimals = display?.decimals ?? 3;
+    const magnitude = Math.abs(voltage ?? 0).toFixed(decimals);
+    const voltageWidth = (magnitude.length + 3) * 22.5;
+    const nameWidth = display?.showLabel ? Array.from(probe.label || 'Wire').length * 16.875 : 0;
+    const horizontalPadding = 15.625;
+    const width = Math.max(voltageWidth, nameWidth) + 2 * horizontalPadding;
+    const center = point.x + (4 + (decimals ? decimals + 1 : 0)) * 22.5 / 2;
+    const top = point.y - (display?.showLabel ? 90.625 : 43.75);
+    return { x: center - width / 2, y: top, right: center + width / 2, bottom: point.y + 37.5 };
+  }
   function probeVoltage(document, probe, frame) {
     if (!frame) return undefined;
     function voltage(ref) {
@@ -60,6 +73,7 @@
     }
     const channels = [], unresolved = [];
     for (const probe of document.probes) {
+      if (probe.scope === false) continue;
       if(probe.kind==='current'){channels.push({...probe,label:probe.label||'Current'});continue;}
       if(probe.kind!=='voltage')continue;
       const positive = terminal(probe.positive), negative = probe.reference === 'ground' ? null : terminal(probe.negative);
@@ -156,10 +170,11 @@
     if(outputSpecs[c.kind]&&Object.keys(Catalog.componentPins(c)).length>2){const ps=Object.values(Catalog.componentPins(c));return {x:Math.max(base.x,32*bodyScale,...ps.map(p=>Math.abs(p[0]))),y:Math.max(base.y,Math.max(24*bodyScale,...ps.map(p=>Math.abs(p[1])))+16*bodyScale)};}
     return base;
   }
-  function hit(document, point, scale = 1, ignoreProbes = false) {
+  function hit(document, point, scale = 1, ignoreProbes = false, frame) {
     for (const probe of document.probes) if (!ignoreProbes && probe.kind === 'voltage' && document.layout.probes?.[probe.id]) {
       if (distance(point, pin(document, probe.positive)) < Math.min(12 / scale, 25)) return { kind: 'probe', id: probe.id, anchor: true };
-      const p = probePoint(document, probe); if (point.x >= p.x - 15.625 && point.x <= p.x + 406.25 && Math.abs(point.y - p.y) < 43.75) return { kind: 'probe', id: probe.id };
+      const b = probeBounds(document, probe, probeVoltage(document, probe, frame));
+      if (point.x >= b.x && point.x <= b.right && point.y >= b.y && point.y <= b.bottom) return { kind: 'probe', id: probe.id };
     }
     let best = null;
     for (const c of document.electrical.components) for (const pinId of Object.keys(Catalog.componentPins(c))) {
@@ -191,7 +206,7 @@
     for(const drawing of [...(document.layout.drawings||[])].reverse())if(drawingHit(drawing,point,scale))return {kind:'drawing',id:drawing.id};
     return null;
   }
-  function boxSelection(d, a, b) {
+  function boxSelection(d, a, b, frame) {
     const r = { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), right: Math.max(a.x, b.x), bottom: Math.max(a.y, b.y) }, crossing = b.x < a.x, result = new Set();
     const inside = p => p.x >= r.x && p.x <= r.right && p.y >= r.y && p.y <= r.bottom;
     const rectangle = q => crossing ? q.x <= r.right && q.right >= r.x && q.y <= r.bottom && q.bottom >= r.y : inside(q) && inside({ x: q.right, y: q.bottom });
@@ -207,7 +222,7 @@
     for (const c of d.electrical.components) if (rectangle(bounds(d, c))) result.add(token('component', c.id));
     for (const w of d.electrical.wires) { const points = route(d, w); if (crossing ? points.some((p, i) => inside(p) || (i && segment(points[i - 1], p))) : points.every(inside)) result.add(token('wire', w.id)); }
     for (const j of d.electrical.junctions) if (inside(d.layout.junctions[j.id])) result.add(token('junction', j.id));
-    for (const probe of d.probes) if (d.layout.probes?.[probe.id]) { const p = probePoint(d, probe); if (rectangle({ x: p.x - 15.625, y: p.y - 43.75, right: p.x + 406.25, bottom: p.y + 43.75 })) result.add(token('probe', probe.id)); }
+    for (const probe of d.probes) if (probe.kind === 'voltage' && d.layout.probes?.[probe.id] && rectangle(probeBounds(d, probe, probeVoltage(d, probe, frame)))) result.add(token('probe', probe.id));
     for(const drawing of d.layout.drawings||[])if(rectangle(drawingBounds(drawing)))result.add(token('drawing',drawing.id));
     return result;
   }
@@ -215,7 +230,7 @@
     const scale = Math.max(.064, Math.min(1.28, camera.scale * factor));
     return { scale, x: point.x - (point.x - camera.x) * scale / camera.scale, y: point.y - (point.y - camera.y) * scale / camera.scale };
   }
-  const api=Object.freeze({componentHitBox,drawingBounds,drawingHit,clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
+  const api=Object.freeze({componentHitBox,drawingBounds,drawingHit,clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeBounds,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
 
   registry.geometry=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

@@ -105,12 +105,12 @@ for (const rotation of [0, 90, 180, 270])
           "Empty space inside a switch is clickable",
         );
         assert.equal(
-          hit(100 + 3 / scale, 0),
+          hit(100 + 9 / scale, 0),
           "switch",
-          "Six-pixel padding works at any zoom",
+          "Ten-pixel padding works at any zoom",
         );
         assert.equal(
-          hit(100 + 8 / scale, 0),
+          hit(100 + 11 / scale, 0),
           null,
           "Nearby space remains available to wires/components",
         );
@@ -121,6 +121,19 @@ for (const rotation of [0, 90, 180, 270])
           null,
           "Non-switch artwork retains precise hit testing",
         );
+      }
+      const bladePoint = new Point(40, -50 - 9 / scale).matrixTransform(matrix);
+      const outside = new Point(40, -50 - 11 / scale).matrixTransform(matrix);
+      for (const y of [-50, -10]) {
+        const switchBody = body(matrix, { x: -100, y, width: 200, height: 10 - y });
+        switchBody.dataset.symbolHitTop = "-50";
+        const surface = svg([switchBody]);
+        assert.equal(
+          symbolBodyHit(surface, bladePoint.x, bladePoint.y),
+          "switch",
+          "Both switch positions reach the padded edge of the open blade",
+        );
+        assert.equal(symbolBodyHit(surface, outside.x, outside.y), null);
       }
     }
 const box = { x: -100, y: -50, width: 200, height: 100 };
@@ -143,7 +156,11 @@ console.log(
 const artwork = new Shape();
 artwork.getScreenCTM = () => new Matrix(2,0,0,2,40,60);
 artwork.cloneNode = () => new Element();
-const switchBody = body(new Matrix(2,0,0,2,40,60), box);
+const switchBody = body(
+  new Matrix(2,0,0,2,40,60),
+  { ...box, y: -10, height: 20 },
+);
+switchBody.dataset.symbolHitTop = "-50";
 switchBody.querySelectorAll = () => [artwork];
 const overlay = new Element();
 overlay.getScreenCTM = () => new Matrix(2,0,0,2);
@@ -151,8 +168,9 @@ overlay.ownerSVGElement = svg([switchBody]);
 exports.drawArtworkHitAreas(overlay);
 assert.equal(overlay.children.length,2,"Overlay includes padded bounds and precise artwork");
 const padding = overlay.children[0].children[0].attributes;
-assert.equal(padding.x,"-103");
-assert.equal(padding.width,"206","Six-screen-pixel padding follows zoom");
+assert.equal(padding.x,"-105");
+assert.equal(padding.y,"-55","Overlay includes the open blade's reach");
+assert.equal(padding.width,"210","Ten-screen-pixel padding follows zoom");
 assert.equal(overlay.children[1].attributes.transform,"matrix(1 0 0 1 20 30)");
 const geometry = overlay.children[1].children[0].attributes;
 assert.equal(geometry.fill,"#ec4899");

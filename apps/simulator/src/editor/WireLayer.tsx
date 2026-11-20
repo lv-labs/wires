@@ -7,6 +7,7 @@ import type { CircuitDocument, Entity, Frame } from "./core"
 export const WireLayer = memo(function WireLayer({
   document,
   selection,
+  highlighted,
   frame,
   showVoltage = true,
   showCurrent = true,
@@ -14,6 +15,7 @@ export const WireLayer = memo(function WireLayer({
 }: {
   document: CircuitDocument
   selection: Entity[]
+  highlighted?: ReadonlySet<string>
   frame?: Frame | null
   showVoltage?: boolean
   showCurrent?: boolean
@@ -56,6 +58,7 @@ export const WireLayer = memo(function WireLayer({
         const isSelected = selection.some(
           (s) => s.kind === "wire" && s.id === w.id
         )
+        const scopeHighlighted = highlighted?.has(w.id)
         const value = signals.voltages[w.id]
         const current = signals.currents[w.id]
         const tint = showVoltage ? voltageColour(value) : "currentColor"
@@ -88,8 +91,10 @@ export const WireLayer = memo(function WireLayer({
               className={
                 isSelected ? "text-blue-600 dark:text-blue-400" : undefined
               }
-              stroke={isSelected ? undefined : tint}
-              strokeWidth={isSelected ? 9.375 : undefined}
+              stroke={
+                scopeHighlighted ? "var(--primary)" : isSelected ? undefined : tint
+              }
+              strokeWidth={scopeHighlighted || isSelected ? 9.375 : undefined}
               points={points}
             />
             {showCurrent &&

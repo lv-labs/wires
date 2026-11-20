@@ -3,6 +3,7 @@ import switchedRc from "../../../../docs/new-simulator/examples/switched-rc.json
 import { core } from "./core"
 import type { CircuitDocument, Command, Run, RunState } from "./core"
 import { defaultSimulationSpeed, simulationPacing } from "./simulationSpeed"
+import { splitLegacyProbes } from "./voltageProbes"
 
 const editingOptions = { wireSections: true, componentReferences: false }
 
@@ -15,13 +16,19 @@ export function useCircuitSession(
       const saved =
         autosave && localStorage.getItem("circuit-editor-prototype.v1")
       if (saved)
-        return core.editing.create(JSON.parse(saved), () => {}, editingOptions)
-          .document
+        return core.editing.create(
+          splitLegacyProbes(core.document.validate(JSON.parse(saved))),
+          () => {},
+          editingOptions
+        ).document
     } catch {
       // Start from the example if the saved document is unavailable.
     }
-    return core.editing.create(initialDocument, () => {}, editingOptions)
-      .document
+    return core.editing.create(
+      splitLegacyProbes(initialDocument),
+      () => {},
+      editingOptions
+    ).document
   })
   const [session] = useState(() =>
     core.editing.create(document, setDocument, editingOptions)
@@ -56,6 +63,7 @@ export function useCircuitSession(
     }
     const coordinator = core.simulation.create({
       ...simulationPacing(defaultSimulationSpeed),
+      retainSampleBatches: false,
       workerFactory: core.browserTransport.factory({
         url: new URL(
           `${import.meta.env.BASE_URL}engine/revision-worker.js`,
@@ -73,6 +81,8 @@ export function useCircuitSession(
         const samples = scope.count
         scope.followState(state)
         if (scope.count !== samples) scopeDirty = true
+        // An automatic batch leaves the Running UI unchanged until it produces a frame.
+        if (state.status === "stepping" && state.runRequested) return
         latestState = state
         scheduleDisplay()
       },

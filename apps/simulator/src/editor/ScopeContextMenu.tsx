@@ -9,16 +9,14 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
 import { formatScope, traceDisplay } from "./scopeDisplay"
+import {
+  minimumValueDivision,
+  timeDivisions,
+  valueDivisions,
+} from "./scopeScales"
 import type { ScopeTrace } from "./ScopePane"
 export type ScopeMode = "docked" | "floating" | "sheet"
 export type TracePatch = { scale?: number; offset?: number }
-const timeDivisions = [
-  1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 0.001, 0.002, 0.005, 0.01, 0.02,
-]
-const valueDivisions = [
-  1e-6, 1e-5, 1e-4, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2,
-  5, 10,
-]
 
 export function ScopeContextMenu({
   menu,
@@ -32,6 +30,7 @@ export function ScopeContextMenu({
   onClose,
   onTime,
   onTrace,
+  getDisplayScale,
   onMode,
   onCombine,
   onSeparate,
@@ -49,6 +48,7 @@ export function ScopeContextMenu({
   onClose: () => void
   onTime: (value: number) => void
   onTrace: (id: string, patch: TracePatch) => void
+  getDisplayScale: (id: string) => number | undefined
   onMode: (mode: ScopeMode) => void
   onCombine: (id: string) => void
   onSeparate: () => void
@@ -57,7 +57,7 @@ export function ScopeContextMenu({
 }) {
   function scaleItems(trace: ScopeTrace) {
     const unit = trace.kind === "current" ? "A" : "V"
-    const scale = traceDisplay(trace).scale
+    const scale = () => getDisplayScale(trace.id) ?? traceDisplay(trace).scale
     return (
       <>
         <DropdownMenuItem
@@ -67,13 +67,15 @@ export function ScopeContextMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() =>
-            onTrace(trace.id, { scale: Math.max(1e-12, scale / 2) })
+            onTrace(trace.id, {
+              scale: Math.max(minimumValueDivision, scale() / 2),
+            })
           }
         >
           Zoom in ×2
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => onTrace(trace.id, { scale: scale * 2 })}
+          onClick={() => onTrace(trace.id, { scale: scale() * 2 })}
         >
           Zoom out ×2
         </DropdownMenuItem>

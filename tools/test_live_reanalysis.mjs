@@ -65,4 +65,24 @@ for(const [kinds,fixture] of [[outputFamilyKinds,outputFamilyCircuit],[passiveMe
  await sim.setDocument(added(rc));assert.equal(workers,1);assert.equal(sim.getState().accepted.runEpoch,epoch);await sim.pause();const after=await sim.step(1);near(after.time,f.time+rc.simulation.timeStep);
  await sim.reset();assert.equal(workers,2);assert.notEqual(sim.getState().accepted.runEpoch,epoch);sim.dispose();
 }
-console.log('Live reanalysis passed: retained model families match continuous controls after placement/index shifts, RC charge survives value edits, invalid edits are atomic, and FIFO general edits retain worker/time/epoch.');
+for (const name of ['opamp-sine','opamp-oscilloscope']) {
+ const document=JSON.parse(await readFile(new URL(`../docs/new-simulator/examples/${name}.json`,import.meta.url)));
+ const control=A.createSession(createEngine()),session=A.createSession(createEngine());
+ control.loadDocument(document);session.loadDocument(document);
+ const initial=session.step(113);control.step(113);
+ const source=document.electrical.components.find(c=>c.id==='vin');
+ const frequency=source.parameters.waveform.frequency*1.7;
+ const changed=structuredClone(document);
+ changed.electrical.components.find(c=>c.id==='vin').parameters.waveform.frequency=frequency;
+ assert.throws(()=>session.setSourceFrequency('vin',0),/positive frequency/);
+ assert.deepEqual(session.snapshot(),initial);
+ near(session.setSourceFrequency('vin',frequency).appliedAtTime,initial.time);
+ update(control,changed);
+ const sample={id:'frequency',positive:{componentId:'vin',pinId:'p'},negative:null};
+ const fast=session.step(36,[sample]),slow=control.step(36,[sample]);
+ assert.deepEqual(fast.sampleBatch.times,slow.sampleBatch.times);
+ fast.sampleBatch.values.frequency.forEach((voltage,i)=>near(voltage,slow.sampleBatch.values.frequency[i]));
+ session.reset();control.loadDocument(changed);
+ assert.deepEqual(session.step(10,[sample]).sampleBatch,control.step(10,[sample]).sampleBatch);
+}
+console.log('Live reanalysis passed: retained model families, RC state, FIFO edits, and phase-preserving source frequency updates.');

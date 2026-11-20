@@ -1,8 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { SettingsIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { core } from "./core"
-import { formatScope, traceDisplay, scopeSampleIndex } from "./scopeDisplay"
+import type { TracePatch } from "./ScopeContextMenu"
+import { ScopeScaleMenu } from "./ScopeScaleMenu"
+import { timeDivisions, valueDivisions } from "./scopeScales"
+import { minimumScopeHeight } from "./scopeDock"
+import {
+  formatScope,
+  traceDisplay,
+  scopeSampleIndex,
+  scopePath,
+  scopePathScale,
+  scopeTimeRuler,
+  updateAutoRange,
+} from "./scopeDisplay"
 export type ScopeTrace = {
   id: string
   label: string
@@ -23,12 +43,16 @@ export function ScopePane({
   times,
   start,
   end,
+  timeDivision,
   cursor,
   liveFraction,
   onHold,
   selectedTrace,
   onSelectTrace,
   onRenameChannel,
+  onDisplayScales,
+  onTimeScale,
+  onTraceSettings,
   onCursor,
   onLeave,
 }: {
@@ -37,18 +61,23 @@ export function ScopePane({
   times: number[]
   start: number
   end: number
+  timeDivision: number
   cursor: number | null
   liveFraction?: number
   onHold: (fraction: number | null) => void
   selectedTrace?: string
   onSelectTrace: (id: string) => void
-  onRenameChannel: (id: string) => void
+  onRenameChannel: (id: string, scale?: number) => void
+  onDisplayScales: (scales: ReadonlyMap<string, number>) => void
+  onTimeScale: (division: number) => void
+  onTraceSettings: (id: string, patch: TracePatch) => void
   onCursor: (fraction: number) => void
   onLeave: () => void
 }) {
   const pointerPosition = useRef(0)
   const heldPointer = useRef<number | null>(null)
   const plotRef = useRef<SVGSVGElement>(null)
+  const plotId = useId()
   const [plotSize, setPlotSize] = useState({ width: 720, height: 200 })
   useEffect(() => {
     const element = plotRef.current
@@ -61,6 +90,7 @@ export function ScopePane({
     return () => observer.disconnect()
   }, [])
   const { width, height } = plotSize
+  const timeRuler = scopeTimeRuler(end, timeDivision)
   const left = 55,
     right = width - 17,
     top = 14,
@@ -68,10 +98,55 @@ export function ScopePane({
   const plotWidth = Math.max(1, right - left),
     plotHeight = bottom - top
   const visible = channels
-  const mappings = useMemo(
+  const rawMappings = useMemo(
     () => new Map(channels.map((trace) => [trace.id, traceDisplay(trace)])),
     [channels]
   )
+  const autoRanges = useRef(
+    new Map<string, ReturnType<typeof updateAutoRange>>()
+  )
+  const [autoScales, setAutoScales] = useState(new Map<string, number>())
+  const sampleTime = times.at(-1)
+  useLayoutEffect(() => {
+    const now = performance.now()
+    const previous = autoRanges.current
+    const ranges = new Map<string, ReturnType<typeof updateAutoRange>>()
+    let scaleChanged = false
+    for (const trace of channels) {
+      const display = rawMappings.get(trace.id)!
+      if (sampleTime === undefined || !trace.values.length) continue
+      if (Number.isFinite(trace.scale) && trace.scale! > 0) continue
+      const range = updateAutoRange(
+        previous.get(trace.id),
+        display,
+        trace.coupling,
+        sampleTime,
+        now
+      )
+      ranges.set(trace.id, range)
+      if (previous.get(trace.id)?.scale !== range.scale) scaleChanged = true
+    }
+    autoRanges.current = ranges
+    if (scaleChanged || previous.size !== ranges.size)
+      setAutoScales(
+        new Map([...ranges].map(([id, range]) => [id, range.scale]))
+      )
+  }, [channels, rawMappings, sampleTime])
+  const mappings = useMemo(
+    () =>
+      new Map(
+        [...rawMappings].map(([id, mapping]) => [
+          id,
+          { ...mapping, scale: autoScales.get(id) ?? mapping.scale },
+        ])
+      ),
+    [autoScales, rawMappings]
+  )
+  useLayoutEffect(() => {
+    onDisplayScales(
+      new Map([...mappings].map(([id, mapping]) => [id, mapping.scale]))
+    )
+  }, [mappings, onDisplayScales])
   const axis =
     channels.find((trace) => trace.id === selectedTrace) || channels[0]
   const axisMapping = axis && mappings.get(axis.id)
@@ -96,6 +171,18 @@ export function ScopePane({
     [top, bottom, plotHeight]
   )
   const cursorIndex = cursor === null ? -1 : scopeSampleIndex(times, cursor)
+  const changeTimePreset = useCallback(
+    (value: number | undefined) => {
+      if (value !== undefined) onTimeScale(value)
+    },
+    [onTimeScale]
+  )
+  const changeTracePreset = useCallback(
+    (scale: number | undefined, traceId?: string) => {
+      if (traceId !== undefined) onTraceSettings(traceId, { scale })
+    },
+    [onTraceSettings]
+  )
   function pointerFraction(element: SVGSVGElement, clientX: number) {
     const rect = element.getBoundingClientRect()
     return Math.max(
@@ -121,22 +208,21 @@ export function ScopePane({
         const mapping = mappings.get(channel.id)!
         const displayValue = (value: number) =>
           (value - mapping.mean) / mapping.scale + mapping.offset
+        // Vertical scaling preserves the raw extrema, so convert only the points we draw.
         const points = core.signals.envelope(
           times,
-          channel.values.map(displayValue),
+          channel.values,
           start,
           end,
           Math.floor(plotWidth)
         )
+        const pointY = (value: number) => y(displayValue(value))
+        const last = points.at(-1)
         return {
           channel,
-          points,
-          d: points
-            .map(
-              ([time, value], i) =>
-                `${i ? "L" : "M"}${x(time).toFixed(2)} ${y(value).toFixed(2)}`
-            )
-            .join(" "),
+          endX: last && x(last[0]),
+          endY: last && pointY(last[1]),
+          d: scopePath(points, x, pointY),
         }
       }),
     [visible, times, start, end, plotWidth, x, y, mappings]
@@ -152,11 +238,50 @@ export function ScopePane({
       className="group/scope h-full min-h-0 min-w-0 overflow-auto"
       data-pane={id}
     >
-      <div className="relative h-full min-h-[160px]">
+      <div
+        className="relative flex h-full flex-col"
+        style={{ minHeight: minimumScopeHeight }}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0.5 z-10 flex justify-end pr-3 pl-[55px]">
+          <div
+            role="group"
+            aria-label="Scope scales"
+            className="pointer-events-auto max-w-full overflow-x-auto rounded bg-background/85 text-[10px]"
+          >
+            <div className="flex w-max items-center gap-x-2 px-1 py-0.5 whitespace-nowrap">
+              <ScopeScaleMenu
+                label="Time scale"
+                unit="s"
+                value={timeDivision}
+                division={timeDivision}
+                presets={timeDivisions}
+                onChange={changeTimePreset}
+              />
+              {channels.map((trace) => {
+                const mapping = mappings.get(trace.id)!
+                return (
+                  <ScopeScaleMenu
+                    key={trace.id}
+                    traceId={trace.id}
+                    label={`Vertical scale for ${trace.label}`}
+                    unit={mapping.unit}
+                    value={trace.scale}
+                    division={mapping.scale}
+                    ac={trace.coupling === "ac"}
+                    presets={valueDivisions}
+                    color={trace.color}
+                    allowAuto
+                    onChange={changeTracePreset}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        </div>
         <svg
           viewBox={`0 0 ${width} ${height}`}
           ref={plotRef}
-          className="h-full w-full touch-none"
+          className="min-h-0 w-full flex-1 touch-none"
           role="img"
           aria-label={`Pane ${id} voltage and current waveforms`}
           onPointerDown={(event) => {
@@ -196,6 +321,23 @@ export function ScopePane({
             if (heldPointer.current === null) onLeave()
           }}
         >
+          {axisMapping && cursorIndex >= 0 && (
+            <text
+              x={left + 4}
+              y={top + 18}
+              fill={axis.color}
+              fontSize={10}
+              className="font-medium tabular-nums"
+              stroke="var(--background)"
+              strokeWidth={3}
+              paintOrder="stroke"
+              data-scope-cursor-value={axis.values[cursorIndex]}
+              pointerEvents="none"
+            >
+              Cursor {formatScope(axis.values[cursorIndex], axisMapping.unit)}
+              <title>{`${axis.label} at ${formatScope(cursor, "s")} · raw sample`}</title>
+            </text>
+          )}
           {Array.from({ length: 11 }, (_, i) => {
             const gx = left + (plotWidth * i) / 10
             return (
@@ -203,13 +345,18 @@ export function ScopePane({
                 <path d={`M${gx} ${top}V${bottom}`} stroke="var(--border)" />
                 {i % 2 === 0 && (
                   <text
-                    x={gx}
+                    x={gx + 2}
                     y={height - 9}
                     fill="var(--muted-foreground)"
-                    textAnchor="middle"
+                    textAnchor="end"
                     fontSize={10}
+                    className="font-mono tabular-nums"
+                    data-scope-time-tick={i}
                   >
-                    {formatScope(start + ((end - start) * i) / 10, "s")}
+                    {timeRuler.format(start + ((end - start) * i) / 10)}
+                    <tspan x={gx + 5} textAnchor="start">
+                      {timeRuler.unit}
+                    </tspan>
                   </text>
                 )}
               </g>
@@ -245,45 +392,49 @@ export function ScopePane({
             />
           )}
           <defs>
-            <clipPath id={`scope-clip-${id}`}>
+            <clipPath id={`${plotId}-clip`}>
               <rect x={left} y={top} width={plotWidth} height={plotHeight} />
             </clipPath>
+            {paths.map(
+              ({ channel, d }, index) =>
+                d && <path key={channel.id} id={`${plotId}-${index}`} d={d} />
+            )}
           </defs>
-          <g clipPath={`url(#scope-clip-${id})`}>
-            {paths.map(({ channel, points, d }) => (
+          <g clipPath={`url(#${plotId}-clip)`}>
+            {paths.map(({ channel, endX, endY, d }, index) => (
               <g key={channel.id}>
                 {d && (
-                  <path
-                    d={d}
+                  <g
                     fill="none"
-                    stroke="transparent"
-                    strokeWidth={12}
-                    className="cursor-pointer"
+                    transform={`scale(${1 / scopePathScale})`}
                     data-select-trace={channel.id}
-                    onClick={() => onSelectTrace(channel.id)}
+                    className="cursor-pointer"
                   >
-                    <title>Select {channel.label}</title>
-                  </path>
+                    <use
+                      href={`#${plotId}-${index}`}
+                      stroke="transparent"
+                      strokeWidth={12 * scopePathScale}
+                    >
+                      <title>Select {channel.label}</title>
+                    </use>
+                    <use
+                      href={`#${plotId}-${index}`}
+                      data-scope-trace={channel.id}
+                      stroke={channel.color}
+                      strokeWidth={
+                        (axis?.id === channel.id ? 2.2 : 1.6) * scopePathScale
+                      }
+                      strokeLinejoin="round"
+                    />
+                  </g>
                 )}
-                {d && (
-                  <path
-                    data-scope-trace={channel.id}
-                    d={d}
-                    fill="none"
-                    stroke={channel.color}
-                    strokeWidth={axis?.id === channel.id ? 2.2 : 1.6}
-                    data-select-trace={channel.id}
-                    className="cursor-pointer"
-                    onClick={() => onSelectTrace(channel.id)}
-                    strokeLinejoin="round"
-                  />
-                )}
-                {points.length > 0 && (
+                {endX !== undefined && (
                   <circle
-                    cx={x(points.at(-1)![0])}
-                    cy={y(points.at(-1)![1])}
+                    cx={endX}
+                    cy={endY}
                     r={2}
                     fill={channel.color}
+                    pointerEvents="none"
                   />
                 )}
               </g>
@@ -294,6 +445,7 @@ export function ScopePane({
                 d={`M${liveFraction === undefined ? x(cursor) : left + liveFraction * plotWidth} ${top}V${bottom}`}
                 stroke="var(--foreground)"
                 strokeDasharray="3 3"
+                pointerEvents="none"
               />
             )}
           </g>
@@ -309,27 +461,6 @@ export function ScopePane({
             </text>
           )}
         </svg>
-        <div className="pointer-events-none absolute top-1 right-3 flex w-fit max-w-[calc(100%-67px)] flex-wrap justify-end gap-x-3 gap-y-1 rounded bg-background/80 px-1 text-[10px]">
-          {axisMapping && cursorIndex >= 0 && (
-            <span
-              className="font-medium tabular-nums"
-              style={{ color: axis.color }}
-              data-scope-cursor-value={axis.values[cursorIndex]}
-              title={`${axis.label} at ${formatScope(cursor, "s")} · raw sample`}
-            >
-              Cursor {formatScope(axis.values[cursorIndex], axisMapping.unit)}
-            </span>
-          )}
-          <span className="text-muted-foreground">
-            {formatScope((end - start) / 10, "s")}/div
-          </span>
-          {axisMapping && (
-            <span style={{ color: axis.color }}>
-              {formatScope(axisMapping.scale, axisMapping.unit)}/div
-              {axis.coupling === "ac" ? " AC" : ""}
-            </span>
-          )}
-        </div>
         <div
           className="absolute bottom-8 left-[55px] flex max-h-[60%] max-w-[calc(100%-67px)] flex-col items-stretch gap-1 overflow-auto text-xs"
           aria-label="Scope traces"
@@ -359,7 +490,7 @@ export function ScopePane({
                 aria-label={`Properties for trace ${channel.label}`}
                 onClick={() => {
                   onSelectTrace(channel.id)
-                  onRenameChannel(channel.id)
+                  onRenameChannel(channel.id, mappings.get(channel.id)?.scale)
                 }}
               >
                 <SettingsIcon className="size-5" aria-hidden="true" />

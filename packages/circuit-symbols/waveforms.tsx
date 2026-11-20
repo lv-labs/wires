@@ -1,13 +1,13 @@
-import { useEffect, useId, useState } from "react";
-import { Upright } from "./svg";
+import { Upright, UprightText } from "./svg";
 import type { Pose } from "./svg";
+
+import { useEffect, useId, useState } from "react";
 
 // Shared by the one- and two-terminal voltage source symbols.
 const waveforms: Record<string, string> = {
-  dc: `M -30 -10
-    H 30
-    M -15 10
-    H 15`,
+  dc: `M -25 0
+    C -20 -30, -5 -30, 0 0
+    S 17.5 30, 25 0`,
   sine: `M -25 0
     C -20 -30, -5 -30, 0 0
     S 17.5 30, 25 0`,
@@ -48,7 +48,7 @@ export function WaveformGlyph({
   if (kind === "dc")
     return (
       <>
-        <path d={waveforms[kind]} />
+      <path d = {waveforms[kind]} />        
       </>
     );
   return (
@@ -57,6 +57,7 @@ export function WaveformGlyph({
     </Upright>
   );
 }
+
 
 // Falstad's idle preview traverses the frequency range and back in two seconds.
 export function idleSweepProgress(milliseconds: number) {

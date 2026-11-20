@@ -411,6 +411,28 @@ public class EngineEntryPoint implements EntryPoint {
         if(!finite(voltage)||voltage<elm.bias||voltage>elm.maxVoltage)throw new IllegalArgumentException("Voltage outside source range");
         checkStopped();elm.frequency=voltage;
     }
+
+    double setSourceFrequency(int id, double frequency) {
+        if (id < 0 || id >= app.elmList.size())
+            throw new IllegalArgumentException("Expected periodic voltage source ID");
+        CircuitElm element = app.elmList.get(id);
+        if (element.getClass() != VoltageElm.class && element.getClass() != RailElm.class)
+            throw new IllegalArgumentException("Expected periodic voltage source ID");
+        VoltageElm source = (VoltageElm) element;
+        if (source.waveform < VoltageElm.WF_AC || source.waveform > VoltageElm.WF_PULSE ||
+                frequency <= 0 || !finite(2 * Math.PI * frequency))
+            throw new IllegalArgumentException("Invalid periodic source frequency");
+        checkStopped();
+        // Periodic sources update their voltage during each step. Their matrix stamp is unchanged.
+        if (source.frequency != frequency) {
+            double zero = app.sim.t - source.frequency * (app.sim.t - source.freqTimeZero) / frequency;
+            if (!finite(zero))
+                throw new IllegalArgumentException("Cannot preserve phase at this frequency");
+            source.freqTimeZero = zero;
+            source.frequency = frequency;
+        }
+        return app.sim.t;
+    }
     private native void appendMeasurements(JavaScriptObject result,int id,JavaScriptObject values) /*-{ if(Object.keys(values).length)result.elements[id].measurements=values; }-*/;
 
     private native JavaScriptObject newSnapshot(double time, double timeStep, String error, boolean editorFree) /*-{
@@ -426,6 +448,11 @@ public class EngineEntryPoint implements EntryPoint {
         $wnd.CircuitEngine = {
             readCapture: $entry(function(id){if(!Number.isInteger(id))throw new Error('Expected integer recorder ID');return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::readCapture(I)(id);}),
             setVariableVoltage: $entry(function(id,voltage){if(!Number.isInteger(id)||typeof voltage!=='number'||!isFinite(voltage))throw new Error('Invalid variable source update');that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::setVariableVoltage(ID)(id,voltage);return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();}),
+            setSourceFrequency: $entry(function(id, frequency) {
+                if (!Number.isInteger(id) || typeof frequency !== 'number')
+                    throw new Error('Invalid source frequency update');
+                return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::setSourceFrequency(ID)(id, frequency);
+            }),
             load: $entry(function(text, dt) {
                 that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::load(Ljava/lang/String;D)(text, dt);
                 return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();

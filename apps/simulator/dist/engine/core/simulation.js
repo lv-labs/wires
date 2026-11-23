@@ -12,7 +12,8 @@
       frame.frameSequence > lastSequence;
   }
   function create({workerFactory, onFrame, onState,
-      autoRun = true, batchSteps = 128, intervalMs = 16, scheduleTask = setTimeout, cancelTask = clearTimeout} = {}) {
+      autoRun = true, batchSteps = 128, intervalMs = 16, retainSampleBatches = true,
+      scheduleTask = setTimeout, cancelTask = clearTimeout} = {}) {
     if(typeof workerFactory!=='function')throw failure('INVALID_RUN_OPTIONS','A workerFactory transport is required');
     if (!Number.isSafeInteger(batchSteps) || batchSteps < 1 || batchSteps > 10000 ||
         !Number.isFinite(intervalMs) || intervalMs < 0) throw failure('INVALID_RUN_OPTIONS', 'Invalid batch size or interval');
@@ -30,14 +31,28 @@
       runRequested = false;
       cancelTick();
     }
-    function schedule(delay = intervalMs) {
+    function schedule(prompt = false) {
       if (!runRequested || disposed || timer !== null || stepPending || livePending ||
+          (!batchSteps && !prompt) ||
           !current() || !['paused', 'running'].includes(status)) return;
       timer = scheduleTask(() => {
         timer = null;
         if (runRequested && !disposed && !stepPending && !livePending && current() && status === 'running')
-          step(batchSteps, true).catch(() => {});
-      }, delay);
+          step(batchSteps || 1, true).catch(() => {});
+      }, prompt ? 0 : intervalMs);
+    }
+    function setRunPacing(steps, interval) {
+      assertOpen();
+      if (!Number.isSafeInteger(steps) || steps < 0 || steps > 10000 ||
+          !Number.isFinite(interval) || interval < 0)
+        throw failure('INVALID_RUN_OPTIONS', 'Invalid batch size or interval');
+      const reschedule = interval !== intervalMs || Boolean(steps) !== Boolean(batchSteps);
+      batchSteps = steps;
+      intervalMs = interval;
+      if (reschedule) {
+        cancelTick();
+        schedule();
+      }
     }
     function current(record = active) {
       return record && !record.dead && record.documentId === desiredDocumentId &&
@@ -54,9 +69,9 @@
         historicalFrame: lastFrame, error: lastError ? {code: lastError.code, message: lastError.message} : null});
     }
     function notify(callback, value) {
-      try {callback?.(copy(value));} catch (cause) {console.error('Simulation observer failed', cause);}
+      try {callback?.(value());} catch (cause) {console.error('Simulation observer failed', cause);}
     }
-    function publish() {notify(onState, state());}
+    function publish() {notify(onState, state);}
     function assertOpen() {if (disposed) throw failure('DISPOSED', 'Coordinator has been disposed');}
     function cancelCandidate() {
       if (candidate) {candidate.worker?.terminate(); candidate = null;}
@@ -92,7 +107,9 @@
             runEpoch: ++nextEpoch, canonical: compiled.canonical});
           candidate = record;
           const ready=await record.worker.ready;
-          record.canUpdate=(ready.capabilities?.liveChanges||ready.liveChanges||[]).includes('updateCircuit');
+          const liveChanges=ready.capabilities?.liveChanges||ready.liveChanges||[];
+          record.canUpdate=liveChanges.includes('updateCircuit');
+          record.canSetSourceFrequency=liveChanges.includes('setSourceFrequency');
           const installed = await record.worker.request('installCircuit', {
             target: {documentId: record.documentId, circuitRevision: record.circuitRevision, runEpoch: record.runEpoch},
             payload: {circuit: JSON.parse(compiled.canonical)}
@@ -106,7 +123,7 @@
           if (replacement?.token === token) replacement = null;
           lastFrame = null; status = idleStatus(); lastError = null;
           previous?.worker.terminate();
-          publish(); schedule();
+          publish(); schedule(batchSteps === 0);
           return {activated: true, ...identity(record)};
         } catch (cause) {
           if (disposed || token !== generation) return {superseded: true};
@@ -132,6 +149,14 @@
       const changed = [];
       before.devices.forEach((device, i) => {
         const next = after.devices[i];
+        if (active?.canSetSourceFrequency && device.id === next.id && device.kind === next.kind &&
+            (device.kind === 'voltageSource' || device.kind === 'voltageRail')) {
+          const previous = device.parameters.waveform, waveform = next.parameters.waveform;
+          if (previous.kind === waveform.kind && waveform.kind !== 'dc' && previous.frequency !== waveform.frequency) {
+            changed.push({componentId:device.id,frequency:waveform.frequency});
+            previous.frequency=waveform.frequency;
+          }
+        }
         const field={pushSwitch:'normallyClosed',spdtSwitch:'position',dpdtSwitch:'position',mbbSwitch:'position',logicInput:'state'}[device.kind];
         if(field&&device.id===next.id&&device.kind===next.kind&&device.parameters[field]!==next.parameters[field]){
           changed.push({componentId:device.id,field,value:next.parameters[field]});device.parameters[field]=next.parameters[field];
@@ -158,7 +183,11 @@
           if (stepPending) await stepPending.promise.catch(() => {});
           if (disposed || token !== generation || active !== record) return {superseded: true};
           if (record.dead) throw failure('ENGINE_FAILURE', 'Worker faulted; reset required');
-          const ack = await record.worker.request(Object.hasOwn(change,'circuit')?'updateCircuit':Object.hasOwn(change,'voltage')?'setVariableVoltage':Object.hasOwn(change,'field')?'setContact':'setSwitch', {
+          const operation = Object.hasOwn(change,'circuit') ? 'updateCircuit' :
+            Object.hasOwn(change,'frequency') ? 'setSourceFrequency' :
+            Object.hasOwn(change,'voltage') ? 'setVariableVoltage' :
+            Object.hasOwn(change,'field') ? 'setContact' : 'setSwitch';
+          const ack = await record.worker.request(operation, {
             target: {documentId: record.documentId, circuitRevision: revision, runEpoch: record.runEpoch},
             payload: {...change, statePolicy: 'preserve'}
           });
@@ -182,7 +211,7 @@
           publish();
           // A drag must not repeatedly postpone physics by a full display interval.
           // Replace an older timer with a prompt solve once the latest edit lands.
-          if(!livePending && token===generation && status==='running'){cancelTick();schedule(0);}
+          if(!livePending && token===generation && status==='running'){cancelTick();schedule(true);}
           else schedule();
         }
       })();
@@ -237,10 +266,15 @@
           const frame = await Promise.resolve().then(() => record.worker.request('step', {payload: {count, ...(channels.length?{channels}:{})}}));
           if (disposed || active !== record || !current(record) || stepGeneration !== generation ||
               !isCurrentFrame(frame, identity(record), previousSequence)) return null;
-          lastFrame = copy(frame);
+          if (retainSampleBatches) lastFrame = copy(frame);
+          else {
+            // The acquisition observer consumes these once. The sheet only needs telemetry.
+            const {sampleBatch, ...telemetry} = frame;
+            lastFrame = copy(telemetry);
+          }
           if(frame.stopRequested)stopRun();
-          notify(onFrame, lastFrame);
-          return copy(frame);
+          notify(onFrame, () => copy(frame));
+          return automatic ? null : copy(frame);
         } catch (cause) {
           if (!disposed && active === record && current(record) && stepGeneration === generation) {
             record.dead = true; status = 'error'; lastError = cause;
@@ -265,7 +299,7 @@
       if(result.componentId!==componentId)throw failure('INVALID_REPLY','Recorder reply target mismatch');
       return copy(result);
     }
-    return {setDocument, readCapture, setSampleChannels: channels=>{assertOpen();sampleChannels=Adapter.normalizeSampleChannels(channels);}, step: count => step(count), getState: state,
+    return {setDocument, readCapture, setRunPacing, setSampleChannels: channels=>{assertOpen();sampleChannels=Adapter.normalizeSampleChannels(channels);}, step: count => step(count), getState: state,
       run: () => {
         assertOpen();
         // Keep the user's intent even while an edit is being installed or repaired.

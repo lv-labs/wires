@@ -1,3 +1,4 @@
+import { circuitImage } from "./exportCircuitImage"
 import {
   memo,
   useEffect,
@@ -153,6 +154,11 @@ export const CircuitSheet = memo(function CircuitSheet({
   onPressComponent,
   onReleaseComponent,
   onSaveDocument,
+  onRecoverDocument,
+  onOpenLink,
+  onExportImage,
+  onExportError,
+  onShareDocument,
   onOpenDocument,
   onImportFalstad,
   onNewDocument,
@@ -201,6 +207,11 @@ export const CircuitSheet = memo(function CircuitSheet({
   onPressComponent: (id: string) => void
   onReleaseComponent: (id: string) => void
   onSaveDocument: () => void
+  onRecoverDocument?: () => void
+  onOpenLink?: () => void
+  onExportImage?: (blob: Blob, format: "svg" | "png") => void
+  onExportError?: (message: string) => void
+  onShareDocument?: () => void
   onOpenDocument: () => void
   onImportFalstad?: () => void
   onNewDocument: () => void
@@ -474,7 +485,9 @@ export const CircuitSheet = memo(function CircuitSheet({
       gesture.current = null
       setPreview(null)
       setBox(null)
-      setPlacement((current) => (current?.kind === "component" ? current : null))
+      setPlacement((current) =>
+        current?.kind === "component" ? current : null
+      )
     }
     window.addEventListener("keyup", up)
     window.addEventListener("blur", blur)
@@ -700,7 +713,11 @@ export const CircuitSheet = memo(function CircuitSheet({
     if (chosen.length) execute({ type: "remove", selection: chosen })
   }
   function beginTransform(detached: boolean) {
-    if (gesture.current || route || (placement && placement.kind !== "component"))
+    if (
+      gesture.current ||
+      route ||
+      (placement && placement.kind !== "component")
+    )
       return
     cancel()
     const chosen = selectForCommand()
@@ -847,9 +864,38 @@ export const CircuitSheet = memo(function CircuitSheet({
     )
       return
     if (command) {
-      if (!["s", "o", "z", "c", "d", "v"].includes(key)) return
+      if (!["a", "s", "o", "z", "c", "d", "v"].includes(key)) return
       event.preventDefault()
       if (event.repeat) return
+      if (key === "a") {
+        cancel()
+        const all: Entity[] = [
+          ...document.electrical.components.map(({ id }): Entity => ({
+            kind: "component",
+            id,
+          })),
+          ...document.electrical.wires.map(({ id }): Entity => ({
+            kind: "wire",
+            id,
+          })),
+          ...document.electrical.junctions.map(({ id }): Entity => ({
+            kind: "junction",
+            id,
+          })),
+          ...document.probes
+            .filter(
+              (probe) =>
+                probe.kind === "voltage" && document.layout.probes?.[probe.id]
+            )
+            .map(({ id }): Entity => ({ kind: "probe", id })),
+          ...(document.layout.drawings ?? []).map(({ id }): Entity => ({
+            kind: "drawing",
+            id,
+          })),
+        ]
+        onSelection(all)
+        sheet.focus({ preventScroll: true })
+      }
       if (key === "s") onSaveDocument()
       if (key === "o") onOpenDocument()
       if (key === "z") changeHistory(event.shiftKey ? redo : undo)
@@ -915,8 +961,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       orient({ axis: key })
       return
     }
-    if (gesture.current || (placement && placement.kind !== "component"))
-      return
+    if (gesture.current || (placement && placement.kind !== "component")) return
     if (key === "e") {
       event.preventDefault()
       cancel()
@@ -1128,7 +1173,13 @@ export const CircuitSheet = memo(function CircuitSheet({
     return id ? { kind: "component", id } : hit
   }
   function targetAt(p: Point, ignoreProbes = false): Target {
-    const hit = core.geometry.hit(document, p, camera.scale, ignoreProbes, frame)
+    const hit = core.geometry.hit(
+      document,
+      p,
+      camera.scale,
+      ignoreProbes,
+      frame
+    )
     if (
       hit &&
       (hit.kind === "pin" ||
@@ -1419,8 +1470,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       const tip = targetPoint(endpoint)
       setPlacement({ ...placement, tip })
       setHover(endpoint.kind === "point" ? null : tip)
-    }
-    else if (!g && !placement && !pressedPush.current) {
+    } else if (!g && !placement && !pressedPush.current) {
       if (route) {
         setRoute((draft) => {
           if (!draft) return draft
@@ -1573,6 +1623,26 @@ export const CircuitSheet = memo(function CircuitSheet({
     drawingDraft?.kind === "polygon"
       ? { ...drawingDraft, points: [...drawingDraft.points, cursor] }
       : drawingDraft
+  async function saveImage(format: "svg" | "png") {
+    if (!svg.current || !onExportImage) return
+    const previousSelection = selection
+    onSelection([])
+    setHover(null)
+    try {
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve())
+      )
+      if (svg.current)
+        onExportImage(
+          await circuitImage(svg.current, document.title, format),
+          format
+        )
+    } catch (cause) {
+      ;(onExportError ?? onNotice)(String(cause))
+    } finally {
+      onSelection(previousSelection)
+    }
+  }
   return (
     <>
       {styleOpen && (
@@ -1607,13 +1677,28 @@ export const CircuitSheet = memo(function CircuitSheet({
             <MenubarTrigger>File</MenubarTrigger>
             <MenubarContent>
               <MenubarItem onClick={onNewDocument}>New circuit</MenubarItem>
-              <MenubarItem onClick={onOpenDocument}>Open…</MenubarItem>
+              <MenubarItem onClick={onOpenDocument}>
+                Open from file…
+              </MenubarItem>
+              <MenubarItem onClick={onOpenLink}>Open from link…</MenubarItem>
               {onImportFalstad && (
                 <MenubarItem onClick={onImportFalstad}>
                   Import Falstad…
                 </MenubarItem>
               )}
-              <MenubarItem onClick={onSaveDocument}>Save as…</MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem onClick={onSaveDocument}>Save to file…</MenubarItem>
+              <MenubarItem onClick={onShareDocument}>Save to link…</MenubarItem>
+              <MenubarItem onClick={() => void saveImage("svg")}>
+                Save to SVG…
+              </MenubarItem>
+              <MenubarItem onClick={() => void saveImage("png")}>
+                Save to PNG…
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem onClick={onRecoverDocument}>
+                Recover a circuit…
+              </MenubarItem>
               <MenubarSeparator />
               <MenubarSub>
                 <MenubarSubTrigger>Open example</MenubarSubTrigger>
@@ -1646,7 +1731,10 @@ export const CircuitSheet = memo(function CircuitSheet({
               <MenubarItem
                 aria-keyshortcuts="U"
                 disabled={
-                  !canExpandSelection || !!route || !!placement || !!drawingDraft
+                  !canExpandSelection ||
+                  !!route ||
+                  !!placement ||
+                  !!drawingDraft
                 }
                 onClick={expandSheetSelection}
               >
@@ -2084,9 +2172,7 @@ export const CircuitSheet = memo(function CircuitSheet({
             </>
           )}
           {itemMenu?.entity.kind === "probe" && (
-            <MenubarItem
-              onClick={() => onPlotProbe(itemMenu.entity.id)}
-            >
+            <MenubarItem onClick={() => onPlotProbe(itemMenu.entity.id)}>
               Add to scope
             </MenubarItem>
           )}
@@ -2096,7 +2182,7 @@ export const CircuitSheet = memo(function CircuitSheet({
         ref={svg}
         tabIndex={0}
         aria-label="Circuit sheet. Select and drag. U expands selection. G moves connected, M moves detached, R rotates, X/Y flips, W starts or places a wire, and Escape cancels and clears selection."
-        className={`min-h-[450px] w-full flex-1 touch-none outline-none${tool === "wire" || route || placement?.kind === "probe" ? "cursor-crosshair" : ""}`}
+        className={`min-h-[450px] w-full flex-1 touch-none outline-none ${tool === "wire" || route || placement?.kind === "probe" ? "cursor-crosshair" : ""}`}
         onContextMenu={(e) => {
           e.preventDefault()
           cancel()
@@ -2267,6 +2353,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           <rect width="100%" height="100%" fill={`url(#${grid})`} />
         )}
         <g
+          data-circuit-content=""
           transform={`translate(${camera.x} ${camera.y}) scale(${camera.scale})`}
         >
           <DrawingLayer
@@ -2276,7 +2363,7 @@ export const CircuitSheet = memo(function CircuitSheet({
               .map((item) => item.id)}
           />
           {drawingPreview && (
-            <g pointerEvents="none" opacity={0.65}>
+            <g data-export-ignore="" pointerEvents="none" opacity={0.65}>
               <DrawingShape drawing={drawingPreview} />
             </g>
           )}
@@ -2303,6 +2390,7 @@ export const CircuitSheet = memo(function CircuitSheet({
               const point = core.geometry.pin(shown, terminal)
               return (
                 <circle
+                  data-export-ignore=""
                   key={id}
                   cx={point.x}
                   cy={point.y}
@@ -2315,16 +2403,20 @@ export const CircuitSheet = memo(function CircuitSheet({
               )
             })}
           {selectedDrawing && tool === "select" && (
-            <DrawingHandles
-              drawing={selectedDrawing}
-              scale={camera.scale}
-              onHandle={(index, event) =>
-                beginDrawingHandle(selectedDrawing, index, event)
-              }
-            />
+            <g data-export-ignore="">
+              <DrawingHandles
+                drawing={selectedDrawing}
+                scale={camera.scale}
+                onHandle={(index, event) =>
+                  beginDrawingHandle(selectedDrawing, index, event)
+                }
+              />
+            </g>
           )}
           {showSelectionHitboxes && (
-            <SelectionHitboxes document={shown} scale={camera.scale} />
+            <g data-export-ignore="">
+              <SelectionHitboxes document={shown} scale={camera.scale} />
+            </g>
           )}
           {shown.probes
             .filter(
@@ -2379,6 +2471,7 @@ export const CircuitSheet = memo(function CircuitSheet({
               return (
                 <g
                   key={probe.id}
+                  data-export-ignore={moving ? "" : undefined}
                   transform={
                     moving
                       ? `translate(${placement.tip.x - anchor.x} ${placement.tip.y - anchor.y})`
@@ -2430,7 +2523,10 @@ export const CircuitSheet = memo(function CircuitSheet({
                     fontSize={37.5}
                     className="font-mono"
                     textAnchor="middle"
-                    textLength={(magnitude.length + (voltage === undefined ? 0 : 1)) * 22.5}
+                    textLength={
+                      (magnitude.length + (voltage === undefined ? 0 : 1)) *
+                      22.5
+                    }
                     lengthAdjust="spacingAndGlyphs"
                     aria-label={`${negative ? "−" : ""}${magnitude}`}
                   >
@@ -2446,6 +2542,7 @@ export const CircuitSheet = memo(function CircuitSheet({
             })}
           {placement?.kind === "component" && previewComponent && placePose && (
             <g
+              data-export-ignore=""
               transform={`translate(${placePose.x} ${placePose.y}) rotate(${placement.rotation}) scale(${placement.mirror ? -1 : 1} 1)`}
               pointerEvents="none"
               fill="none"
@@ -2462,6 +2559,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           )}
           {hover && (
             <circle
+              data-export-ignore=""
               cx={hover.x}
               cy={hover.y}
               r={10 / camera.scale}
@@ -2474,6 +2572,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           )}
           {route && (
             <polyline
+              data-export-ignore=""
               points={routePoints.map((p) => `${p.x},${p.y}`).join(" ")}
               fill="none"
               stroke="var(--primary)"
@@ -2483,6 +2582,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           )}
           {box && (
             <rect
+              data-export-ignore=""
               x={Math.min(box.a.x, box.b.x)}
               y={Math.min(box.a.y, box.b.y)}
               width={Math.abs(box.b.x - box.a.x)}

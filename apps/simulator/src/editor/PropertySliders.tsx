@@ -1,3 +1,4 @@
+import { formatNumberInput, parseNumber } from "./parseNumber"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +15,7 @@ export type PropertySlider = {
   min: number
   max: number
   step: number
+  logarithmic?: boolean
 }
 
 export function numericProperties(
@@ -59,15 +61,28 @@ export function PropertySliderDialog({
           onSubmit={(event) => {
             event.preventDefault()
             const data = new FormData(event.currentTarget)
-            const min = Number(data.get("min")),
-              max = Number(data.get("max")),
-              step = Number(data.get("step"))
+            let min: number, max: number, step: number
+            try {
+              min = parseNumber(String(data.get("min")), "Minimum")
+              max = parseNumber(String(data.get("max")), "Maximum")
+              step = parseNumber(String(data.get("step")), "Step")
+            } catch (error) {
+              setError((error as Error).message)
+              return
+            }
             if (
               ![min, max, step].every(Number.isFinite) ||
               min >= max ||
               step <= 0
             ) {
               setError("Enter a minimum below the maximum and a positive step.")
+              return
+            }
+            const logarithmic = data.get("scale") === "logarithmic"
+            if (logarithmic && min <= 0) {
+              setError(
+                "Logarithmic sliders require a positive minimum and maximum."
+              )
               return
             }
             onSave({
@@ -78,6 +93,7 @@ export function PropertySliderDialog({
               min,
               max,
               step,
+              logarithmic,
             })
           }}
         >
@@ -110,41 +126,56 @@ export function PropertySliderDialog({
               }
             />
           </label>
+          <label className="grid gap-1 text-sm">
+            Scale
+            <NativeSelect
+              name="scale"
+              defaultValue={defaults?.logarithmic ? "logarithmic" : "linear"}
+            >
+              <NativeSelectOption value="linear">Linear</NativeSelectOption>
+              <NativeSelectOption value="logarithmic">
+                Logarithmic
+              </NativeSelectOption>
+            </NativeSelect>
+          </label>
           <div className="grid grid-cols-3 gap-2">
             <label className="grid gap-1 text-sm">
               Minimum
               <Input
                 required
-                type="number"
-                step="any"
+                type="text"
                 name="min"
-                defaultValue={defaults?.min ?? Math.min(0, value - span)}
+                defaultValue={formatNumberInput(
+                  defaults?.min ?? Math.min(0, value - span)
+                )}
               />
             </label>
             <label className="grid gap-1 text-sm">
               Maximum
               <Input
                 required
-                type="number"
-                step="any"
+                type="text"
                 name="max"
-                defaultValue={defaults?.max ?? Math.max(0, value + span)}
+                defaultValue={formatNumberInput(
+                  defaults?.max ?? Math.max(0, value + span)
+                )}
               />
             </label>
             <label className="grid gap-1 text-sm">
               Step
               <Input
                 required
-                type="number"
-                step="any"
+                type="text"
                 name="step"
-                defaultValue={defaults?.step ?? span / 100}
+                defaultValue={formatNumberInput(defaults?.step ?? span / 100)}
               />
             </label>
           </div>
           <p className="text-xs text-muted-foreground">
-            Use the property's base units. Values must satisfy the component's
-            property rules.
+            Use base units or prefixes p, n, u (µ), m, k, M or G (e.g. 10u, 10m,
+            1k, 2M). Logarithmic scales require positive limits; equal distances
+            multiply the value by the same factor. Step stays in base units.
+            Values must satisfy the component's property rules.
           </p>
           {error && (
             <p role="alert" className="text-sm text-destructive">

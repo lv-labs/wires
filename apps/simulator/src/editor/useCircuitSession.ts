@@ -1,43 +1,50 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import switchedRc from "../../../../docs/new-simulator/examples/switched-rc.json"
 import { core } from "./core"
 import type { CircuitDocument, Command, Run, RunState } from "./core"
 import { defaultSimulationSpeed, simulationPacing } from "./simulationSpeed"
 import { splitLegacyProbes } from "./voltageProbes"
 
+import { startWorkspace, rememberDraft, writeEntry } from "./circuitWorkspace"
+
 const editingOptions = { wireSections: true, componentReferences: false }
 
 export function useCircuitSession(
-  initialDocument = switchedRc as CircuitDocument,
+  initialDocument = core.document.empty(),
   autosave = true
 ) {
+  const [workspace, setWorkspace] = useState(() =>
+    autosave
+      ? startWorkspace(initialDocument)
+      : {
+          id: crypto.randomUUID(),
+          document: initialDocument,
+        }
+  )
   const [document, setDocument] = useState(() => {
     try {
-      const saved =
-        autosave && localStorage.getItem("circuit-editor-prototype.v1")
-      if (saved)
-        return core.editing.create(
-          splitLegacyProbes(core.document.validate(JSON.parse(saved))),
-          () => {},
-          editingOptions
-        ).document
+      return core.editing.create(
+        splitLegacyProbes(core.document.validate(workspace.document)),
+        () => {},
+        editingOptions
+      ).document
     } catch {
-      // Start from the example if the saved document is unavailable.
+      return core.editing.create(
+        splitLegacyProbes(initialDocument),
+        () => {},
+        editingOptions
+      ).document
     }
-    return core.editing.create(
-      splitLegacyProbes(initialDocument),
-      () => {},
-      editingOptions
-    ).document
   })
   const [session] = useState(() =>
     core.editing.create(document, setDocument, editingOptions)
   )
   const [simulation, setSimulation] = useState<RunState>({ status: "loading" })
   const [simulationSpeed, setSimulationSpeed] = useState(defaultSimulationSpeed)
-  const [scope] = useState(() => core.signals.create({ capacity: 20000 }))
+  const [scope] = useState(() =>
+    core.signals.create({ capacity: 20000, historySpan: 0.2 })
+  )
   const [scopeData, setScopeData] = useState(() => scope.window(0.002))
-  const scopeSpan = useRef(0.002)
+  const scopeSpan = useRef(0.2)
   const [error, setError] = useState("")
   const [savedLocally, setSavedLocally] = useState<boolean | null>(null)
   const run = useRef<Run | null>(null)
@@ -132,15 +139,18 @@ export function useCircuitSession(
   useEffect(() => {
     if (!autosave) return
     try {
-      localStorage.setItem(
-        "circuit-editor-prototype.v1",
-        JSON.stringify(document)
-      )
+      writeEntry("draft", {
+        id: workspace.id,
+        document,
+        updated: Date.now(),
+        revision: crypto.randomUUID(),
+      })
+      rememberDraft(workspace.id)
       setSavedLocally(true)
     } catch {
       setSavedLocally(false)
     }
-  }, [autosave, document])
+  }, [autosave, document, workspace.id])
   const execute = useCallback(
     (command: Command) => {
       try {
@@ -156,6 +166,7 @@ export function useCircuitSession(
   const setScopeTime = useCallback(
     (seconds: number) => {
       scopeSpan.current = seconds * 10
+      scope.setHistorySpan(Math.max(0.2, scopeSpan.current))
       setScopeData(scope.window(scopeSpan.current))
     },
     [scope]
@@ -164,7 +175,14 @@ export function useCircuitSession(
     scope.clear()
     setScopeData(scope.window(scopeSpan.current))
   }, [scope])
+  function openDocument(next: CircuitDocument) {
+    const validated = splitLegacyProbes(core.document.validate(next))
+    session.replace(validated)
+    setWorkspace({ id: crypto.randomUUID(), document: validated })
+  }
   return {
+    openDocument,
+    draftId: workspace.id,
     document,
     session,
     execute,

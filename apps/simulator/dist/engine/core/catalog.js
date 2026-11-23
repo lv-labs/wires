@@ -246,11 +246,28 @@
           "type": "number",
           "min": 0,
           "default": 10000000
+        },
+        "scale": {
+          "label": "Scale",
+          "type": "number",
+          "min": 0,
+          "max": 3,
+          "integer": true,
+          "optional": true,
+          "default": 0
+        },
+        "circleSymbol": {
+          "label": "Circular symbol",
+          "type": "boolean",
+          "optional": true,
+          "default": true
         }
       },
       "parameters": {
         "mode": 0,
-        "resistance": 10000000
+        "resistance": 10000000,
+        "scale": 0,
+        "circleSymbol": true
       },
       "sign": 1
     },
@@ -313,10 +330,27 @@
           "max": 1,
           "integer": true,
           "default": 0
+        },
+        "scale": {
+          "label": "Scale",
+          "type": "number",
+          "min": 0,
+          "max": 3,
+          "integer": true,
+          "optional": true,
+          "default": 0
+        },
+        "circleSymbol": {
+          "label": "Circular symbol",
+          "type": "boolean",
+          "optional": true,
+          "default": true
         }
       },
       "parameters": {
-        "mode": 0
+        "mode": 0,
+        "scale": 0,
+        "circleSymbol": true
       },
       "sign": 1
     },
@@ -815,11 +849,11 @@
     "sweepSource": {
       "name": "A/C sweep",
       "prefix": "V",
-      "drawingScale": 3.125,
+      "drawingScale": 1,
       "pins": {
         "p": [
           0,
-          100
+          0
         ]
       },
       "type": "170",
@@ -1209,14 +1243,14 @@
     "tunnelDiode": {
       "name": "Tunnel diode",
       "prefix": "D",
-      "drawingScale": 3.125,
+      "drawingScale": 1,
       "pins": {
         "anode": [
-          -150,
+          -100,
           0
         ],
         "cathode": [
-          150,
+          100,
           0
         ]
       },
@@ -1912,20 +1946,19 @@
       }
     },
     "spdtSwitch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "SPDT switch",
       "pins": {
         "common": [
-          -150,
+          -100,
           0
         ],
         "a": [
-          150,
+          100,
           -50
         ],
         "b": [
-          150,
+          100,
           50
         ]
       },
@@ -1941,33 +1974,32 @@
       }
     },
     "dpdtSwitch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "DPDT switch",
       "pins": {
         "common1": [
-          -150,
+          -100,
           -100
         ],
         "a1": [
-          150,
+          100,
           -50
         ],
         "b1": [
-          150,
+          100,
           -150
         ],
         "common2": [
-          -150,
-          50
-        ],
-        "a2": [
-          150,
+          -100,
           100
         ],
+        "a2": [
+          100,
+          150
+        ],
         "b2": [
-          150,
-          0
+          100,
+          50
         ]
       },
       "parameters": {
@@ -2001,16 +2033,15 @@
       }
     },
     "zener": {
-      "drawingScale": 3.125,
       "prefix": "D",
       "name": "Zener diode",
       "pins": {
         "anode": [
-          -150,
+          -100,
           0
         ],
         "cathode": [
-          150,
+          100,
           0
         ]
       },
@@ -2023,12 +2054,12 @@
       "name": "Resistor",
       "pins": {
         "a": [
-          0,
-          -100
+          100,
+          0
         ],
         "b": [
-          0,
-          100
+          -100,
+          0
         ]
       },
       "parameters": {
@@ -2036,16 +2067,15 @@
       }
     },
     "inductor": {
-      "drawingScale": 3.125,
       "prefix": "L",
       "name": "Inductor",
       "pins": {
         "a": [
-          -150,
+          -100,
           0
         ],
         "b": [
-          150,
+          100,
           0
         ]
       },
@@ -2056,16 +2086,15 @@
       }
     },
     "diode": {
-      "drawingScale": 3.125,
       "prefix": "D",
       "name": "Diode",
       "pins": {
         "anode": [
-          -150,
+          -100,
           0
         ],
         "cathode": [
-          150,
+          100,
           0
         ]
       },
@@ -2093,16 +2122,15 @@
       }
     },
     "potentiometer": {
-      "drawingScale": 3.125,
       "prefix": "RV",
       "name": "Potentiometer",
       "pins": {
         "a": [
-          -150,
+          -100,
           0
         ],
         "b": [
-          150,
+          100,
           0
         ],
         "wiper": [
@@ -2117,16 +2145,15 @@
       }
     },
     "polarizedCapacitor": {
-      "drawingScale": 3.125,
       "prefix": "C",
       "name": "Polarized capacitor",
       "pins": {
         "positive": [
-          -150,
+          -100,
           0
         ],
         "negative": [
-          150,
+          100,
           0
         ]
       },
@@ -2241,16 +2268,15 @@
       }
     },
     "pushSwitch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "Push switch",
       "pins": {
         "a": [
-          -150,
+          -100,
           0
         ],
         "b": [
-          150,
+          100,
           0
         ]
       },
@@ -2263,20 +2289,19 @@
       }
     },
     "mbbSwitch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "Make-before-break switch",
       "pins": {
         "common": [
-          -150,
+          -100,
           0
         ],
         "a": [
-          150,
+          100,
           -50
         ],
         "b": [
-          150,
+          100,
           50
         ]
       },
@@ -2653,16 +2678,15 @@
       }
     },
     "capacitor": {
-      "drawingScale": 3.125,
       "prefix": "C",
       "name": "Capacitor",
       "pins": {
         "a": [
-          -75,
+          -100,
           0
         ],
         "b": [
-          75,
+          100,
           0
         ]
       },
@@ -2673,32 +2697,14 @@
       }
     },
     "voltageSource": {
-      "drawingScale": 3.125,
       "prefix": "V",
       "name": "DC source (2 terminals)",
       "pins": {
         "p": [
           0,
-          -150
+          -100
         ],
         "n": [
-          0,
-          150
-        ]
-      },
-      "parameters": {
-        "waveform": {
-          "kind": "dc",
-          "voltage": 5
-        }
-      }
-    },
-    "voltageRail": {
-      "drawingScale": 3.125,
-      "prefix": "V",
-      "name": "DC source (1 terminal)",
-      "pins": {
-        "p": [
           0,
           100
         ]
@@ -2710,17 +2716,32 @@
         }
       }
     },
+    "voltageRail": {
+      "prefix": "V",
+      "name": "DC source (1 terminal)",
+      "pins": {
+        "p": [
+          0,
+          0
+        ]
+      },
+      "parameters": {
+        "waveform": {
+          "kind": "dc",
+          "voltage": 5
+        }
+      }
+    },
     "switch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "Switch",
       "pins": {
         "a": [
-          -150,
+          -100,
           0
         ],
         "b": [
-          150,
+          100,
           0
         ]
       },
@@ -3000,30 +3021,34 @@
       ['schmittInputs','invertInputs'].some(k=>Object.hasOwn(p,k)&&typeof p[k]!=='boolean'))throw new Error('Invalid gate input count, delay or logic parameters');
     return structuredClone(p);
   }
-  function componentPins(component) {
+  function componentPins(component, definition=definitions[component.kind]) {
     const kind=component.kind,p=component.parameters||{};
     if(gateKind(kind)) {
       if(!Number.isInteger(p.inputCount??2)||(p.inputCount??2)<1||(p.inputCount??2)>8)throw new Error('Gate input count must be 1 to 8');
-      if((p.inputCount??2)===2)return definitions[kind].pins;
+      if((p.inputCount??2)===2)return definition.pins;
       return {...Object.fromEntries(gateOffsets(p.inputCount??2).map((y,i)=>[String.fromCharCode(97+i),[-150,y*3.125]])),out:[150,0]};
     }
     if(kind==='spdtSwitch'&&(p.throwCount??2)!==2){
       const count=p.throwCount;
       if(!Number.isInteger(count)||count<2||count>10)throw new Error('Invalid throw count');
-      return {common:[-150,0],...Object.fromEntries(Array.from({length:count},(_,i)=>[i<2?['a','b'][i]:'throw'+(i+1),[150,50*(i-Math.floor((count-1)/2))]]))};
+      return {common:definition.pins.common,...Object.fromEntries(Array.from({length:count},(_,i)=>[i<2?['a','b'][i]:'throw'+(i+1),[definition.pins.a[0],50*(i-Math.floor((count-1)/2))]]))};
     }
     if(kind==='dpdtSwitch'&&(p.poleCount??2)!==2){
       if(!Number.isInteger(p.poleCount)||p.poleCount<1||p.poleCount>8)throw new Error('Invalid pole count');
-      return Object.fromEntries(Array.from({length:p.poleCount},(_,i)=>[['common'+(i+1),[-150,-100+i*150]],['a'+(i+1),[150,-50+i*150]],['b'+(i+1),[150,-150+i*150]]]).flat());
+      const spacing=definition.pins.common2[1]-definition.pins.common1[1];
+      return Object.fromEntries(Array.from({length:p.poleCount},(_,i)=>['common','a','b'].map(name=>{
+        const pin=i<2?definition.pins[name+(i+1)]:[definition.pins[name+'1'][0],definition.pins[name+'1'][1]+i*spacing];
+        return [name+(i+1),pin];
+      })).flat());
     }
-    if(transistorKind(kind)&&p.swapTerminals){const pins=definitions[kind].pins;return {...pins,collector:pins.emitter,emitter:pins.collector};}
+    if(transistorKind(kind)&&p.swapTerminals){const pins=definition.pins;return {...pins,collector:pins.emitter,emitter:pins.collector};}
     if(mosfetKind(kind)) {
-      const pins={...definitions[kind].pins};
+      const pins={...definition.pins};
       if(p.swapTerminals){const source=pins.source;pins.source=pins.drain;pins.drain=source;}
       if(activeBody(p))pins.body=[150,0];
       return pins;
     }
-    return definitions[kind].pins;
+    return definition.pins;
   }
   function componentModel(component) {
     const model=simulationModels[component.kind];

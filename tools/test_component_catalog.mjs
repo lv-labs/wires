@@ -7,6 +7,8 @@ const M=CircuitEditorModel,A=CircuitDocumentAdapter,engine=createEngine(),sessio
 const near=(actual,expected,tolerance=1e-10)=>assert.ok(Math.abs(actual-expected)<=tolerance,`${actual} != ${expected}`);
 function circuit(kind,parameters={}){
   const d=M.empty();d.id='catalog-'+kind;
+  // Keep analytical transient expectations independent of the editor default.
+  d.simulation.timeStep=1e-5;
   const add=(id,kind,parameters,x)=>{d.electrical.components.push({id,kind,modelVersion:1,reference:id,parameters});d.layout.components[id]={x,y:0,rotation:0,mirror:false};};
   add('part',kind,{...structuredClone(M.definitions[kind].parameters),...parameters},0);
   add('r','resistor',{resistance:1000},192);add('g','ground',{},384);
@@ -36,7 +38,7 @@ for(const kind of ['inductor','diode','currentSource','potentiometer']){
   if(kind==='currentSource'){near(frame.pinVoltages.part.b,10);near(frame.componentCurrents.part,.01);}
   if(kind==='diode'){assert.ok(frame.pinVoltages.part.anode>.4&&frame.pinVoltages.part.anode<.9);near(frame.componentCurrents.part,frame.componentCurrents.r);}
   if(kind==='potentiometer')near(frame.pinVoltages.part.wiper,2);
-  if(kind==='inductor')near(frame.componentCurrents.part,.005*(1-Math.pow(1/(1+1000*1e-5),20)));
+  if(kind==='inductor')near(frame.componentCurrents.part,.005*(1-Math.pow(1/(1+1000*d.simulation.timeStep),20)));
 }
 for(const position of [0,.25,.5,.75,1]){
   session.loadDocument(circuit('potentiometer',{position}));const f=session.step(5);

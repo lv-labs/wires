@@ -1,3 +1,4 @@
+import { parseNumber } from "./parseNumber"
 import { useId, useState } from "react"
 import type { ChangeEvent, FormEvent } from "react"
 import { Button } from "@/components/ui/button"
@@ -107,30 +108,6 @@ const waveformLabels: Record<string, string> = {
   offset: "DC offset · V",
   phase: "Phase · degrees",
   dutyCycle: "Duty cycle · %",
-}
-const scales: Record<string, number> = {
-  p: 1e-12,
-  n: 1e-9,
-  u: 1e-6,
-  µ: 1e-6,
-  m: 1e-3,
-  k: 1e3,
-  K: 1e3,
-  M: 1e6,
-  G: 1e9,
-}
-
-function parseNumber(input: string, label: string) {
-  const match =
-    /^([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)\s*([pnuµmkKMG]?)$/.exec(
-      input.trim()
-    )
-  const value = match ? Number(match[1]) * (scales[match[2]] ?? 1) : NaN
-  if (!Number.isFinite(value))
-    throw new Error(
-      `${label} requires a finite number. You can use p, n, u, m, k, M or G.`
-    )
-  return value
 }
 
 function choices(component: Component, key: string): string[] | undefined {

@@ -133,7 +133,7 @@ export function ComponentSliderPanel({
           component,
           value,
           config,
-          displayValue: (number) => String(Number(number.toPrecision(5))),
+          displayValue: (number) => format(number),
         },
       ]
     })

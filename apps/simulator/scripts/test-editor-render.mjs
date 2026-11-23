@@ -7,7 +7,7 @@ const server=await createServer({server:{middlewareMode:true,ws:false,watch:null
 try {
   const {CircuitEditor}=await server.ssrLoadModule('/src/editor/CircuitEditor.tsx')
   const {simulationPacing,snapSimulationSpeed}=await server.ssrLoadModule('/src/editor/simulationSpeed.ts')
-  const {nearestScopeSample, scopeBounds, scopePath, scopeTimeRuler, scopeWindow, traceDisplay, updateAutoRange} = await server.ssrLoadModule('/src/editor/scopeDisplay.ts')
+  const {nearestScopeSample, scopeBounds, scopeColumnPath, scopePath, scopeTimeRuler, scopeWindow, traceDisplay, updateAutoRange} = await server.ssrLoadModule('/src/editor/scopeDisplay.ts')
   const {adjacentPositions, adjacentValueDivisions} = await server.ssrLoadModule('/src/editor/scopeScales.ts')
   const {scopeSource} = await server.ssrLoadModule('/src/editor/scopeSource.ts')
   const {expandSelection} = await server.ssrLoadModule('/src/editor/expandSelection.ts')
@@ -98,12 +98,33 @@ try {
   assert.equal(full.channels, channels)
   const cropped = scopeWindow(channels, times, 2.75)
   assert.deepEqual(cropped.channels[0], { values: [-2, 3], min: -2, max: 3, last: 3 })
+  const triggerTimes = Array.from({length: 41}, (_, i) => i / 10)
+  const triggerChannels = [{id: 'signal', values: triggerTimes.map(t => Math.sin(t * Math.PI * 2)), min: -1, max: 1}]
+  const trigger = {mode: 'normal', source: 'signal', edge: 'rising', level: 0.5}
+  const rising = scopeWindow(triggerChannels, triggerTimes, 1, trigger)
+  assert.equal(rising.triggered, true)
+  assert.ok(Math.abs(rising.start - 2.885) < 0.01, 'Latest completed rising sweep, with interpolated crossing at 20%')
+  const falling = scopeWindow(triggerChannels, triggerTimes, 1, {...trigger, edge: 'falling'})
+  assert.equal(falling.triggered, true)
+  assert.ok(falling.start < rising.start)
+  assert.equal(scopeWindow(triggerChannels, triggerTimes, 1, {...trigger, level: 2}).times.length, 0)
+  assert.deepEqual(scopeWindow(triggerChannels, triggerTimes, 1, {...trigger, mode: 'auto', level: 2}).times, scopeWindow(triggerChannels, triggerTimes, 1).times)
+  assert.equal(scopeWindow(triggerChannels, triggerTimes.slice(0, 2), 1, trigger).triggered, false, 'Incomplete sweeps wait')
   const bounds = scopeBounds(times, 2.75)
   assert.equal(nearestScopeSample(times, bounds.start, bounds.index), 2)
   assert.equal(nearestScopeSample(times, bounds.end, bounds.index), 4)
   const coordinate = (n) => n
   assert.equal(scopePath([[0, 0], [1, 0], [2, 9], [3, 0], [4, 0]], coordinate, coordinate), 'M0 0H4L8 36L12 0H16')
   assert.equal(scopePath([[0, 3], [1, 3.0001], [2, 3]], coordinate, coordinate), 'M0 12H8')
+
+  const squareColumns = scopeColumnPath([[0.1, -1], [0.8, 1], [1.1, 1], [1.8, -1]], coordinate, coordinate, 0)
+  assert.ok(squareColumns.includes('M0 -4V4'), 'Dense square transition retains both extrema at one x')
+  assert.ok(squareColumns.includes('M4 -4V4'), 'Falling transition retains both extrema')
+  assert.ok(!squareColumns.includes('L'), 'Dense transitions use vertical and horizontal segments')
+  assert.equal(scopeColumnPath([], coordinate, coordinate, 0), '')
+  const spikeColumn = scopeColumnPath([[55.1, 0], [55.2, 10], [55.3, -3], [55.9, 0]], coordinate, coordinate, 55)
+  assert.ok(spikeColumn.includes('M220 -12V40'), 'Subpixel spikes and troughs survive column drawing with a plot offset')
+  assert.equal(scopeColumnPath([[0, 0], [10, 1]], coordinate, coordinate, 0), 'M0 0M0 0H40V4M40 4', 'Sparse sweeps also use horizontal and vertical segments')
 
   const pin = { kind: 'pin', componentId: 'r1', pinId: 'a' }
   const junction = { kind: 'junction', junctionId: 'branch' }

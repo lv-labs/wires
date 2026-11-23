@@ -1,10 +1,13 @@
+import { RecoveryDialog, OpenLinkDialog } from "./RecoveryDialog"
+import { EditorDialog } from "./EditorDialog"
+import { circuitLink, readCircuitLink } from "./circuitWorkspace"
 import { FalstadImportDialog } from "./FalstadImportDialog"
+import { SimulationSettings } from "./SimulationSettings"
 import { defaultScopeLayout } from "./scopeLayout"
 import { createScopeViewport } from "./scopeViewport"
 import { DrawingProperties } from "./DrawingProperties"
 import { ProbeProperties } from "./ProbeProperties"
 import { TraceProperties } from "./TraceProperties"
-import { splitLegacyProbes } from "./voltageProbes"
 import { ScopeWorkspace } from "./ScopeWorkspace"
 import type { TracePatch } from "./ScopeContextMenu"
 import { scopeWindow } from "./scopeDisplay"
@@ -84,9 +87,37 @@ export function CircuitEditor({
   autosave?: boolean
 }) {
   const editor = useCircuitSession(initialDocument, autosave)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
+  const [openLink, setOpenLink] = useState(false)
+  const [projectError, setProjectError] = useState("")
+  const [shareLink, setShareLink] = useState("")
+  const linkLoaded = useRef(false)
+  useEffect(() => {
+    if (linkLoaded.current) return
+    linkLoaded.current = true
+    const request = documentRequest.current
+    void readCircuitLink(location.hash)
+      .then((document) => {
+        if (document && request === documentRequest.current) {
+          replaceDocument(document, "Opened shared circuit")
+          history.replaceState(null, "", location.pathname + location.search)
+        }
+      })
+      .catch((cause) =>
+        setProjectError(`Could not open shared circuit: ${String(cause)}`)
+      )
+  }, [])
+  async function shareProject() {
+    try {
+      setShareLink(await circuitLink(editor.document))
+    } catch (cause) {
+      setProjectError(`Could not create link: ${String(cause)}`)
+    }
+  }
   const [selection, setSelection] = useState<Entity[]>([])
   const [tool, setTool] = useState("select")
   const [importFalstad, setImportFalstad] = useState(false)
+  const [simulationSettingsOpen, setSimulationSettingsOpen] = useState(false)
   const [gridMode, setGridMode] = useState<"dots" | "lines" | "off">("lines")
   const [scopeViewport] = useState(createScopeViewport)
   const scopeOpen = editor.document.layout.scopes?.open ?? false
@@ -160,7 +191,10 @@ export function CircuitEditor({
                       typeof value === "number" && Number.isFinite(value)
                   ) &&
                   entry.min < entry.max &&
-                  entry.step > 0
+                  entry.step > 0 &&
+                  (entry.logarithmic === undefined ||
+                    entry.logarithmic === false ||
+                    (entry.logarithmic === true && entry.min > 0))
               )
             : [],
         ])
@@ -696,12 +730,14 @@ export function CircuitEditor({
         )
       }
     } catch (cause) {
-      if (request === documentRequest.current)
-        setNotice(`Could not open circuit: ${String(cause)}`)
+      if (request === documentRequest.current) {
+        setProjectError(`Could not open circuit: ${String(cause)}`)
+      }
     }
   }
   function replaceDocument(document: CircuitDocument, message: string) {
-    editor.session.replace(splitLegacyProbes(core.document.validate(document)))
+    editor.openDocument(document)
+    setRecoveryOpen(false)
     setSelection([])
     closeProperties()
     if (pendingSlider.current) cancelSliderAdjustment()
@@ -727,6 +763,90 @@ export function CircuitEditor({
       className="flex min-h-0 flex-1 flex-col"
       aria-label="Circuit editor"
     >
+      {recoveryOpen && (
+        <RecoveryDialog
+          draftId={editor.draftId}
+          currentDocument={editor.document}
+          onClose={() => setRecoveryOpen(false)}
+          onRestore={(document) => {
+            documentRequest.current++
+            replaceDocument(document, "Circuit recovered")
+          }}
+        />
+      )}
+      {openLink && (
+        <OpenLinkDialog
+          onClose={() => setOpenLink(false)}
+          onOpen={async (value) => {
+            const request = ++documentRequest.current
+            const url = new URL(value, location.href)
+            if (
+              !["https:", "http:"].includes(url.protocol) ||
+              url.username ||
+              url.password
+            )
+              throw new Error("Enter a valid circuit link")
+            if (
+              url.hostname === "go.lv-labs.com" &&
+              /^\/[a-z0-9_-]+$/.test(url.pathname)
+            ) {
+              location.assign(url.href)
+              return
+            }
+            const document = await readCircuitLink(url.hash)
+            if (!document)
+              throw new Error(
+                "Use a Wires circuit link or a go.lv-labs.com short link"
+              )
+            if (request === documentRequest.current)
+              replaceDocument(document, "Opened circuit link")
+          }}
+        />
+      )}
+      {projectError && (
+        <EditorDialog
+          title="Could not complete action"
+          onClose={() => setProjectError("")}
+        >
+          <p role="alert">{projectError}</p>
+          <Button onClick={() => setProjectError("")}>Close</Button>
+        </EditorDialog>
+      )}
+      {shareLink && (
+        <EditorDialog title="Save to link" onClose={() => setShareLink("")}>
+          <p className="text-sm">
+            This link contains a snapshot. Later edits won’t change it. Anyone
+            with the link can open a copy.
+          </p>
+          {shareLink.length > 8000 && (
+            <p className="text-sm">
+              This is a long link; some messaging apps may truncate it. A
+              downloaded file is another way to share this circuit.
+            </p>
+          )}
+          <textarea
+            aria-label="Circuit share link"
+            className="w-full rounded border p-2 text-xs"
+            rows={4}
+            readOnly
+            value={shareLink}
+            onFocus={(event) => event.target.select()}
+          />
+          <Button
+            onClick={() => {
+              void navigator.clipboard
+                .writeText(shareLink)
+                .catch(() =>
+                  setProjectError(
+                    "Could not copy automatically. Select and copy the link manually."
+                  )
+                )
+            }}
+          >
+            Copy link
+          </Button>
+        </EditorDialog>
+      )}
       {editingDrawing && (
         <DrawingProperties
           key={editingDrawing.id}
@@ -805,7 +925,22 @@ export function CircuitEditor({
           }}
         />
       )}
-      <header className="flex flex-wrap items-center gap-2 border-b p-2">
+      {simulationSettingsOpen && (
+        <SimulationSettings
+          timeStep={editor.document.simulation.timeStep}
+          onClose={() => setSimulationSettingsOpen(false)}
+          onApply={(timeStep) => {
+            editor.session.transaction("Simulation settings", (draft) => {
+              draft.simulation.timeStep = timeStep
+            })
+          }}
+        />
+      )}
+      <header
+        className="flex flex-wrap items-center gap-2 border-b p-2 [-webkit-app-region:no-drag] [app-region:no-drag]"
+        onPointerDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <input
           ref={fileInput}
           type="file"
@@ -820,12 +955,23 @@ export function CircuitEditor({
         {autosave && editor.savedLocally !== null && (
           <span className="text-xs text-muted-foreground">
             {editor.savedLocally
-              ? "Saved locally"
+              ? "Recovery draft saved"
               : "Save JSON to keep your work"}
           </span>
         )}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <div className="w-28 shrink-0 text-xs text-muted-foreground">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSimulationSettingsOpen(true)}
+          >
+            Simulation settings
+          </Button>
+          <div
+            className="w-32 shrink-0 rounded px-2 py-1 text-xs text-muted-foreground [-webkit-app-region:no-drag] [app-region:no-drag]"
+            onPointerDown={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <span>Simulation Speed</span>
             <Slider
               min={0}
@@ -844,7 +990,7 @@ export function CircuitEditor({
                   pointer ? snapSimulationSpeed(value) : value
                 )
               }}
-              className="[&_[data-slot=slider-control]]:h-5"
+              className="[&_[data-slot=slider-control]]:h-8"
             >
               <span
                 aria-hidden="true"
@@ -932,6 +1078,15 @@ export function CircuitEditor({
           onPressComponent={pressComponent}
           onReleaseComponent={releaseComponent}
           onSaveDocument={saveDocument}
+          onRecoverDocument={() => setRecoveryOpen(true)}
+          onOpenLink={() => setOpenLink(true)}
+          onShareDocument={() => void shareProject()}
+          onExportError={setProjectError}
+          onExportImage={(blob, extension) => {
+            const name =
+              editor.document.title.replace(/[^\w -]/g, "").trim() || "circuit"
+            download(blob, `${name}.${extension}`, blob.type)
+          }}
           onOpenDocument={() => fileInput.current?.click()}
           onImportFalstad={() => setImportFalstad(true)}
           onNewDocument={newDocument}

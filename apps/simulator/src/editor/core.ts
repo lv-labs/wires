@@ -37,6 +37,12 @@ export type Component = {
 export type ScopePaneLayout = {
   mode: "docked" | "floating" | "sheet"
   timeDivision: number
+  trigger?: {
+    mode: "off" | "auto" | "normal"
+    source?: string
+    edge: "rising" | "falling"
+    level: number
+  }
   sheetScale?: number
   order?: number
   x: number
@@ -441,7 +447,8 @@ export const core = implementation as {
   }
   browserTransport: { factory(options: { url: URL }): unknown }
   signals: {
-    create(options?: { capacity?: number }): {
+    create(options?: { capacity?: number; historySpan?: number }): {
+      setHistorySpan(span: number): void
       setChannels(channels: ScopeChannel[]): unknown
       followState(state: RunState): void
       append(frame: Frame): boolean

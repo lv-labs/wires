@@ -15,6 +15,17 @@
     Catalog.validateSharedTransistorModels(e.components);
     const components = ids(e.components), junctions = ids(e.junctions); ids(e.wires);
     const point = p => p && Number.isFinite(p.x) && Number.isFinite(p.y);
+    if(l.drawings!==undefined){
+      assert(Array.isArray(l.drawings)&&l.drawings.length<=10000,'Invalid sheet drawings');ids(l.drawings);
+      const color=value=>value==='none'||value==='currentColor'||typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value);
+      for(const d of l.drawings){
+        const counts={line:2,box:4,ellipse:3,text:1};
+        assert(['line','box','ellipse','polygon','text'].includes(d.kind)&&Array.isArray(d.points)&&d.points.every(point)&&(d.kind==='polygon'?d.points.length>=3&&d.points.length<=1000:d.points.length===counts[d.kind]),'Invalid drawing geometry');
+        assert(color(d.stroke)&&color(d.fill)&&Number.isFinite(d.strokeWidth)&&d.strokeWidth>=0&&d.strokeWidth<=50&&['solid','dashed','dotted'].includes(d.strokeStyle),'Invalid drawing style');
+        assert(d.rotation===undefined||Number.isFinite(d.rotation),'Invalid drawing rotation');
+        if(d.kind==='text')assert(typeof d.text==='string'&&d.text.length<=4096&&Number.isFinite(d.fontSize)&&d.fontSize>=8&&d.fontSize<=300,'Invalid drawing text');
+      }
+    }
     for (const c of e.components) {
       assert(Object.hasOwn(definitions, c.kind) && c.modelVersion === 1, 'Unsupported editor component model');
       const p = l.components?.[c.id]; assert(point(p) && [0, 90, 180, 270].includes(p.rotation) && typeof p.mirror === 'boolean', 'Invalid component pose');
@@ -65,8 +76,11 @@
     for(const route of Object.values(l.wires))for(const field of ['showVoltage','showCurrent'])assert(route[field]===undefined||typeof route[field]==='boolean','Invalid wire display setting');
     assert(Array.isArray(document.probes) && document.simulation && Number.isFinite(document.simulation.timeStep) && document.simulation.timeStep > 0, 'Invalid probes or timestep');
     const probeIds = ids(document.probes);
+    const markerIds = new Set(document.probes.filter(p => p.scope === false).map(p => p.id));
     for (const p of document.probes) assert(p.kind === 'voltage' ? endpoint(p.positive) && (p.reference === 'ground' || endpoint(p.negative)) : p.kind === 'current' && components.has(p.componentId), 'Invalid probe target');
     for (const p of document.probes) {
+      assert(p.scope === undefined || p.scope === false && p.kind === 'voltage' && l.probes && Object.hasOwn(l.probes, p.id), 'Invalid probe scope setting');
+      assert(p.sourceProbeId === undefined || p.kind === 'voltage' && p.scope !== false && markerIds.has(p.sourceProbeId), 'Invalid trace probe source');
       assert(p.color === undefined || typeof p.color === 'string' && p.color.length > 0 && p.color.length <= 200, 'Invalid trace colour');
       assert(p.scale === undefined || Number.isFinite(p.scale) && p.scale > 0, 'Invalid trace vertical scale');
       assert(p.offset === undefined || Number.isFinite(p.offset) && Math.abs(p.offset) <= 8, 'Invalid trace vertical position');
@@ -92,17 +106,28 @@
       for (const [id,pane] of Object.entries(scopes.panes)) {
         assert(id.length > 0 && record(pane) && ['docked','floating','sheet'].includes(pane.mode), 'Invalid scope pane mode');
         assert(point(pane) && [pane.width,pane.height,pane.weight,pane.timeDivision].every(n => Number.isFinite(n) && n > 0) && pane.timeDivision <= 60, 'Invalid scope pane geometry or scale');
+        if (pane.trigger !== undefined) {
+          const t = pane.trigger;
+          assert(record(t) && ['off','auto','normal'].includes(t.mode) && ['rising','falling'].includes(t.edge) && Number.isFinite(t.level) && (t.source === undefined || typeof t.source === 'string'), 'Invalid scope trigger');
+        }
         assert(pane.order === undefined || Number.isSafeInteger(pane.order) && pane.order >= 0, 'Invalid scope order');
         assert(pane.sheetScale === undefined || Number.isFinite(pane.sheetScale) && pane.sheetScale > 0, 'Invalid scope sheet reference scale');
       }
     }
-    if (l.probes) { assert(typeof l.probes === 'object' && !Array.isArray(l.probes), 'Invalid probe layout'); for (const [id, pose] of Object.entries(l.probes)) assert(probeIds.has(id) && point(pose), 'Invalid probe layout'); }
+    if (l.probes) {
+      assert(typeof l.probes === 'object' && !Array.isArray(l.probes), 'Invalid probe layout');
+      for (const [id, pose] of Object.entries(l.probes)) {
+        assert(probeIds.has(id) && point(pose), 'Invalid probe layout');
+        assert(pose.decimals === undefined || Number.isInteger(pose.decimals) && pose.decimals >= 0 && pose.decimals <= 6, 'Invalid probe decimal places');
+        assert(pose.showLabel === undefined || typeof pose.showLabel === 'boolean', 'Invalid probe label visibility');
+      }
+    }
     return document;
   }
   function empty() {
     return {
       schemaVersion: 1, id: crypto.randomUUID(), title: 'Untitled circuit', electrical: { components: [], junctions: [], wires: [] },
-      layout: { components: {}, junctions: {}, wires: {} }, probes: [], simulation: { timeStep: 1e-5 }
+      layout: { components: {}, junctions: {}, wires: {} }, probes: [], simulation: { timeStep: 5e-6 }
     };
   }
   const api=Object.freeze({validate,empty});

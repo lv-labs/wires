@@ -1,4 +1,4 @@
-import { Upright, UprightText } from "./svg";
+import { Upright } from "./svg";
 import type { Pose } from "./svg";
 
 import { useEffect, useId, useState } from "react";

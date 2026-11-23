@@ -6,10 +6,24 @@
   const descriptors=channels=>Adapter.normalizeSampleChannels(channels.map(c=>c.kind==='current'?{id:c.id,kind:'current',componentId:c.componentId}:{id:c.id,positive:c.positive,negative:c.negative}));
   const key=channels=>JSON.stringify(descriptors(channels));
   function color(id){let hash=2166136261;for(const c of id)hash=Math.imul(hash^c.charCodeAt(0),16777619);return `hsl(${(hash>>>0)%360} 72% 72%)`;}
-  function create({capacity=20000}={}) {
+  function create({capacity=20000,historySpan}={}) {
     if(!Number.isInteger(capacity)||capacity<2||capacity>100000)throw new Error('Invalid scope capacity');
+    function setHistorySpan(span){
+      if(!Number.isFinite(span)||span<=0)throw new Error('Invalid scope history span');
+      historySpan=span;
+    }
+    if(historySpan!==undefined)setHistorySpan(historySpan);
     let channels=[],signature='[]',expected,identity=null,sequence=0,revision=0,lastTime=-Infinity,start=0,length=0,timeOffset=0,lastStep=0,preserveNext=false,acquisition=null;
-    const times=new Float64Array(capacity);let values=[];
+    let times=new Float64Array(capacity),values=[];
+    function grow(){
+      const nextCapacity=capacity*2,nextTimes=new Float64Array(nextCapacity),nextValues=values.map(()=>new Float64Array(nextCapacity));
+      for(let i=0;i<length;i++){
+        const index=(start+i)%capacity;
+        nextTimes[i]=times[index];
+        values.forEach((v,j)=>{nextValues[j][i]=v[index];});
+      }
+      capacity=nextCapacity;times=nextTimes;values=nextValues;start=0;
+    }
     function clear(){start=0;length=0;}
     function reset(){clear();identity=null;sequence=0;revision=0;lastTime=-Infinity;timeOffset=0;lastStep=0;preserveNext=false;}
     function setChannels(next){
@@ -52,6 +66,12 @@
         identity=nextIdentity;preserveNext=false;
       }
       for(let i=0;i<ts.length;i++){
+        if(historySpan!==undefined){
+          const cutoff=ts[i]+timeOffset-historySpan;
+          // Keep one sample before the window for a continuous left edge.
+          while(length>1&&times[(start+1)%capacity]<cutoff){start=(start+1)%capacity;length--;}
+          if(length===capacity)grow();
+        }
         const index=(start+length)%capacity;times[index]=ts[i]+timeOffset;values.forEach((v,j)=>v[index]=vs[j][i]);
         if(length<capacity)length++;else start=(start+1)%capacity;
       }
@@ -81,7 +101,7 @@
         return {...c,values:ys,min:ys.length?min:null,max:ys.length?max:null,last:ys.at(-1)};
       })};
     }
-    return {setChannels,expect,suspend,followState,append,clear,reset,window,get count(){return length;},get signature(){return signature;}};
+    return {setChannels,setHistorySpan,expect,suspend,followState,append,clear,reset,window,get count(){return length;},get signature(){return signature;}};
   }
   // Preserve first/last and min/max within each screen column, never average away peaks.
   function envelope(times,values,start,end,width){

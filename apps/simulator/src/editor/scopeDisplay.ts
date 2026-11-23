@@ -1,3 +1,4 @@
+import type { ScopePaneLayout } from "./core"
 import { minimumValueDivision } from "./scopeScales"
 
 export function formatScope(value: number | null | undefined, unit = "") {
@@ -60,16 +61,66 @@ export function scopeBounds(times: number[], span: number) {
 
 /** Crop a pane independently while acquisition retains the longest requested window. */
 export function scopeWindow<
-  T extends { values: number[]; min: number | null; max: number | null },
->(channels: T[], times: number[], span: number) {
-  const { start, end, index } = scopeBounds(times, span)
-  if (index === 0) return { start, end, times, channels }
+  T extends {
+    id?: string
+    values: number[]
+    min: number | null
+    max: number | null
+  },
+>(
+  channels: T[],
+  times: number[],
+  span: number,
+  trigger?: ScopePaneLayout["trigger"]
+) {
+  let { start, end, index } = scopeBounds(times, span)
+  let triggered = false
+  if (trigger && trigger.mode !== "off") {
+    const source = channels.find((c) => c.id === trigger.source) ?? channels[0]
+    if (source)
+      for (let i = times.length - 1; i > 0; i--) {
+        const a = source.values[i - 1],
+          b = source.values[i]
+        const crosses =
+          trigger.edge === "rising"
+            ? a < trigger.level && b >= trigger.level
+            : a > trigger.level && b <= trigger.level
+        if (!crosses || !Number.isFinite(a) || !Number.isFinite(b)) continue
+        const crossing =
+          times[i - 1] +
+          ((times[i] - times[i - 1]) * (trigger.level - a)) / (b - a)
+        const candidate = crossing - span * 0.2
+        if (candidate < times[0] || candidate + span > times.at(-1)!) continue
+        start = candidate
+        end = start + span
+        index = sampleLowerBound(times, start)
+        triggered = true
+        break
+      }
+    if (!triggered && trigger.mode === "normal")
+      return {
+        start,
+        end,
+        times: [],
+        channels: channels.map((c) => ({
+          ...c,
+          values: [],
+          min: null,
+          max: null,
+        })),
+        triggered,
+      }
+  }
+  const stop = Math.min(times.length, sampleLowerBound(times, end) + 1)
+  if (index === 0 && stop === times.length)
+    return { start, end, times, channels, triggered }
   return {
     start,
     end,
-    times: times.slice(index),
+    triggered,
+    times: times.slice(index, stop),
     channels: channels.map((channel) => {
-      const values = channel.values.slice(index)
+      const values = channel.values.slice(index, stop)
       let min = Infinity,
         max = -Infinity
       for (const value of values) {
@@ -113,6 +164,49 @@ export function scopePath(
     pendingX = undefined
   }
   if (pendingX !== undefined && pendingX !== lastX) path += `H${pendingX}`
+  return path
+}
+
+/** Show the full range in each pixel column using vertical edges at every time scale.
+ * The envelope already retains first/last and extrema for each column.
+ */
+export function scopeColumnPath(
+  points: [number, number][],
+  x: (time: number) => number,
+  y: (value: number) => number,
+  left: number
+) {
+  let path = ""
+  let column: number | undefined
+  let firstY = 0,
+    lastY = 0,
+    minY = 0,
+    maxY = 0
+  let previousY: number | undefined
+  function flush() {
+    if (column === undefined) return
+    const px = Math.round((left + column) * scopePathScale)
+    if (previousY !== undefined) path += `H${px}V${firstY}`
+    else path += `M${px} ${firstY}`
+    if (minY !== maxY) path += `M${px} ${minY}V${maxY}`
+    // Resume at the last sample, not at an arbitrary extremum.
+    path += `M${px} ${lastY}`
+    previousY = lastY
+  }
+  for (const [time, value] of points) {
+    const nextColumn = Math.floor(x(time) - left)
+    const nextY = Math.round(y(value) * scopePathScale)
+    if (nextColumn !== column) {
+      flush()
+      column = nextColumn
+      firstY = minY = maxY = nextY
+    } else {
+      minY = Math.min(minY, nextY)
+      maxY = Math.max(maxY, nextY)
+    }
+    lastY = nextY
+  }
+  flush()
   return path
 }
 

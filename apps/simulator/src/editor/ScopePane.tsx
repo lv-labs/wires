@@ -1,3 +1,4 @@
+import type { ScopePaneLayout } from "./core"
 import {
   useCallback,
   useEffect,
@@ -18,7 +19,7 @@ import {
   formatScope,
   traceDisplay,
   scopeSampleIndex,
-  scopePath,
+  scopeColumnPath,
   scopePathScale,
   scopeTimeRuler,
   updateAutoRange,
@@ -44,6 +45,9 @@ export function ScopePane({
   start,
   end,
   timeDivision,
+  trigger,
+  triggered,
+  onTrigger,
   cursor,
   liveFraction,
   onHold,
@@ -61,6 +65,9 @@ export function ScopePane({
   times: number[]
   start: number
   end: number
+  trigger?: ScopePaneLayout["trigger"]
+  triggered?: boolean
+  onTrigger: (trigger: NonNullable<ScopePaneLayout["trigger"]>) => void
   timeDivision: number
   cursor: number | null
   liveFraction?: number
@@ -209,12 +216,16 @@ export function ScopePane({
         const displayValue = (value: number) =>
           (value - mapping.mean) / mapping.scale + mapping.offset
         // Vertical scaling preserves the raw extrema, so convert only the points we draw.
+        const columns = Math.max(1, Math.floor(plotWidth))
+        // Use the same column grid for reduction and drawing.
+        const columnX = (time: number) =>
+          left + ((time - start) / Math.max(end - start, 1e-12)) * columns
         const points = core.signals.envelope(
           times,
           channel.values,
           start,
           end,
-          Math.floor(plotWidth)
+          columns
         )
         const pointY = (value: number) => y(displayValue(value))
         const last = points.at(-1)
@@ -222,7 +233,7 @@ export function ScopePane({
           channel,
           endX: last && x(last[0]),
           endY: last && pointY(last[1]),
-          d: scopePath(points, x, pointY),
+          d: scopeColumnPath(points, columnX, pointY, left),
         }
       }),
     [visible, times, start, end, plotWidth, x, y, mappings]
@@ -231,7 +242,9 @@ export function ScopePane({
     ? "Add voltage or current traces from a component’s Add to scope menu"
     : !visible.length
       ? "Enable a probe channel to plot it"
-      : "Run or Step to capture waveforms"
+      : trigger?.mode === "normal"
+        ? "Waiting for trigger"
+        : "Run or Step to capture waveforms"
 
   return (
     <section
@@ -257,6 +270,99 @@ export function ScopePane({
                 presets={timeDivisions}
                 onChange={changeTimePreset}
               />
+              <details className="relative">
+                <summary className="cursor-pointer">
+                  Trigger: {trigger?.mode ?? "off"}
+                  {trigger?.mode && trigger.mode !== "off"
+                    ? triggered
+                      ? " · triggered"
+                      : " · waiting"
+                    : ""}
+                </summary>
+                <div
+                  className="flex items-center gap-2 py-1"
+                  aria-label="Trigger controls"
+                >
+                  <select
+                    aria-label="Trigger mode"
+                    value={trigger?.mode ?? "off"}
+                    onChange={(e) =>
+                      onTrigger({
+                        edge: "rising",
+                        level: 0,
+                        ...trigger,
+                        mode: e.target.value as "off" | "auto" | "normal",
+                      })
+                    }
+                  >
+                    <option value="off">Off</option>
+                    <option value="auto">Auto</option>
+                    <option value="normal">Normal</option>
+                  </select>
+                  <select
+                    aria-label="Trigger source"
+                    value={
+                      channels.some((c) => c.id === trigger?.source)
+                        ? trigger!.source
+                        : (channels[0]?.id ?? "")
+                    }
+                    onChange={(e) =>
+                      onTrigger({
+                        mode: "auto",
+                        edge: "rising",
+                        level: 0,
+                        ...trigger,
+                        source: e.target.value,
+                      })
+                    }
+                  >
+                    {channels.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label="Trigger edge"
+                    value={trigger?.edge ?? "rising"}
+                    onChange={(e) =>
+                      onTrigger({
+                        mode: "auto",
+                        level: 0,
+                        ...trigger,
+                        edge: e.target.value as "rising" | "falling",
+                      })
+                    }
+                  >
+                    <option value="rising">Rising</option>
+                    <option value="falling">Falling</option>
+                  </select>
+                  <label>
+                    Level{" "}
+                    <input
+                      className="w-20 rounded border px-1"
+                      aria-label="Trigger level"
+                      type="number"
+                      step="any"
+                      value={trigger?.level ?? 0}
+                      onChange={(e) => {
+                        const level = e.target.valueAsNumber
+                        if (Number.isFinite(level))
+                          onTrigger({
+                            mode: "auto",
+                            edge: "rising",
+                            ...trigger,
+                            level,
+                          })
+                      }}
+                    />{" "}
+                    {channels.find((c) => c.id === trigger?.source)?.kind ===
+                    "current"
+                      ? "A"
+                      : "V"}
+                  </label>
+                </div>
+              </details>
               {channels.map((trace) => {
                 const mapping = mappings.get(trace.id)!
                 return (

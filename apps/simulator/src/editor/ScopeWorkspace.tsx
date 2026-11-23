@@ -38,7 +38,7 @@ import { createPortal } from "react-dom"
 import { GripIcon, GripVerticalIcon } from "lucide-react"
 import { ScopeContextMenu } from "./ScopeContextMenu"
 import type { ScopeMode, TracePatch } from "./ScopeContextMenu"
-import { scopeBounds, scopeWindow, nearestScopeSample } from "./scopeDisplay"
+import { scopeWindow, nearestScopeSample } from "./scopeDisplay"
 import { ScopePane } from "./ScopePane"
 import type { ScopeTrace } from "./ScopePane"
 
@@ -65,7 +65,7 @@ const ScopeGestures = createContext<{
 } | null>(null)
 const initialLayout = (): Layout => ({
   mode: "docked",
-  timeDivision: 0.0002,
+  timeDivision: 0.02,
   x: 24,
   y: 64,
   width: 640,
@@ -300,7 +300,9 @@ export function ScopeWorkspace({
   const hoveredTrace =
     hoveredScope &&
     (hoveredGroup?.find((trace) => trace.id === hoveredScope.trace) ||
-      hoveredGroup?.find((trace) => trace.id === activeTraces[hoveredScope.id]) ||
+      hoveredGroup?.find(
+        (trace) => trace.id === activeTraces[hoveredScope.id]
+      ) ||
       hoveredGroup?.[0])
   const hoveredTraceId = hoveredTrace?.id ?? null
   useLayoutEffect(() => {
@@ -324,8 +326,14 @@ export function ScopeWorkspace({
   const dockTree = normalizeDock(dock, docked, (id) => layoutFor(id).weight)
   const dockMinimum = dockSize(dockTree)
   const maxTimeDivision = Math.max(
-    0.0002,
-    ...[...groups.keys()].map((id) => layoutFor(id).timeDivision)
+    0.02,
+    ...[...groups.keys()].map(
+      (id) =>
+        layoutFor(id).timeDivision *
+        (layoutFor(id).trigger?.mode && layoutFor(id).trigger?.mode !== "off"
+          ? 2
+          : 1)
+    )
   )
   useEffect(() => {
     onTimeWindow(maxTimeDivision)
@@ -432,13 +440,12 @@ export function ScopeWorkspace({
     return scopeWindow(
       groups.get(id) || [],
       times,
-      layoutFor(id).timeDivision * 10
+      layoutFor(id).timeDivision * 10,
+      layoutFor(id).trigger
     )
   }
   const hoverWindow =
-    holding?.mode === "hover"
-      ? scopeBounds(times, layoutFor(holding.id).timeDivision * 10)
-      : null
+    holding?.mode === "hover" ? { ...paneData(holding.id), index: 0 } : null
   const effectiveCursor =
     holding?.mode === "sample"
       ? holding.sample
@@ -483,14 +490,16 @@ export function ScopeWorkspace({
     (id: string, fraction: number | null) => {
       cancelHoverFrame()
       if (fraction !== null) {
-        const window = scopeBounds(
+        const window = scopeWindow(
+          groups.get(id) || [],
           times,
-          (Object.hasOwn(layouts, id) ? layouts[id].timeDivision : 0.0002) * 10
+          (layouts[id]?.timeDivision ?? 0.02) * 10,
+          layouts[id]?.trigger
         )
         const sample = nearestScopeSample(
           times,
           window.start + fraction * (window.end - window.start),
-          window.index
+          0
         )
         setHolding({ id, fraction, mode: "sample", sample })
         onCursorCommit(sample)
@@ -500,7 +509,7 @@ export function ScopeWorkspace({
         )
       }
     },
-    [cancelHoverFrame, times, layouts, onCursorCommit]
+    [cancelHoverFrame, times, layouts, groups, onCursorCommit]
   )
   function renderPane(id: string) {
     return (
@@ -509,6 +518,11 @@ export function ScopeWorkspace({
         channels={groups.get(id)!}
         times={times}
         timeDivision={layoutFor(id).timeDivision}
+        trigger={layoutFor(id).trigger}
+        onTrigger={(trigger) => {
+          updateLayout(id, { trigger })
+          leaveCursor()
+        }}
         cursor={effectiveCursor}
         liveFraction={
           holding?.id === id && holding.mode === "hover"
@@ -543,12 +557,14 @@ export function ScopeWorkspace({
         if (event.pointerType === "touch") return
         const trace =
           event.target instanceof Element
-            ? event.target
-                .closest<SVGElement | HTMLElement>("[data-select-trace]")
-                ?.dataset.selectTrace
+            ? event.target.closest<SVGElement | HTMLElement>(
+                "[data-select-trace]"
+              )?.dataset.selectTrace
             : undefined
         setHoveredScope((current) =>
-          current?.id === id && current.trace === trace ? current : { id, trace }
+          current?.id === id && current.trace === trace
+            ? current
+            : { id, trace }
         )
       },
       onPointerLeave: () => {
@@ -1260,6 +1276,8 @@ const ScopeContent = memo(function ScopeContent({
   channels,
   times,
   timeDivision,
+  trigger,
+  onTrigger,
   cursor,
   liveFraction,
   onHold,
@@ -1275,6 +1293,8 @@ const ScopeContent = memo(function ScopeContent({
   id: string
   channels: ScopeTrace[]
   times: number[]
+  trigger?: ScopePaneLayout["trigger"]
+  onTrigger: (trigger: NonNullable<ScopePaneLayout["trigger"]>) => void
   timeDivision: number
   cursor: number | null
   liveFraction?: number
@@ -1282,15 +1302,18 @@ const ScopeContent = memo(function ScopeContent({
   selectedTrace?: string
   onSelectTrace: (group: string, trace: string) => void
   onProperties: (trace: string, span: number, scale?: number) => void
-  onDisplayScales: (id: string, scales: ReadonlyMap<string, number> | null) => void
+  onDisplayScales: (
+    id: string,
+    scales: ReadonlyMap<string, number> | null
+  ) => void
   onTimeScale: (id: string, division: number) => void
   onTraceSettings: (id: string, patch: TracePatch) => void
   onCursor: (id: string, fraction: number) => void
   onLeave: () => void
 }) {
   const window = useMemo(
-    () => scopeWindow(channels, times, timeDivision * 10),
-    [channels, times, timeDivision]
+    () => scopeWindow(channels, times, timeDivision * 10, trigger),
+    [channels, times, timeDivision, trigger]
   )
   const select = useCallback(
     (trace: string) => onSelectTrace(id, trace),
@@ -1323,6 +1346,8 @@ const ScopeContent = memo(function ScopeContent({
       id={id}
       {...window}
       timeDivision={timeDivision}
+      trigger={trigger}
+      onTrigger={onTrigger}
       cursor={cursor}
       liveFraction={liveFraction}
       onHold={hold}

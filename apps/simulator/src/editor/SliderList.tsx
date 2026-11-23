@@ -3,7 +3,12 @@ import { GripVerticalIcon, PencilIcon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { sliderField, sliderPosition, sliderVoltage } from "./componentSliders"
+import {
+  logarithmicSliderValue,
+  sliderField,
+  sliderPosition,
+  sliderVoltage,
+} from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
 import type { Component } from "./core"
 import type { PropertySlider } from "./PropertySliders"
@@ -168,6 +173,11 @@ export function SliderList({
             adjustment?.id === component.id && sliderField(adjustment) === field
               ? adjustment.value
               : item.value
+          const logarithmic = config?.logarithmic === true && min > 0
+          const valueAt = (position: number) =>
+            logarithmic
+              ? logarithmicSliderValue(position, min, max, step)
+              : sliderVoltage(position, min, max)
           return (
             <li
               key={id}
@@ -272,28 +282,56 @@ export function SliderList({
                 )}
               </div>
               <Slider
-                value={sliderPosition(value, min, max)}
+                value={sliderPosition(value, min, max, logarithmic)}
                 min={0}
                 max={1}
-                step={Math.min(1, step / Math.abs(max - min))}
-                largeStep={Math.min(1, (10 * step) / Math.abs(max - min))}
+                step={
+                  logarithmic ? 0.001 : Math.min(1, step / Math.abs(max - min))
+                }
+                largeStep={
+                  logarithmic
+                    ? 0.01
+                    : Math.min(1, (10 * step) / Math.abs(max - min))
+                }
                 disabled={
                   !!drop ||
                   (!!adjustment &&
                     (adjustment.id !== component.id ||
                       sliderField(adjustment) !== field))
                 }
+                onKeyDownCapture={(event) => {
+                  if (
+                    !logarithmic ||
+                    event.altKey ||
+                    event.ctrlKey ||
+                    event.metaKey
+                  )
+                    return
+                  const direction = {
+                    ArrowRight: 1,
+                    ArrowUp: 1,
+                    ArrowLeft: -1,
+                    ArrowDown: -1,
+                    PageUp: 10,
+                    PageDown: -10,
+                  }[event.key]
+                  if (direction === undefined) return
+                  event.preventDefault()
+                  const next = Math.max(
+                    min,
+                    Math.min(max, value + direction * step)
+                  )
+                  onPreview(item, next)
+                  onCommit(component.id, next)
+                }}
                 getAriaLabel={() => label}
-                getAriaValueText={(_, value) =>
-                  displayValue(sliderVoltage(value, min, max))
-                }
+                getAriaValueText={(_, value) => displayValue(valueAt(value))}
                 onValueChange={(next) => {
-                  if (typeof next === "number")
-                    onPreview(item, sliderVoltage(next, min, max))
+                  if (typeof next === "number") onPreview(item, valueAt(next))
                 }}
                 onValueCommitted={(next) => {
                   if (typeof next === "number")
-                    onCommit(component.id, sliderVoltage(next, min, max))
+                    onCommit(component.id, valueAt(next))
                 }}
                 className="py-1"
               />

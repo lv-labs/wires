@@ -32,6 +32,19 @@
     const anchor = pin(document, probe.positive), offset = document.layout.probes?.[probe.id] || { x: 50, y: -100 };
     return { x: anchor.x + offset.x, y: anchor.y + offset.y };
   }
+  function probeBounds(document, probe, voltage) {
+    const point = probePoint(document, probe);
+    const display = document.layout.probes?.[probe.id];
+    const decimals = display?.decimals ?? 3;
+    const magnitude = Math.abs(voltage ?? 0).toFixed(decimals);
+    const voltageWidth = (magnitude.length + 3) * 22.5;
+    const nameWidth = display?.showLabel ? Array.from(probe.label || 'Wire').length * 16.875 : 0;
+    const horizontalPadding = 15.625;
+    const width = Math.max(voltageWidth, nameWidth) + 2 * horizontalPadding;
+    const center = point.x + (4 + (decimals ? decimals + 1 : 0)) * 22.5 / 2;
+    const top = point.y - (display?.showLabel ? 90.625 : 43.75);
+    return { x: center - width / 2, y: top, right: center + width / 2, bottom: point.y + 37.5 };
+  }
   function probeVoltage(document, probe, frame) {
     if (!frame) return undefined;
     function voltage(ref) {
@@ -60,6 +73,7 @@
     }
     const channels = [], unresolved = [];
     for (const probe of document.probes) {
+      if (probe.scope === false) continue;
       if(probe.kind==='current'){channels.push({...probe,label:probe.label||'Current'});continue;}
       if(probe.kind!=='voltage')continue;
       const positive = terminal(probe.positive), negative = probe.reference === 'ground' ? null : terminal(probe.negative);
@@ -119,10 +133,48 @@
       right: Math.max(...points.map(p => p.x)) + 8*sheetScale, bottom: Math.max(...points.map(p => p.y)) + 8*sheetScale
     };
   }
-  function hit(document, point, scale = 1, ignoreProbes = false) {
+  function drawingBounds(drawing) {
+    let points=drawing.points;
+    if(drawing.kind==='ellipse'){
+      const [c,a,b]=points,rx=Math.hypot(a.x-c.x,a.y-c.y),ry=Math.hypot(b.x-c.x,b.y-c.y);
+      const angle=Math.atan2(a.y-c.y,a.x-c.x),w=Math.hypot(rx*Math.cos(angle),ry*Math.sin(angle)),h=Math.hypot(rx*Math.sin(angle),ry*Math.cos(angle));
+      points=[{x:c.x-w,y:c.y-h},{x:c.x+w,y:c.y+h}];
+    }
+    if(drawing.kind==='text'){
+      const p=points[0],size=drawing.fontSize,w=Math.max(1,...drawing.text.split('\n').map(line=>line.length))*size*.65,h=drawing.text.split('\n').length*size*1.3;
+      points=[[0,0],[w,0],[w,h],[0,h]].map(([x,y])=>{const [rx,ry]=rotateOffset(x,y,drawing.rotation||0);return {x:p.x+rx,y:p.y+ry};});
+    }
+    return {x:Math.min(...points.map(p=>p.x)),y:Math.min(...points.map(p=>p.y)),right:Math.max(...points.map(p=>p.x)),bottom:Math.max(...points.map(p=>p.y))};
+  }
+  function drawingHit(drawing,p,scale=1){
+    const ps=drawing.points,tolerance=Math.max(7/scale,drawing.strokeWidth/2+3/scale),b=drawingBounds(drawing);
+    if(p.x<b.x-tolerance||p.x>b.right+tolerance||p.y<b.y-tolerance||p.y>b.bottom+tolerance)return false;
+    if(drawing.kind==='text')return true;
+    if(drawing.kind==='ellipse'){
+      const [c,a,b]=ps,ax=a.x-c.x,ay=a.y-c.y,bx=b.x-c.x,by=b.y-c.y,rx=Math.hypot(ax,ay),ry=Math.hypot(bx,by);
+      if(!rx||!ry)return false;
+      const u=((p.x-c.x)*ax+(p.y-c.y)*ay)/(rx*rx),v=((p.x-c.x)*bx+(p.y-c.y)*by)/(ry*ry),r=Math.hypot(u,v);
+      return drawing.fill!=='none'&&r<=1||Math.abs(r-1)*Math.min(rx,ry)<tolerance;
+    }
+    const closed=drawing.kind==='box'||drawing.kind==='polygon';
+    for(let i=0;i<ps.length-(closed?0:1);i++)if(distance(p,closest(p,ps[i],ps[(i+1)%ps.length]))<=tolerance)return true;
+    if(!closed||drawing.fill==='none')return false;
+    let inside=false;
+    for(let i=0,j=ps.length-1;i<ps.length;j=i++)if((ps[i].y>p.y)!==(ps[j].y>p.y)&&p.x<(ps[j].x-ps[i].x)*(p.y-ps[i].y)/(ps[j].y-ps[i].y)+ps[i].x)inside=!inside;
+    return inside;
+  }
+  function componentHitBox(c) {
+    const bodyScale = definitions[c.kind].drawingScale || 1;
+    if(c.kind==='resistor')return {x:Math.max(70,34*bodyScale),y:Math.max(30,24*bodyScale)};
+    const base = {x:(c.kind==='ground'?25:34)*bodyScale,y:(['dFlipFlop','jkFlipFlop','tFlipFlop','counter','latch','halfAdder','fullAdder'].includes(c.kind)?Math.max(...Object.values(Catalog.componentPins(c)).map(p=>Math.abs(p[1])))/bodyScale+16:c.kind==='pushSwitch'?40:c.kind==='tappedTransformer'?64:c.kind==='customTransformer'?80:c.kind==='dpdtSwitch'?56:['voltageSource','voltageRail','opamp','transformer'].includes(c.kind)?36:24)*bodyScale};
+    if(outputSpecs[c.kind]&&Object.keys(Catalog.componentPins(c)).length>2){const ps=Object.values(Catalog.componentPins(c));return {x:Math.max(base.x,32*bodyScale,...ps.map(p=>Math.abs(p[0]))),y:Math.max(base.y,Math.max(24*bodyScale,...ps.map(p=>Math.abs(p[1])))+16*bodyScale)};}
+    return base;
+  }
+  function hit(document, point, scale = 1, ignoreProbes = false, frame) {
     for (const probe of document.probes) if (!ignoreProbes && probe.kind === 'voltage' && document.layout.probes?.[probe.id]) {
       if (distance(point, pin(document, probe.positive)) < Math.min(12 / scale, 25)) return { kind: 'probe', id: probe.id, anchor: true };
-      const p = probePoint(document, probe); if (point.x >= p.x - 15.625 && point.x <= p.x + 406.25 && Math.abs(point.y - p.y) < 43.75) return { kind: 'probe', id: probe.id };
+      const b = probeBounds(document, probe, probeVoltage(document, probe, frame));
+      if (point.x >= b.x && point.x <= b.right && point.y >= b.y && point.y <= b.bottom) return { kind: 'probe', id: probe.id };
     }
     let best = null;
     for (const c of document.electrical.components) for (const pinId of Object.keys(Catalog.componentPins(c))) {
@@ -138,10 +190,8 @@
       const pose = document.layout.components[c.id], r = -pose.rotation * Math.PI / 180;
       const dx = point.x - pose.x, dy = point.y - pose.y, x = dx * Math.cos(r) - dy * Math.sin(r), y = dx * Math.sin(r) + dy * Math.cos(r);
       if(graphic(c.kind)){const b=graphicSize(c),ux=pose.mirror?-x:x;if(c.kind==='line'){if(distance({x:ux,y},closest({x:ux,y},{x:-b.width/2,y:-c.parameters.height/2},{x:b.width/2,y:c.parameters.height/2}))<8/scale)return {kind:'component',id:c.id};}else if(c.kind==='box'){if(Math.abs(ux)<=b.width/2+8/scale&&Math.abs(y)<=b.height/2+8/scale&&Math.min(Math.abs(Math.abs(ux)-b.width/2),Math.abs(Math.abs(y)-b.height/2))<8/scale)return {kind:'component',id:c.id};}else if(Math.abs(ux)<=b.width/2+6&&Math.abs(y)<=b.height/2+6)return {kind:'component',id:c.id};continue;}
-      const bodyScale = definitions[c.kind].drawingScale || 1;
-      if(c.kind==='resistor' && Math.abs(x)<70 && Math.abs(y)<30) return {kind:'component',id:c.id};
-      if(outputSpecs[c.kind]&&Object.keys(Catalog.componentPins(c)).length>2){const ps=Object.values(Catalog.componentPins(c));if(Math.abs(x)<Math.max(32*bodyScale,...ps.map(p=>Math.abs(p[0])))&&Math.abs(y)<Math.max(24*bodyScale,...ps.map(p=>Math.abs(p[1])))+16*bodyScale)return {kind:'component',id:c.id};}
-      if (Math.abs(x) < (c.kind === 'ground' ? 25 : 34)*bodyScale && Math.abs(y) < (['dFlipFlop','jkFlipFlop','tFlipFlop','counter','latch','halfAdder','fullAdder'].includes(c.kind) ? Math.max(...Object.values(Catalog.componentPins(c)).map(p=>Math.abs(p[1])))/bodyScale+16 : c.kind==='pushSwitch'?40:c.kind==='tappedTransformer'?64:c.kind==='customTransformer'?80:c.kind === 'dpdtSwitch' ? 56 : ['voltageSource', 'voltageRail', 'opamp', 'transformer'].includes(c.kind) ? 36 : 24)*bodyScale) return { kind: 'component', id: c.id };
+      const b = componentHitBox(c);
+      if (Math.abs(x)<b.x && Math.abs(y)<b.y) return {kind:'component',id:c.id};
     }
     for (const wire of [...document.electrical.wires].reverse()) {
       const points = route(document, wire);
@@ -153,9 +203,10 @@
         }
       }
     }
+    for(const drawing of [...(document.layout.drawings||[])].reverse())if(drawingHit(drawing,point,scale))return {kind:'drawing',id:drawing.id};
     return null;
   }
-  function boxSelection(d, a, b) {
+  function boxSelection(d, a, b, frame) {
     const r = { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), right: Math.max(a.x, b.x), bottom: Math.max(a.y, b.y) }, crossing = b.x < a.x, result = new Set();
     const inside = p => p.x >= r.x && p.x <= r.right && p.y >= r.y && p.y <= r.bottom;
     const rectangle = q => crossing ? q.x <= r.right && q.right >= r.x && q.y <= r.bottom && q.bottom >= r.y : inside(q) && inside({ x: q.right, y: q.bottom });
@@ -171,14 +222,15 @@
     for (const c of d.electrical.components) if (rectangle(bounds(d, c))) result.add(token('component', c.id));
     for (const w of d.electrical.wires) { const points = route(d, w); if (crossing ? points.some((p, i) => inside(p) || (i && segment(points[i - 1], p))) : points.every(inside)) result.add(token('wire', w.id)); }
     for (const j of d.electrical.junctions) if (inside(d.layout.junctions[j.id])) result.add(token('junction', j.id));
-    for (const probe of d.probes) if (d.layout.probes?.[probe.id]) { const p = probePoint(d, probe); if (rectangle({ x: p.x - 15.625, y: p.y - 43.75, right: p.x + 406.25, bottom: p.y + 43.75 })) result.add(token('probe', probe.id)); }
+    for (const probe of d.probes) if (probe.kind === 'voltage' && d.layout.probes?.[probe.id] && rectangle(probeBounds(d, probe, probeVoltage(d, probe, frame)))) result.add(token('probe', probe.id));
+    for(const drawing of d.layout.drawings||[])if(rectangle(drawingBounds(drawing)))result.add(token('drawing',drawing.id));
     return result;
   }
   function zoom(camera, point, factor) {
     const scale = Math.max(.064, Math.min(1.28, camera.scale * factor));
     return { scale, x: point.x - (point.x - camera.x) * scale / camera.scale, y: point.y - (point.y - camera.y) * scale / camera.scale };
   }
-  const api=Object.freeze({clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
+  const api=Object.freeze({componentHitBox,drawingBounds,drawingHit,clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeBounds,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
 
   registry.geometry=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

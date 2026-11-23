@@ -116,6 +116,8 @@
       triode:()=>({flags:2,parameters:` ${p.mu} ${p.kg1}`}),
       lamp:()=>({flags:0,parameters:` ${p.initialTemperature} ${p.nominalPower} ${p.nominalVoltage} ${p.warmTime} ${p.coolTime}`}),
       labeledNode:()=>({flags:4,parameters:' '+enc('private-net-'+x)}),
+      // Meter scale/body choices are renderer-only; preserve the worker's fixed
+      // drawing flags and Auto scale without changing resistance or statistics.
       voltmeter:()=>({flags:3,parameters:` ${p.mode} 0 ${p.resistance}`}),
       ohmmeter:()=>({flags:0,parameters:` ${p.current} ${p.maxVoltage}`}),
       ammeter:()=>({flags:3,parameters:` ${p.mode} 0`}),
@@ -690,6 +692,22 @@
         const next=fromProjection(projection,compiled.documentId),raw=invoke(()=>engine.setVariableVoltage(entry.index,voltage));compiled=next;hasFrame=false;
         return {appliedAtTime:raw.time,frameAvailable:false};
       },
+      ...(typeof engine.setSourceFrequency==='function' ? {setSourceFrequency:(componentId,frequency)=>{
+        active();
+        const entry=compiled.mapping.find(item=>item.id===componentId&&
+          (item.kind==='voltageSource'||item.kind==='voltageRail'));
+        check(entry&&Number.isFinite(frequency)&&frequency>0&&Number.isFinite(2*Math.PI*frequency),
+          'Expected periodic voltage source ID and positive frequency');
+        const projection=JSON.parse(compiled.canonical);
+        const waveform=projection.devices.find(item=>item.id===componentId).parameters.waveform;
+        check(waveform.kind!=='dc','Expected a periodic voltage source');
+        const appliedAtTime=invoke(()=>engine.setSourceFrequency(entry.index,frequency));
+        waveform.frequency=frequency;
+        // Pins, nets and solver indices are unchanged. Rebuild the text only if needed for reset.
+        compiled={...compiled,canonical:JSON.stringify(projection),text:null};
+        hasFrame=false;
+        return {appliedAtTime,frameAvailable:false};
+      }} : {}),
       setContact: (componentId, field, value) => {
         active();const entry=compiled.mapping.find(item=>item.id===componentId);
         const fields={pushSwitch:'normallyClosed',spdtSwitch:'position',dpdtSwitch:'position',mbbSwitch:'position',logicInput:'state'};
@@ -739,7 +757,10 @@
       },
       snapshot: () => { active(); if (!hasFrame) fail('NO_FRAME', 'Advance simulation before reading results');
         return invoke(() => frame(engine.snapshot())); },
-      reset: () => { active(); return install(compiled); }
+      reset: () => {
+        active();
+        return install(compiled.text===null?fromProjection(JSON.parse(compiled.canonical),compiled.documentId):compiled);
+      }
     };
   }
   const api=Object.freeze({outputSpecs, graphic, compile, fromProjection, createSession, normalizeSampleChannels});

@@ -37,3 +37,30 @@ const guarded=S.create();guarded.setChannels(channels);guarded.expect({sessionId
 assert.equal(guarded.append(frame(100,[0],{in:[1],out:[2]})),false,'Old session cannot replace the accepted acquisition');
 assert.equal(guarded.append(frame(1,[0],{in:[1],out:[2]},{sessionId:'new',runEpoch:3,circuitRevision:4})),true);
 guarded.expect(null);assert.equal(guarded.count,0);assert.equal(guarded.append(frame(2,[1],{in:[1],out:[2]},{sessionId:'new',runEpoch:3,circuitRevision:4})),false,'Fault/loading state rejects old samples');
+
+// Retain the same simulated duration at smaller timesteps, without decimating peaks.
+for(const step of [1e-5,5e-6,1e-6]){
+  const timed=S.create({capacity:8,historySpan:.2});timed.setChannels(channels);
+  let sequence=0;
+  const total=Math.round(.3/step);
+  for(let first=0;first<=total;first+=1000){
+    const times=Array.from({length:Math.min(1000,total-first+1)},(_,i)=>(first+i)*step);
+    const samples=times.map(t=>t>=.15&&t<.15+step*1.1?100:-1);
+    assert.ok(timed.append(frame(++sequence,times,{in:samples,out:samples.map(v=>-v)},{timeStep:step})));
+  }
+  const view=timed.window(.2);
+  assert.ok(view.times[0]<=.1+step,'Full 200 ms window retained');
+  assert.ok(view.times.at(-1)>=.3-step);
+  assert.ok(view.times.length>=Math.floor(.2/step),'Raw sample resolution retained');
+  assert.equal(view.channels[0].max,100,'Narrow peak retained');
+  assert.equal(view.channels[1].min,-100,'Channels remain aligned after buffer growth');
+  const grownCapacity=view.capacity;
+  timed.setHistorySpan(.4);
+  const times=Array.from({length:1000},(_,i)=>.3+(i+1)*step);
+  timed.append(frame(++sequence,times,{in:times.map(()=>2),out:times.map(()=>-2)},{timeStep:step}));
+  assert.ok(timed.window(.4).times[0]<=.1+step,'Increasing duration preserves existing samples');
+  timed.reset();assert.equal(timed.count,0);
+  assert.equal(timed.window(.2).capacity,grownCapacity,'Reset reuses allocated storage');
+}
+assert.throws(()=>S.create({historySpan:0}),/history span/);
+console.log('Time-based scope retention checks passed at 10, 5 and 1 µs.');

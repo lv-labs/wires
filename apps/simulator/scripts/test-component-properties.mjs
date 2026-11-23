@@ -97,6 +97,70 @@ try {
     doc.layout.components.c = { x: 0, y: 0, rotation: 0, mirror: false }
     core.document.validate(doc)
   }
+  const { PropertySliderDialog } = await server.ssrLoadModule(
+    "/src/editor/PropertySliders.tsx"
+  )
+  for (const existing of [undefined, {
+    id: "slider", componentId: "c", field: "resistance",
+    label: "Resistance", min: 1, max: 2, step: 0.1,
+  }]) {
+    for (const logarithmic of [false, true]) {
+    for (const [min, max, step, expected] of [
+      ["10u", "10m", "10u", [1e-5, 0.01, 1e-5]],
+      ["1k", "2M", "5k", [1000, 2000000, 5000]],
+    ]) {
+      let saved
+      const html = renderToStaticMarkup(React.createElement(PropertySliderDialog, {
+        component: panel("resistor").component,
+        existing,
+        onSave(value) { saved = value },
+        onClose() {},
+      }))
+      assert.doesNotMatch(html, /type="number"/)
+      globalThis.__propertyTestForm.props.onSubmit({
+        preventDefault() {},
+        currentTarget: { min, max, step, label: "Resistance", scale: logarithmic ? "logarithmic" : "linear" },
+      })
+      for (const [index, field] of ["min", "max", "step"].entries())
+        assert.ok(Math.abs(saved[field] - expected[index]) <= expected[index] * 1e-12)
+      assert.equal(saved.logarithmic, logarithmic)
+      if (existing) assert.equal(saved.id, existing.id)
+      const reopened = renderToStaticMarkup(React.createElement(PropertySliderDialog, {
+        component: panel("resistor").component,
+        existing: saved,
+        onSave() {},
+        onClose() {},
+      }))
+      assert.ok(reopened.includes(`value="${logarithmic ? "logarithmic" : "linear"}" selected=""`))
+      for (const [field, text] of [["min", min], ["max", max], ["step", step]])
+        assert.ok(reopened.includes(`name="${field}" value="${text}"`), reopened)
+
+    }
+  }
+
+  }
+  for (const min of ["0", "-1k"]) {
+    let saved
+    renderToStaticMarkup(React.createElement(PropertySliderDialog, {
+      component: panel("resistor").component,
+      onSave(value) { saved = value }, onClose() {},
+    }))
+    globalThis.__propertyTestForm.props.onSubmit({
+      preventDefault() {}, currentTarget: { min, max: "1M", step: "1k", scale: "logarithmic" },
+    })
+    assert.equal(saved, undefined, "Nonpositive logarithmic ranges must be rejected")
+  }
+  const { sliderPosition, sliderVoltage, logarithmicSliderValue } = await server.ssrLoadModule("/src/editor/componentSliders.ts")
+  assert.equal(sliderVoltage(0.5, 1000, 1000000), 500500)
+  assert.ok(Math.abs(sliderVoltage(0.5, 1000, 1000000, true) - Math.sqrt(1e9)) < 1e-9)
+  for (const position of [0, 0.1, 0.5, 0.9, 1]) {
+    const value = sliderVoltage(position, 1e-5, 1e6, true)
+    assert.ok(Math.abs(sliderPosition(value, 1e-5, 1e6, true) - position) < 1e-12)
+  }
+  assert.equal(logarithmicSliderValue(0, 1000, 1000000, 5000), 1000)
+  assert.equal(logarithmicSliderValue(1, 1000, 1000000, 5000), 1000000)
+  assert.equal(logarithmicSliderValue(0.5, 1000, 1000000, 5000), 31000)
+  console.log("Slider checks passed: prefixes, linear/logarithmic creation and editing, positive limits, mapping and step snapping.")
   for (const kind of Object.keys(core.catalog.definitions)) {
     const p = panel(kind)
     assert.doesNotMatch(p.html, /Sheet label|labelPosition|labelShowValue/)

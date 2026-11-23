@@ -17,6 +17,7 @@
    */
   function createDragSession(initial, selection, { wireId, segment = 0 } = {}) {
     const base=clone(initial), chosen=new Set(selection), nodes=new Map(), edges=[];
+    const drawingOnly=chosen.size>0&&[...chosen].every(item=>JSON.parse(item)[0]==='drawing');
     const offset={x:0,y:0}, protectedEnds=new Set(), probeNodes=new Set();
     let cancelled=false, serial=0;
     const finished=new Map();
@@ -164,7 +165,10 @@
     function serialize(){
       if(!offset.x&&!offset.y)return clone(base);
       const d=clone(base),used=new Set(),newWires=[],layout={};
+      for(const drawing of d.layout.drawings||[])if(chosen.has(token('drawing',drawing.id)))for(const p of drawing.points){p.x+=offset.x;p.y+=offset.y;}
+      if(drawingOnly)return d;
       for(const c of d.electrical.components)if(chosen.has(token('component',c.id))){d.layout.components[c.id].x+=offset.x;d.layout.components[c.id].y+=offset.y;}
+
       for(const p of d.probes)if(chosen.has(token('probe',p.id))&&d.layout.probes?.[p.id]){d.layout.probes[p.id].x+=offset.x;d.layout.probes[p.id].y+=offset.y;}
       for(const n of originalNodes)if(n.ref.kind==='junction')d.layout.junctions[n.ref.junctionId]=point(n);
       const anchor=n=>!n.temporary||n.exportAnchor||incident(n).length!==2||probeNodes.has(n);
@@ -208,10 +212,11 @@
         if(finished.has(cacheKey))return clone(finished.get(cacheKey));
         if(rotation||orientations.length){
           const d=clone(base);transformSelection(d,chosen,offset.x,offset.y,{rotation,orientations,contacts:true});
-          if(normalize)normalizeWires(d);
+          if(normalize&&!drawingOnly)normalizeWires(d);
           validate(d);finished.set(cacheKey,clone(d));return d;
         }
         const d=serialize();
+        if(drawingOnly){validate(d);finished.set(cacheKey,clone(d));return d;}
         if(movingEdges.length&&(offset.x||offset.y)){
           const movedPaths=edges.filter(e=>!equal(e.a,e.b)&&(e.temporary||!initialPositions.has(e.a)||!initialPositions.has(e.b)||!equal(e.a,initialPositions.get(e.a))||!equal(e.b,initialPositions.get(e.b)))).map(e=>[point(e.a),point(e.b)]);
           connectWireContacts(d,movedPaths);

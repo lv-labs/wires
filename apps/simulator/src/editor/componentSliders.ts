@@ -68,10 +68,47 @@ export function clampSliderValue(kind: string, field: string, value: number) {
 }
 
 // Slider position always increases left→right, even for descending voltage ranges.
-export function sliderPosition(value: number, left: number, right: number) {
+export function sliderPosition(
+  value: number,
+  left: number,
+  right: number,
+  logarithmic = false
+) {
+  if (logarithmic && left > 0 && right > left)
+    return (
+      (Math.log(Math.max(left, value)) - Math.log(left)) /
+      (Math.log(right) - Math.log(left))
+    )
   const position = (value - left) / (right - left)
   return position === 0 ? 0 : position
 }
-export function sliderVoltage(position: number, left: number, right: number) {
+export function sliderVoltage(
+  position: number,
+  left: number,
+  right: number,
+  logarithmic = false
+) {
+  if (logarithmic && left > 0 && right > left) {
+    if (position <= 0) return left
+    if (position >= 1) return right
+    return Math.exp(
+      Math.log(left) + position * (Math.log(right) - Math.log(left))
+    )
+  }
   return left + position * (right - left)
+}
+
+export function logarithmicSliderValue(
+  position: number,
+  min: number,
+  max: number,
+  step: number
+) {
+  if (position <= 0) return min
+  if (position >= 1) return max
+  const value = sliderVoltage(position, min, max, true)
+  return Math.max(
+    min,
+    Math.min(max, min + Math.round((value - min) / step) * step)
+  )
 }

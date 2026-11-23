@@ -238,6 +238,6 @@
     }
   ],
   "simulation": {
-    "timeStep": 1e-05
+    "timeStep": 5e-06
   }
 }

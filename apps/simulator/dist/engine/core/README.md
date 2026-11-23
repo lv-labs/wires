@@ -186,3 +186,21 @@ node tools/test_drag_browser.mjs /path/to/chrome /tmp/fresh-profile http://127.0
 The focused browser runner also opens an independent ESM consumer which loads no
 prototype renderer/inspector, edits a real divider through `execute`, and runs the
 worker while verifying numerical results and state-preserving updates.
+
+### Non-electrical drawings
+
+`layout.drawings` is an optional array, separate from `electrical.components`.
+Each drawing has a stable ID, kind (`text`, `line`, `box`, `ellipse`, `polygon`),
+world-coordinate points, stroke/fill, stroke width, line style, text and font size.
+Boxes use four corners; ellipses use a centre and two axis endpoints. Explicit
+colour values are six-digit hex; `currentColor` follows the host theme and `none`
+disables paint. The document validator checks geometry and appearance.
+
+`addDrawing` and `setDrawing` commands commit drawing edits transactionally.
+Drawing entities participate in selection, drag, transforms, copy/paste, deletion
+and undo/redo. Drawing-only drags leave circuit wires untouched. The solver
+projection omits this layout data. Legacy annotation component models remain
+supported for saved documents and Falstad imports.
+
+Run `node tools/test_drawings.mjs` to check drawing operations and projection
+invariance without browser automation.

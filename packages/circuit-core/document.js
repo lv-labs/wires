@@ -106,6 +106,10 @@
       for (const [id,pane] of Object.entries(scopes.panes)) {
         assert(id.length > 0 && record(pane) && ['docked','floating','sheet'].includes(pane.mode), 'Invalid scope pane mode');
         assert(point(pane) && [pane.width,pane.height,pane.weight,pane.timeDivision].every(n => Number.isFinite(n) && n > 0) && pane.timeDivision <= 60, 'Invalid scope pane geometry or scale');
+        if (pane.trigger !== undefined) {
+          const t = pane.trigger;
+          assert(record(t) && ['off','auto','normal'].includes(t.mode) && ['rising','falling'].includes(t.edge) && Number.isFinite(t.level) && (t.source === undefined || typeof t.source === 'string'), 'Invalid scope trigger');
+        }
         assert(pane.order === undefined || Number.isSafeInteger(pane.order) && pane.order >= 0, 'Invalid scope order');
         assert(pane.sheetScale === undefined || Number.isFinite(pane.sheetScale) && pane.sheetScale > 0, 'Invalid scope sheet reference scale');
       }
@@ -123,7 +127,7 @@
   function empty() {
     return {
       schemaVersion: 1, id: crypto.randomUUID(), title: 'Untitled circuit', electrical: { components: [], junctions: [], wires: [] },
-      layout: { components: {}, junctions: {}, wires: {} }, probes: [], simulation: { timeStep: 1e-5 }
+      layout: { components: {}, junctions: {}, wires: {} }, probes: [], simulation: { timeStep: 5e-6 }
     };
   }
   const api=Object.freeze({validate,empty});

@@ -11,6 +11,27 @@ Use **File → Import Falstad…** to paste exported text/XML, or **Open…** fo
 files. The importer supports a measured subset and reports unsupported records.
 See [import coverage and remaining work](docs/new-simulator/FALSTAD-IMPORT.md).
 
+## Files, links and recovery
+
+Every new tab starts with a blank circuit. **Open from file…** imports JSON or
+Falstad circuit files; **Save to file…** downloads a portable JSON snapshot.
+**Open from link…** accepts Wires snapshot links or `go.lv-labs.com` short links.
+**Save to link…** creates a compressed snapshot URL; later edits do not change it.
+Hosted shortening is not yet connected.
+
+Edits automatically update a recovery draft in this browser profile. Refresh
+resumes that tab without creating another draft. **File → Recover a circuit…**
+restores circuits from closed tabs or work you switched away from. Each tab writes
+independently, including duplicated tabs. Saving a file or link keeps its recovery
+draft. Previous autosaves and library circuits remain available through recovery.
+Clearing site data removes local recovery drafts.
+
+**Save to SVG…** and **Save to PNG…** export the complete circuit drawing, including
+labels and annotations, with the current theme. Exports omit the grid and editing
+handles and are independent of pan and zoom. These images are for viewing; use a
+circuit file or link to continue editing. PNG output is capped at 4096 pixels on
+its longest side.
+
 ## Development
 
 Requirements: Java 8, Python 3.9+, Node 24+ and pnpm 10.30.3.

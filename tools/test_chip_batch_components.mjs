@@ -63,7 +63,8 @@ for(const edgeTriggered of [false,true])for(const initialValue of [0,9,15]){
  const inputs={load:square(1000)};for(let bit=0;bit<4;bit++)inputs['I'+bit]=square(137+bit*101);
  session.loadDocument(chipBatchCircuit('latch',{edgeTriggered,initialValue},inputs));
  let expected=initialValue,lastLoad=false,previous={load:0,I0:0,I1:0,I2:0,I3:0},changes=0;
- for(let step=0;step<1000;step++){
+ // Cover ten clock periods at the default 5 µs timestep.
+ for(let step=0;step<2000;step++){
   const load=previous.load>2.5;if(load&&(!edgeTriggered||!lastLoad)){expected=[0,1,2,3].reduce((v,b)=>v+((previous['I'+b]>2.5?1:0)<<b),0);changes++;}lastLoad=load;
   const f=session.step(1);assert.equal(word(f,'O'),expected);previous=f.pinVoltages.part;
  }

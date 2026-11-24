@@ -60,6 +60,21 @@ public class EngineEntryPoint implements EntryPoint {
                 if (semiconductor != null) { semiconductor.setPoints(); elements.add(semiconductor); continue; }
                 CircuitElm output = EngineOutputSupport.construct(fields,timeStep);
                 if (output != null) { output.setPoints(); elements.add(output); continue; }
+                if (type.equals("178")) {
+                    RelayElm relay = EngineRelaySupport.construct(fields,x1,y1,x2,y2,flags,timeStep);
+                    relay.setPoints();
+                    elements.add(relay);
+                    continue;
+                }
+                if (type.equals("165")) {
+                    if (fields.length != 7 || (flags & ~6) != 0 || y1 != 32 || y2 != 32 || x2-x1 != 64 ||
+                        !finite(Double.parseDouble(fields[6])))
+                        throw new IllegalArgumentException("Invalid 555 timer flags, geometry or initial output");
+                    TimerElm timer = new TimerElm(x1, y1, x2, y2, flags, new StringTokenizer(fields[6]));
+                    timer.setPoints();
+                    elements.add(timer);
+                    continue;
+                }
                 boolean voltage = type.equals("v") || type.equals("R");
                 boolean analog = type.equals("159") || type.equals("160");
                 boolean capacitor = type.equals("c") || type.equals("209");
@@ -377,11 +392,14 @@ public class EngineEntryPoint implements EntryPoint {
         if (loadedText == null)
             throw new IllegalStateException("Load a circuit first");
         checkStopped();
-        boolean trigger = false;
-        for (CircuitElm elm : app.elmList) if (elm instanceof StopTriggerElm) trigger = true;
-        if (!trigger) app.sim.stepCircuit(count);
+        if (!hasStopTrigger()) app.sim.stepCircuit(count);
         else for(int i=0;i<count;i++){app.sim.stepCircuit(1);if(EngineOutputSupport.stopRequested(app.elmList))break;}
         checkStopped();
+    }
+
+    private boolean hasStopTrigger() {
+        for (CircuitElm elm : app.elmList) if (elm instanceof StopTriggerElm) return true;
+        return false;
     }
 
     private void checkStopped() {
@@ -410,6 +428,28 @@ public class EngineEntryPoint implements EntryPoint {
         VarRailElm elm=(VarRailElm)app.elmList.get(id);
         if(!finite(voltage)||voltage<elm.bias||voltage>elm.maxVoltage)throw new IllegalArgumentException("Voltage outside source range");
         checkStopped();elm.frequency=voltage;
+    }
+
+    double setPotPosition(int id, double position) {
+        CircuitElm element = sampleElement(id);
+        if (!(element instanceof PotElm) || !(position >= 0 && position <= 1))
+            throw new IllegalArgumentException("Expected a potentiometer and a wiper position between 0 and 1");
+        PotElm pot = (PotElm) element;
+        checkStopped();
+        if (pot.position != position) {
+            boolean changedTopology = pot.position == 0 || pot.position == 1 || position == 0 || position == 1;
+            pot.position = position;
+            // An exact endpoint changes which ideal connection the pot stamps.
+            // Reanalyze the existing elements so the control retains solver state.
+            if (changedTopology) {
+                app.sim.analyzeCircuit();
+                app.sim.preStampAndStampCircuit();
+            } else {
+                app.sim.stampCircuit();
+            }
+            checkStopped();
+        }
+        return app.sim.t;
     }
 
     double setSourceFrequency(int id, double frequency) {
@@ -443,11 +483,104 @@ public class EngineEntryPoint implements EntryPoint {
         result.elements.push({id: id, type: type, current: current, voltages: Array.prototype.slice.call(volts)});
     }-*/;
 
+    private CircuitElm sampleElement(int index) {
+        if (index < 0 || index >= app.elmList.size())
+            throw new IllegalArgumentException("Invalid sample element");
+        return app.elmList.get(index);
+    }
+
+    private void advanceSampled(int count, boolean delayWireCurrents, JavaScriptObject sample,
+            int rampIndex, double fromVoltage) {
+        if (loadedText == null)
+            throw new IllegalStateException("Load a circuit first");
+        checkStopped();
+        final boolean hasTrigger = hasStopTrigger();
+        final VarRailElm rail = rampIndex == -1 ? null : (VarRailElm) sampleElement(rampIndex);
+        final double targetVoltage = rail == null ? 0 : rail.frequency;
+        final int[] completed = {0};
+        if (rail != null) setVariableVoltage(rampIndex, rampVoltage(fromVoltage, targetVoltage, 1, count));
+        try {
+            app.sim.stepSampled(count, delayWireCurrents, (time, timeStep) -> {
+                emitSample(sample, time, timeStep);
+                if (hasTrigger && EngineOutputSupport.stopRequested(app.elmList)) return false;
+                if (rail != null && ++completed[0] < count)
+                    rail.frequency = rampVoltage(fromVoltage, targetVoltage, completed[0] + 1, count);
+                return true;
+            });
+        } finally {
+            if (rail != null) rail.frequency = targetVoltage;
+        }
+        checkStopped();
+    }
+
+    private static double rampVoltage(double from, double target, int step, int count) {
+        if (step == count) return target;
+        double fraction = (double) step / count;
+        return from * (1 - fraction) + target * fraction;
+    }
+
+    private static native void emitSample(JavaScriptObject sample, double time, double timeStep) /*-{
+        sample(time, timeStep);
+    }-*/;
+
+    private native JavaScriptObject stepSampled(int count, JavaScriptObject targets, JavaScriptObject ramp) /*-{
+        var that = this, times = [], values = [], delayWireCurrents = true;
+        if (!Array.isArray(targets) || targets.length > 32 || (!targets.length && !ramp))
+            throw new Error("Invalid sample target count");
+        if (ramp && (!Number.isInteger(ramp.index) || ramp.index < 0 || !Number.isFinite(ramp.fromVoltage)))
+            throw new Error("Invalid variable source ramp");
+        function element(index) {
+            if (!Number.isInteger(index)) throw new Error("Invalid sample element");
+            return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::sampleElement(I)(index);
+        }
+        function voltageReader(terminal) {
+            if (terminal === null) return function() { return 0; };
+            var elm = element(terminal.index), post = terminal.post;
+            // Labeled nodes allocate their voltage slots during the first solve.
+            if (!Number.isInteger(post) || post < 0)
+                throw new Error("Invalid sample post");
+            return function() {
+                return elm.@com.lushprojects.circuitjs1.client.CircuitElm::volts[post];
+            };
+        }
+        var read = targets.map(function(target) {
+            values.push([]);
+            if (target.current !== undefined) {
+                var elm = element(target.current), sign = target.sign;
+                if (sign !== 1 && sign !== -1) throw new Error("Invalid sample current sign");
+                if (elm.@com.lushprojects.circuitjs1.client.CircuitElm::isWireEquivalent()())
+                    delayWireCurrents = false;
+                return function() {
+                    return sign * elm.@com.lushprojects.circuitjs1.client.CircuitElm::getCurrent()();
+                };
+            }
+            var positive = voltageReader(target.positive), negative = voltageReader(target.negative);
+            return function() { return positive() - negative(); };
+        });
+        function sample(t, dt) {
+            if (!isFinite(t) || !isFinite(dt) || dt <= 0) throw new Error("Invalid scope sample time");
+            if (read.length) times.push(Math.max(0, t - dt));
+            for (var j = 0; j < read.length; j++) {
+                var value = read[j]();
+                if (!isFinite(value)) throw new Error("Invalid scope sample voltage");
+                values[j].push(value);
+            }
+        }
+        this.@com.lushprojects.circuitjs1.client.EngineEntryPoint::advanceSampled(IZLcom/google/gwt/core/client/JavaScriptObject;ID)(
+            count, delayWireCurrents, sample, ramp ? ramp.index : -1, ramp ? ramp.fromVoltage : 0);
+        return {raw: this.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()(), times: times, values: values};
+    }-*/;
+
     private native void publish() /*-{
         var that = this;
         $wnd.CircuitEngine = {
             readCapture: $entry(function(id){if(!Number.isInteger(id))throw new Error('Expected integer recorder ID');return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::readCapture(I)(id);}),
             setVariableVoltage: $entry(function(id,voltage){if(!Number.isInteger(id)||typeof voltage!=='number'||!isFinite(voltage))throw new Error('Invalid variable source update');that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::setVariableVoltage(ID)(id,voltage);return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();}),
+            setPotPosition: $entry(function(id, position) {
+                if (!Number.isInteger(id) || typeof position !== 'number')
+                    throw new Error("Invalid potentiometer position update");
+                return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::setPotPosition(ID)(id, position);
+            }),
             setSourceFrequency: $entry(function(id, frequency) {
                 if (!Number.isInteger(id) || typeof frequency !== 'number')
                     throw new Error('Invalid source frequency update');
@@ -463,6 +596,12 @@ public class EngineEntryPoint implements EntryPoint {
                 that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::step(I)(count);
                 return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();
             }),
+            stepSampled: $entry(function(count, targets, ramp) {
+                if (!Number.isInteger(count) || count < 1 || count > 10000)
+                    throw new Error("Step count must be an integer between 1 and 10000");
+                return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::stepSampled(ILcom/google/gwt/core/client/JavaScriptObject;Lcom/google/gwt/core/client/JavaScriptObject;)(count, targets, ramp || null);
+            }),
+            supportsVoltageRamp: true,
             reset: $entry(function() {
                 that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::reset()();
                 return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();

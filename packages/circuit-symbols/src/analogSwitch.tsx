@@ -21,16 +21,19 @@ export const metadata = {
   },
 } as const;
 
-export function Symbol({ pose }: SymbolProps) {
+export function Symbol({ pose, parameters = metadata.parameters, measured }: SymbolProps) {
+  const controlVoltage = measured?.controlVoltage;
+  const closed =
+    typeof controlVoltage === "number" &&
+    Number.isFinite(controlVoltage) &&
+    (controlVoltage >= Number(parameters.threshold)) !== Boolean(parameters.inverted);
+
   return (
     <>
       <Lead from={metadata.pins.a} to={[-20, 0]} />
       <Lead from={metadata.pins.b} to={[20, 0]} />
       <Lead from={metadata.pins.control} to={[0, -20]} />
-      <path
-        d="M -20 0
-          L 18 -12"
-      />
+      <Lead from={[-20, 0]} to={closed ? [20, 0] : [18, -12]} />
       <path
         d="M 0 -20
           V -4"

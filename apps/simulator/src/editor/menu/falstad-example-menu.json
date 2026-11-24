@@ -284,47 +284,47 @@
           {
             "title": "Relay",
             "file": "relay.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay AND",
             "file": "relayand.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay OR",
             "file": "relayor.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay XOR",
             "file": "relayxor.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay Mux",
             "file": "relaymux.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay Flip-Flop",
             "file": "relayff.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay Toggle Flip-Flop",
             "file": "relaytff.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay Oscillator",
             "file": "relayosc.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Relay Counter",
             "file": "relayctr.txt",
-            "enabled": false
+            "enabled": true
           }
         ]
       },
@@ -813,7 +813,7 @@
           {
             "title": "Astable Multivib",
             "file": "multivib-a.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Bistable Multivib (Flip-Flop)",
@@ -1073,7 +1073,8 @@
       {
         "title": "Square Wave Generator",
         "file": "555square.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Internals",
@@ -1084,42 +1085,45 @@
       {
         "title": "Sawtooth Oscillator",
         "file": "555saw.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Low-duty-cycle Oscillator",
         "file": "555lowduty.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Monostable Multivibrator",
         "file": "555monostable.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Pulse Width Modulator",
         "file": "555pulsemod.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Pulse Sequencer",
         "file": "555sequencer.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Schmitt Trigger (inverting)",
         "file": "555schmitt.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Missing Pulse Detector",
         "file": "555missing.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Adjustable Duty Cycle Oscillator",
         "file": "555dutycycle.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       }
     ]
   },
@@ -1960,12 +1964,12 @@
           {
             "title": "SCR",
             "file": "scr.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "AC Trigger",
             "file": "scractrig.txt",
-            "enabled": false
+            "enabled": true
           }
         ]
       },
@@ -2130,7 +2134,8 @@
       {
         "title": "DIAC/TRIAC Dimmer",
         "file": "triacdimmer.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Unijunction Oscillator",

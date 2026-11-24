@@ -1,4 +1,4 @@
-import type { ScopePaneLayout } from "./core"
+import type { ScopePaneLayout, ScopeSamples } from "./core"
 import { minimumValueDivision } from "./scopeScales"
 
 export function formatScope(value: number | null | undefined, unit = "") {
@@ -34,18 +34,19 @@ export function scopeTimeRuler(end: number, timeDivision: number) {
 }
 
 /** Statistics of raw samples in the visible window (also in AC display mode). */
-export function scopeMeasurements(values: number[]) {
-  if (!values.length) return { mean: null, rms: null, peakToPeak: null }
+export function scopeMeasurements(values: ScopeSamples, count = values.length) {
+  if (!count) return { mean: null, rms: null, peakToPeak: null }
   let mean = 0,
     meanSquare = 0,
     min = Infinity,
     max = -Infinity
-  values.forEach((value, i) => {
+  for (let i = 0; i < count; i++) {
+    const value = values[i]
     mean += (value - mean) / (i + 1)
     meanSquare += (value * value - meanSquare) / (i + 1)
     min = Math.min(min, value)
     max = Math.max(max, value)
-  })
+  }
   return {
     mean,
     rms: Math.sqrt(Math.max(0, meanSquare)),
@@ -53,7 +54,7 @@ export function scopeMeasurements(values: number[]) {
   }
 }
 
-export function scopeBounds(times: number[], span: number) {
+export function scopeBounds(times: ScopeSamples, span: number) {
   const end = Math.max(span, times.at(-1) || 0)
   const start = Math.max(0, end - span)
   return { start, end, index: sampleLowerBound(times, start) }
@@ -63,13 +64,13 @@ export function scopeBounds(times: number[], span: number) {
 export function scopeWindow<
   T extends {
     id?: string
-    values: number[]
+    values: ScopeSamples
     min: number | null
     max: number | null
   },
 >(
   channels: T[],
-  times: number[],
+  times: ScopeSamples,
   span: number,
   trigger?: ScopePaneLayout["trigger"]
 ) {
@@ -138,6 +139,7 @@ export function scopeWindow<
   }
 }
 
+export type ScopeRendering = "smooth" | "stepped"
 export const scopePathScale = 4
 
 /** Encode a quarter-pixel grid and collapse flat runs before submitting the SVG path. */
@@ -212,7 +214,7 @@ export function scopeColumnPath(
 
 /** One trace owns its vertical mapping, independent of other traces in its pane. */
 export function traceDisplay(trace: {
-  values: number[]
+  values: ScopeSamples
   min: number | null
   max: number | null
   scale?: number
@@ -293,7 +295,7 @@ export function updateAutoRange(
     : { scale, sampleTime, coupling, shrinkSince }
 }
 
-function sampleLowerBound(times: number[], time: number, low = 0) {
+function sampleLowerBound(times: ScopeSamples, time: number, low = 0) {
   let high = times.length
   while (low < high) {
     const middle = (low + high) >>> 1
@@ -304,7 +306,7 @@ function sampleLowerBound(times: number[], time: number, low = 0) {
 }
 /** Select an actual acquisition sample once, in the hovered pane. */
 export function nearestScopeSample(
-  times: number[],
+  times: ScopeSamples,
   time: number,
   first = 0
 ): number | null {
@@ -317,7 +319,7 @@ export function nearestScopeSample(
     : times[next]
 }
 /** Other panes must show the identical sample, never a nearby substitute. */
-export function scopeSampleIndex(times: number[], time: number) {
+export function scopeSampleIndex(times: ScopeSamples, time: number) {
   const index = sampleLowerBound(times, time)
   return times[index] === time ? index : -1
 }

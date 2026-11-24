@@ -67,10 +67,24 @@
       if(!root.children.length&&!Object.hasOwn(root.attrs,'f')&&!Object.hasOwn(root.attrs,'ts'))throw new Error('No supported components found');
       emit(root.line,`$ ${numeric(root.attrs,'f',0)} ${numeric(root.attrs,'ts',5e-6)} 10 50 5`);
     }catch(cause){error(root.line,cause.message);}
+    const relayModels=new Map([['default',{}],['default-2-poles',{po:'2'}],['default-3-poles',{po:'3'}]]);
+    const relayModelKeys=['in','ron','rof','on','of','coR','sw','cs','po','sb','pd'];
+    for(const node of root.children){
+      if(node.name!=='rlm')continue;
+      try{
+        const name=node.attrs.nm;
+        check(node,['nm','f',...relayModelKeys]);
+        if(!name||!name.trim()||relayModels.has(name)||node.children.length||node.text?.trim())throw new Error('Invalid or duplicate relay model name');
+        numeric(node.attrs,'f',0);
+        for(const key of relayModelKeys)if(Object.hasOwn(node.attrs,key))numeric(node.attrs,key);
+        relayModels.set(name,node.attrs);
+      }catch(cause){error(node.line,cause.message);}
+    }
     for(const node of root.children){
       const {name,attrs:a,line}=node;
-      if(name==='o'){
-        emit(line,'o');scopes.set(lines.length,node);continue;
+      if(name==='rlm')continue;
+      if(name==='o'||name==='Scope'){
+        emit(line,name==='Scope'?'403':'o');scopes.set(lines.length,node);continue;
       }
       if(name==='h'||name==='adj'){emit(line,name==='adj'?'&':name);continue;}
       try{
@@ -87,14 +101,15 @@
           as:['ron','roff','th'],as2:['ron','roff','th'],Schmitt:['slr','lt','ut','lon','loff'],InvertingSchmitt:['slr','lt','ut','lon','loff'],
           Ammeter:['me','sc'],TestPoint:['me','lb'],m:['ron','rof','do','to','mo'],dd:['bc','dm','bo','hv'],
           SparkGap:['on','of','br','ho'],TunnelDiode:[],Lamp:['te','np','nv','wa','co'],Varactor:['mo','ca','ba'],Triode:['mu','kg'],
+          rl:['mo','i','ip','po','in','ron','roff','on','coR','of','sw'],Timer:['hv','v5'],SCR:['tr','ho','gr'],Diac:['ron','roff','bd','hc'],Triac:['ti','hi','cr','st'],
           a:['ma','mi','ga','vd'],g:['sy'],i:['cu','mv'],s:['p','mm','lab','key','r'],O:['sc'],L:['p','mm','lab','key','r','hi','lo'],
           M:['th'],d:['mo'],z:['mo'],LED:['mo','cr','cg','cb','mbc'],S:['p','mm','lab','key','r','li','th'],pt:['ma','po','sl','li'],I:['sl','hi'],p:['me','sc','re'],
         }[name];
         if(!allowed)throw new Error(`Unsupported Falstad XML component <${name}>`);
         check(node,['x','f',...allowed]);
         if(!a.x||a.x.trim().split(/\s+/).length!==4)throw new Error(`Expected four coordinates on <${name}>`);
-        const defaultFlags={sw:2,as:2,as2:2,Ammeter:3,Triode:2};
-        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(flipFlopType||name==='dd'?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
+        const defaultFlags={sw:2,as:2,as2:2,Ammeter:3,Triode:2,SCR:1};
+        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(flipFlopType||name==='Timer'||name==='dd'?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
         if(name==='ln'){
           flags|=4;fields=[escapeText(a.te??'label')];
         }
@@ -136,6 +151,27 @@
           flags=0;fields=[num('ca',0),num('ba',4e-12)];
         }
         if(name==='Triode')fields=[num('mu',93),num('kg',680)];
+        if(name==='SCR')fields=[0,0,num('tr',.01),num('ho',.0082),num('gr',50)];
+        if(name==='Diac')fields=[num('ron',500),num('roff',1e8),num('bd',30),num('hc',.01)];
+        if(name==='Triac')fields=[num('ti',.01),num('hi',.0082),num('cr',100),a.st??'false'];
+        if(name==='rl'){
+          if(flags>31)throw new Error('Unsupported relay flags');
+          const model=a.mo===undefined?a:relayModels.get(a.mo);
+          if(!model)throw new Error(`Unknown relay model ${a.mo}`);
+          if(a.mo!==undefined){
+            const style=numeric(model,'cs',0);
+            if(![0,1,2].includes(style))throw new Error('Invalid relay coil style');
+            flags=(flags&8)|(style===0?4:style===2?1:0)|(numeric(model,'sb',1)?2:0)|(numeric(model,'pd',1)?16:0);
+          }
+          const m=(key,fallback)=>numeric(model,key,fallback);
+          fields=[m('po',1),m('in',.2),num('i',0),m('ron',.05),m(a.mo===undefined?'roff':'rof',1e6),
+            m('on',.02),m('coR',20),m('of',.015),m('sw',.005),num('ip',0)];
+        }
+        if(name==='Timer'){
+          const voltage=num('hv',5);
+          if(a.hv!==undefined)flags|=8192;
+          fields=flags&8192?[voltage,num('v5',0)]:[num('v5',0)];
+        }
         if(flipFlopType){
           const voltage=num('hv',5);
           flags=voltage===5?flags&~8192:flags|8192;
@@ -209,6 +245,7 @@
           pt:'174',VarRail:'172',sw:'170',tl:'171',tt:'169',ln:'207',rw:'w',AM:'200',FM:'201',aout:'211',
           LED:'162',as:'159',as2:'160',Schmitt:'182',InvertingSchmitt:'183',pc:'209',Ammeter:'370',TestPoint:'368',dd:'419',
           SparkGap:'187',TunnelDiode:'175',Lamp:'181',Varactor:'176',Triode:'173',Line:'423',
+          SCR:'177',Diac:'203',Triac:'206',Timer:'165',rl:'178',
         }[name]||name;
         emit(line,`${type} ${coordinates.join(' ')} ${flags} ${fields.join(' ')}`.trim());
       }catch(cause){error(line,cause.message);}

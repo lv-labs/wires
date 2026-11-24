@@ -1,4 +1,4 @@
-import type { ScopePaneLayout } from "./core"
+import type { ScopePaneLayout, ScopeSamples, TraceSettings } from "./core"
 import {
   useCallback,
   useEffect,
@@ -17,31 +17,32 @@ import { timeDivisions, valueDivisions } from "./scopeScales"
 import { minimumScopeHeight } from "./scopeDock"
 import {
   formatScope,
+  scopeMeasurements,
   traceDisplay,
   scopeSampleIndex,
   scopeColumnPath,
+  scopePath,
   scopePathScale,
   scopeTimeRuler,
   updateAutoRange,
 } from "./scopeDisplay"
-export type ScopeTrace = {
+import type { ScopeRendering } from "./scopeDisplay"
+export type ScopeTrace = TraceSettings & {
   id: string
   label: string
   color: string
-  values: number[]
+  values: ScopeSamples
   min: number | null
   max: number | null
   last?: number
-  kind?: string
-  scale?: number
-  offset?: number
-  coupling?: string
 }
 
 export function ScopePane({
   id,
   channels,
   times,
+  rendering,
+  hideUi = false,
   start,
   end,
   timeDivision,
@@ -62,7 +63,9 @@ export function ScopePane({
 }: {
   id: string
   channels: ScopeTrace[]
-  times: number[]
+  times: ScopeSamples
+  rendering: ScopeRendering
+  hideUi?: boolean
   start: number
   end: number
   trigger?: ScopePaneLayout["trigger"]
@@ -98,10 +101,10 @@ export function ScopePane({
   }, [])
   const { width, height } = plotSize
   const timeRuler = scopeTimeRuler(end, timeDivision)
-  const left = 55,
-    right = width - 17,
-    top = 14,
-    bottom = height - 28
+  const left = hideUi ? 4 : 55,
+    right = width - (hideUi ? 4 : 17),
+    top = hideUi ? 4 : 14,
+    bottom = height - (hideUi ? 4 : 28)
   const plotWidth = Math.max(1, right - left),
     plotHeight = bottom - top
   const visible = channels
@@ -114,6 +117,22 @@ export function ScopePane({
   )
   const [autoScales, setAutoScales] = useState(new Map<string, number>())
   const sampleTime = times.at(-1)
+  // A triggered sweep can retain one sample beyond the right edge for drawing.
+  const visibleCount =
+    sampleTime !== undefined && sampleTime > end
+      ? times.length - 1
+      : times.length
+  const rmsReadings = useMemo(() => {
+    const readings = new Map<string, string>()
+    if (hideUi) return readings
+    for (const trace of channels) {
+      if (!trace.showRms) continue
+      const { rms } = scopeMeasurements(trace.values, visibleCount)
+      const unit = trace.kind === "current" ? "A" : "V"
+      readings.set(trace.id, formatScope(rms, unit))
+    }
+    return readings
+  }, [channels, visibleCount, hideUi])
   useLayoutEffect(() => {
     const now = performance.now()
     const previous = autoRanges.current
@@ -233,10 +252,13 @@ export function ScopePane({
           channel,
           endX: last && x(last[0]),
           endY: last && pointY(last[1]),
-          d: scopeColumnPath(points, columnX, pointY, left),
+          d:
+            rendering === "smooth"
+              ? scopePath(points, x, pointY)
+              : scopeColumnPath(points, columnX, pointY, left),
         }
       }),
-    [visible, times, start, end, plotWidth, x, y, mappings]
+    [visible, times, start, end, plotWidth, x, y, mappings, rendering]
   )
   const emptyMessage = !channels.length
     ? "Add voltage or current traces from a component’s Add to scope menu"
@@ -255,135 +277,137 @@ export function ScopePane({
         className="relative flex h-full flex-col"
         style={{ minHeight: minimumScopeHeight }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0.5 z-10 flex justify-end pr-3 pl-[55px]">
-          <div
-            role="group"
-            aria-label="Scope scales"
-            className="pointer-events-auto max-w-full overflow-x-auto rounded bg-background/85 text-[10px]"
-          >
-            <div className="flex w-max items-center gap-x-2 px-1 py-0.5 whitespace-nowrap">
-              <ScopeScaleMenu
-                label="Time scale"
-                unit="s"
-                value={timeDivision}
-                division={timeDivision}
-                presets={timeDivisions}
-                onChange={changeTimePreset}
-              />
-              <details className="relative">
-                <summary className="cursor-pointer">
-                  Trigger: {trigger?.mode ?? "off"}
-                  {trigger?.mode && trigger.mode !== "off"
-                    ? triggered
-                      ? " · triggered"
-                      : " · waiting"
-                    : ""}
-                </summary>
-                <div
-                  className="flex items-center gap-2 py-1"
-                  aria-label="Trigger controls"
-                >
-                  <select
-                    aria-label="Trigger mode"
-                    value={trigger?.mode ?? "off"}
-                    onChange={(e) =>
-                      onTrigger({
-                        edge: "rising",
-                        level: 0,
-                        ...trigger,
-                        mode: e.target.value as "off" | "auto" | "normal",
-                      })
-                    }
+        {!hideUi && (
+          <div className="pointer-events-none absolute inset-x-0 top-0.5 z-10 flex justify-end pr-3 pl-[55px]">
+            <div
+              role="group"
+              aria-label="Scope scales"
+              className="pointer-events-auto max-w-full overflow-x-auto rounded bg-background/85 text-[10px]"
+            >
+              <div className="flex w-max items-center gap-x-2 px-1 py-0.5 whitespace-nowrap">
+                <ScopeScaleMenu
+                  label="Time scale"
+                  unit="s"
+                  value={timeDivision}
+                  division={timeDivision}
+                  presets={timeDivisions}
+                  onChange={changeTimePreset}
+                />
+                <details className="relative">
+                  <summary className="cursor-pointer">
+                    Trigger: {trigger?.mode ?? "off"}
+                    {trigger?.mode && trigger.mode !== "off"
+                      ? triggered
+                        ? " · triggered"
+                        : " · waiting"
+                      : ""}
+                  </summary>
+                  <div
+                    className="flex items-center gap-2 py-1"
+                    aria-label="Trigger controls"
                   >
-                    <option value="off">Off</option>
-                    <option value="auto">Auto</option>
-                    <option value="normal">Normal</option>
-                  </select>
-                  <select
-                    aria-label="Trigger source"
-                    value={
-                      channels.some((c) => c.id === trigger?.source)
-                        ? trigger!.source
-                        : (channels[0]?.id ?? "")
-                    }
-                    onChange={(e) =>
-                      onTrigger({
-                        mode: "auto",
-                        edge: "rising",
-                        level: 0,
-                        ...trigger,
-                        source: e.target.value,
-                      })
-                    }
-                  >
-                    {channels.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Trigger edge"
-                    value={trigger?.edge ?? "rising"}
-                    onChange={(e) =>
-                      onTrigger({
-                        mode: "auto",
-                        level: 0,
-                        ...trigger,
-                        edge: e.target.value as "rising" | "falling",
-                      })
-                    }
-                  >
-                    <option value="rising">Rising</option>
-                    <option value="falling">Falling</option>
-                  </select>
-                  <label>
-                    Level{" "}
-                    <input
-                      className="w-20 rounded border px-1"
-                      aria-label="Trigger level"
-                      type="number"
-                      step="any"
-                      value={trigger?.level ?? 0}
-                      onChange={(e) => {
-                        const level = e.target.valueAsNumber
-                        if (Number.isFinite(level))
-                          onTrigger({
-                            mode: "auto",
-                            edge: "rising",
-                            ...trigger,
-                            level,
-                          })
-                      }}
-                    />{" "}
-                    {channels.find((c) => c.id === trigger?.source)?.kind ===
-                    "current"
-                      ? "A"
-                      : "V"}
-                  </label>
-                </div>
-              </details>
-              {channels.map((trace) => {
-                const mapping = mappings.get(trace.id)!
-                return (
-                  <ScopeScaleMenu
-                    key={trace.id}
-                    traceId={trace.id}
-                    label={`Vertical scale for ${trace.label}`}
-                    unit={mapping.unit}
-                    value={trace.scale}
-                    division={mapping.scale}
-                    ac={trace.coupling === "ac"}
-                    presets={valueDivisions}
-                    color={trace.color}
-                    allowAuto
-                    onChange={changeTracePreset}
-                  />
-                )
-              })}
+                    <select
+                      aria-label="Trigger mode"
+                      value={trigger?.mode ?? "off"}
+                      onChange={(e) =>
+                        onTrigger({
+                          edge: "rising",
+                          level: 0,
+                          ...trigger,
+                          mode: e.target.value as "off" | "auto" | "normal",
+                        })
+                      }
+                    >
+                      <option value="off">Off</option>
+                      <option value="auto">Auto</option>
+                      <option value="normal">Normal</option>
+                    </select>
+                    <select
+                      aria-label="Trigger source"
+                      value={
+                        channels.some((c) => c.id === trigger?.source)
+                          ? trigger!.source
+                          : (channels[0]?.id ?? "")
+                      }
+                      onChange={(e) =>
+                        onTrigger({
+                          mode: "auto",
+                          edge: "rising",
+                          level: 0,
+                          ...trigger,
+                          source: e.target.value,
+                        })
+                      }
+                    >
+                      {channels.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      aria-label="Trigger edge"
+                      value={trigger?.edge ?? "rising"}
+                      onChange={(e) =>
+                        onTrigger({
+                          mode: "auto",
+                          level: 0,
+                          ...trigger,
+                          edge: e.target.value as "rising" | "falling",
+                        })
+                      }
+                    >
+                      <option value="rising">Rising</option>
+                      <option value="falling">Falling</option>
+                    </select>
+                    <label>
+                      Level{" "}
+                      <input
+                        className="w-20 rounded border px-1"
+                        aria-label="Trigger level"
+                        type="number"
+                        step="any"
+                        value={trigger?.level ?? 0}
+                        onChange={(e) => {
+                          const level = e.target.valueAsNumber
+                          if (Number.isFinite(level))
+                            onTrigger({
+                              mode: "auto",
+                              edge: "rising",
+                              ...trigger,
+                              level,
+                            })
+                        }}
+                      />{" "}
+                      {channels.find((c) => c.id === trigger?.source)?.kind ===
+                      "current"
+                        ? "A"
+                        : "V"}
+                    </label>
+                  </div>
+                </details>
+                {channels.map((trace) => {
+                  const mapping = mappings.get(trace.id)!
+                  return (
+                    <ScopeScaleMenu
+                      key={trace.id}
+                      traceId={trace.id}
+                      label={`Vertical scale for ${trace.label}`}
+                      unit={mapping.unit}
+                      value={trace.scale}
+                      division={mapping.scale}
+                      ac={trace.coupling === "ac"}
+                      presets={valueDivisions}
+                      color={trace.color}
+                      allowAuto
+                      onChange={changeTracePreset}
+                    />
+                  )
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <svg
           viewBox={`0 0 ${width} ${height}`}
           ref={plotRef}
@@ -427,7 +451,7 @@ export function ScopePane({
             if (heldPointer.current === null) onLeave()
           }}
         >
-          {axisMapping && cursorIndex >= 0 && (
+          {!hideUi && axisMapping && cursorIndex >= 0 && (
             <text
               x={left + 4}
               y={top + 18}
@@ -444,58 +468,67 @@ export function ScopePane({
               <title>{`${axis.label} at ${formatScope(cursor, "s")} · raw sample`}</title>
             </text>
           )}
-          {Array.from({ length: 11 }, (_, i) => {
-            const gx = left + (plotWidth * i) / 10
-            return (
-              <g key={`x-${i}`}>
-                <path d={`M${gx} ${top}V${bottom}`} stroke="var(--border)" />
-                {i % 2 === 0 && (
-                  <text
-                    x={gx + 2}
-                    y={height - 9}
-                    fill="var(--muted-foreground)"
-                    textAnchor="end"
-                    fontSize={10}
-                    className="font-mono tabular-nums"
-                    data-scope-time-tick={i}
-                  >
-                    {timeRuler.format(start + ((end - start) * i) / 10)}
-                    <tspan x={gx + 5} textAnchor="start">
-                      {timeRuler.unit}
-                    </tspan>
-                  </text>
-                )}
-              </g>
-            )
-          })}
-          {Array.from({ length: 9 }, (_, i) => {
-            const gy = top + (plotHeight * i) / 8
-            return (
-              <g key={`y-${i}`}>
+          {!hideUi && (
+            <>
+              {Array.from({ length: 11 }, (_, i) => {
+                const gx = left + (plotWidth * i) / 10
+                return (
+                  <g key={`x-${i}`}>
+                    <path
+                      d={`M${gx} ${top}V${bottom}`}
+                      stroke="var(--border)"
+                    />
+                    {i % 2 === 0 && (
+                      <text
+                        x={gx + 2}
+                        y={height - 9}
+                        fill="var(--muted-foreground)"
+                        textAnchor="end"
+                        fontSize={10}
+                        className="font-mono tabular-nums"
+                        data-scope-time-tick={i}
+                      >
+                        {timeRuler.format(start + ((end - start) * i) / 10)}
+                        <tspan x={gx + 5} textAnchor="start">
+                          {timeRuler.unit}
+                        </tspan>
+                      </text>
+                    )}
+                  </g>
+                )
+              })}
+              {Array.from({ length: 9 }, (_, i) => {
+                const gy = top + (plotHeight * i) / 8
+                return (
+                  <g key={`y-${i}`}>
+                    <path
+                      d={`M${left} ${gy}H${right}`}
+                      stroke={
+                        i === 4 ? "var(--muted-foreground)" : "var(--border)"
+                      }
+                    />
+                    {i % 2 === 0 && (
+                      <text
+                        x={left - 8}
+                        y={gy + 4}
+                        fill={axis?.color || "var(--muted-foreground)"}
+                        textAnchor="end"
+                        fontSize={10}
+                      >
+                        {axisLabel(4 - i)}
+                      </text>
+                    )}
+                  </g>
+                )
+              })}
+              {axis && (
                 <path
-                  d={`M${left} ${gy}H${right}`}
-                  stroke={i === 4 ? "var(--muted-foreground)" : "var(--border)"}
+                  d={`M${left} ${top}V${bottom}`}
+                  stroke={axis.color}
+                  opacity={0.65}
                 />
-                {i % 2 === 0 && (
-                  <text
-                    x={left - 8}
-                    y={gy + 4}
-                    fill={axis?.color || "var(--muted-foreground)"}
-                    textAnchor="end"
-                    fontSize={10}
-                  >
-                    {axisLabel(4 - i)}
-                  </text>
-                )}
-              </g>
-            )
-          })}
-          {axis && (
-            <path
-              d={`M${left} ${top}V${bottom}`}
-              stroke={axis.color}
-              opacity={0.65}
-            />
+              )}
+            </>
           )}
           <defs>
             <clipPath id={`${plotId}-clip`}>
@@ -513,16 +546,18 @@ export function ScopePane({
                   <g
                     fill="none"
                     transform={`scale(${1 / scopePathScale})`}
-                    data-select-trace={channel.id}
-                    className="cursor-pointer"
+                    data-select-trace={hideUi ? undefined : channel.id}
+                    className={hideUi ? undefined : "cursor-pointer"}
                   >
-                    <use
-                      href={`#${plotId}-${index}`}
-                      stroke="transparent"
-                      strokeWidth={12 * scopePathScale}
-                    >
-                      <title>Select {channel.label}</title>
-                    </use>
+                    {!hideUi && (
+                      <use
+                        href={`#${plotId}-${index}`}
+                        stroke="transparent"
+                        strokeWidth={12 * scopePathScale}
+                      >
+                        <title>{`Select ${channel.label}`}</title>
+                      </use>
+                    )}
                     <use
                       href={`#${plotId}-${index}`}
                       data-scope-trace={channel.id}
@@ -534,7 +569,7 @@ export function ScopePane({
                     />
                   </g>
                 )}
-                {endX !== undefined && (
+                {!hideUi && endX !== undefined && (
                   <circle
                     cx={endX}
                     cy={endY}
@@ -555,55 +590,67 @@ export function ScopePane({
               />
             )}
           </g>
-          {(!channels.length || !visible.length || !times.length) && (
-            <text
-              x={left + plotWidth / 2}
-              y={top + plotHeight / 2}
-              textAnchor="middle"
-              fill="var(--muted-foreground)"
-              fontSize={12}
-            >
-              {emptyMessage}
-            </text>
-          )}
+          {!hideUi &&
+            (!channels.length || !visible.length || !times.length) && (
+              <text
+                x={left + plotWidth / 2}
+                y={top + plotHeight / 2}
+                textAnchor="middle"
+                fill="var(--muted-foreground)"
+                fontSize={12}
+              >
+                {emptyMessage}
+              </text>
+            )}
         </svg>
-        <div
-          className="absolute bottom-8 left-[55px] flex max-h-[60%] max-w-[calc(100%-67px)] flex-col items-stretch gap-1 overflow-auto text-xs"
-          aria-label="Scope traces"
-        >
-          {channels.map((channel) => (
-            <div
-              key={channel.id}
-              className="group/trace flex max-w-full min-w-0 items-center gap-1 rounded bg-background/80 px-1"
-              data-scope-channel={channel.id}
-              data-select-trace={channel.id}
-            >
-              <button
-                type="button"
-                className="min-w-0 flex-1 cursor-pointer truncate rounded px-1 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:font-semibold aria-pressed:underline aria-pressed:underline-offset-4"
-                style={{ color: channel.color }}
-                title={`Use ${channel.label} for the vertical axis`}
-                aria-pressed={axis?.id === channel.id}
-                onClick={() => onSelectTrace(channel.id)}
+        {!hideUi && (
+          <div
+            className="absolute bottom-8 left-[55px] flex max-h-[60%] max-w-[calc(100%-67px)] flex-col items-stretch gap-1 overflow-auto text-xs"
+            aria-label="Scope traces"
+          >
+            {channels.map((channel) => (
+              <div
+                key={channel.id}
+                className="group/trace flex max-w-full min-w-0 items-center gap-1 rounded bg-background/80 px-1"
+                data-scope-channel={channel.id}
+                data-select-trace={channel.id}
               >
-                {channel.label}
-              </button>
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                className="shrink-0 text-muted-foreground opacity-40 transition-opacity group-focus-within/scope:opacity-100 group-hover/scope:opacity-100 hover:text-foreground [@media(hover:none)]:opacity-100"
-                title="Trace settings"
-                aria-label={`Properties for trace ${channel.label}`}
-                onClick={() => {
-                  onSelectTrace(channel.id)
-                  onRenameChannel(channel.id, mappings.get(channel.id)?.scale)
-                }}
-              >
-                <SettingsIcon className="size-5" aria-hidden="true" />
-              </Button>
-            </div>
-          ))}
-        </div>
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 cursor-pointer truncate rounded px-1 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:font-semibold aria-pressed:underline aria-pressed:underline-offset-4"
+                  style={{ color: channel.color }}
+                  title={`Use ${channel.label} for the vertical axis`}
+                  aria-pressed={axis?.id === channel.id}
+                  onClick={() => onSelectTrace(channel.id)}
+                >
+                  {channel.label}
+                </button>
+                {channel.showRms && (
+                  <span
+                    className="shrink-0 whitespace-nowrap tabular-nums"
+                    style={{ color: channel.color }}
+                    title="Root mean square of the raw samples in the visible window"
+                  >
+                    RMS {rmsReadings.get(channel.id)}
+                  </span>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  className="shrink-0 text-muted-foreground opacity-40 transition-opacity group-focus-within/scope:opacity-100 group-hover/scope:opacity-100 hover:text-foreground [@media(hover:none)]:opacity-100"
+                  title="Trace settings"
+                  aria-label={`Properties for trace ${channel.label}`}
+                  onClick={() => {
+                    onSelectTrace(channel.id)
+                    onRenameChannel(channel.id, mappings.get(channel.id)?.scale)
+                  }}
+                >
+                  <SettingsIcon className="size-5" aria-hidden="true" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

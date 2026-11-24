@@ -50,6 +50,7 @@
       if (c.kind === 'potentiometer') {
         assert(Number.isFinite(v.resistance) && v.resistance > 0 && Number.isFinite(v.position) && v.position >= 0 && v.position <= 1, 'Potentiometer position must be between 0 and 1');
         assert(!Object.hasOwn(v, 'label') || typeof v.label === 'string', 'Potentiometer slider label must be text');
+        assert(!Object.hasOwn(v, 'showValues') || typeof v.showValues === 'boolean', 'Invalid potentiometer show values setting');
       }
       if (c.kind === 'analogSwitch' || c.kind === 'analogSpdtSwitch') assert([v.onResistance, v.offResistance].every(r => Number.isFinite(r) && r > 0 && Number.isFinite(1 / r)) && Number.isFinite(v.threshold) && typeof v.inverted === 'boolean' && typeof v.pulldown === 'boolean', 'Invalid analog switch parameters');
       if (c.kind === 'output') assert(typeof v.showVoltage === 'boolean', 'Invalid output marker');
@@ -86,6 +87,7 @@
       assert(p.scale === undefined || Number.isFinite(p.scale) && p.scale > 0, 'Invalid trace vertical scale');
       assert(p.offset === undefined || Number.isFinite(p.offset) && Math.abs(p.offset) <= 8, 'Invalid trace vertical position');
       assert(p.coupling === undefined || ['dc','ac'].includes(p.coupling), 'Invalid trace coupling');
+      assert(p.showRms === undefined || typeof p.showRms === 'boolean', 'Invalid trace RMS display setting');
       assert(p.polarity === undefined || p.kind === 'current' && [1,-1].includes(p.polarity), 'Invalid trace current polarity');
     }
     if (l.scopes !== undefined) {
@@ -114,6 +116,7 @@
         }
         assert(pane.order === undefined || Number.isSafeInteger(pane.order) && pane.order >= 0, 'Invalid scope order');
         assert(pane.sheetScale === undefined || Number.isFinite(pane.sheetScale) && pane.sheetScale > 0, 'Invalid scope sheet reference scale');
+        assert(pane.hideUi === undefined || typeof pane.hideUi === 'boolean', 'Invalid scope UI visibility');
       }
     }
     if (l.probes) {

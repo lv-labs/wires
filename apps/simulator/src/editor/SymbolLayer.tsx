@@ -5,7 +5,7 @@ import type { CircuitDocument, Component, Frame } from "./core"
 import { core } from "./core"
 import { sliderField, setProperty } from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
-import { sheetValue } from "./componentValue"
+import { format, sheetValue } from "./componentValue"
 import { SheetLabel } from "./SheetLabel"
 
 export function SymbolBody({
@@ -59,6 +59,39 @@ export function SymbolBody({
   )
 }
 
+function PotentiometerValues({ component, pose }: {
+  component: Component
+  pose: CircuitDocument["layout"]["components"][string]
+}) {
+  const pins = core.catalog.componentPins(component)
+  const resistance = Number(component.parameters.resistance)
+  const position = Number(component.parameters.position)
+  const segments = [["a", position], ["b", 1 - position]] as const
+  return (
+    <g fill="currentColor" stroke="none" opacity={0.7} pointerEvents="none">
+      {segments.map(([pin, fraction]) => {
+        const [x, y] = core.geometry.rotateOffset(
+          pins[pin][0] * (pose.mirror ? -1 : 1),
+          35,
+          pose.rotation
+        )
+        return (
+          <text
+            key={pin}
+            x={pose.x + x}
+            y={pose.y + y}
+            textAnchor={x < 0 ? "end" : "start"}
+            dominantBaseline="central"
+            fontSize={32}
+          >
+            {format(resistance * fraction, "Ω")}
+          </text>
+        )
+      })}
+    </g>
+  )
+}
+
 export const SymbolLayer = memo(function SymbolLayer({
   document,
   selected,
@@ -90,9 +123,11 @@ export const SymbolLayer = memo(function SymbolLayer({
         const isSelected = selected.includes(component.id)
         const scopeHighlighted = highlighted?.has(component.id)
         const current = frame?.componentCurrents?.[component.id] ?? 0
+        const pinVoltages = frame?.pinVoltages[component.id]
         const measured = {
           ...frame?.componentMeasurements?.[component.id],
-          voltage: frame?.pinVoltages[component.id]?.in ?? NaN,
+          voltage: pinVoltages?.in ?? NaN,
+          controlVoltage: pinVoltages?.control ?? null,
         }
         const displayComponent =
           sliderPreview?.id === component.id &&
@@ -106,7 +141,7 @@ export const SymbolLayer = memo(function SymbolLayer({
             sliderPreview.value
           )
         const value = sheetValue(displayComponent, {
-          pinVoltages: frame?.pinVoltages[component.id],
+          pinVoltages,
           measurement: measured,
         })
         return (
@@ -158,6 +193,10 @@ export const SymbolLayer = memo(function SymbolLayer({
               />
             </g>
             {/* Sheet labels are positioned outside the symbol's pose transform. */}
+            {displayComponent.kind === "potentiometer" &&
+              displayComponent.parameters.showValues === true && (
+                <PotentiometerValues component={displayComponent} pose={pose} />
+              )}
             {!core.catalog.graphic(component.kind) && value && (
               <SheetLabel pose={pose} kind={component.kind}>
                 {value}

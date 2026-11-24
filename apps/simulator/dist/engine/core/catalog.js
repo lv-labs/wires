@@ -256,6 +256,12 @@
           "optional": true,
           "default": 0
         },
+        "showVoltage": {
+          "label": "Show value on sheet",
+          "type": "boolean",
+          "optional": true,
+          "default": true
+        },
         "circleSymbol": {
           "label": "Circular symbol",
           "type": "boolean",
@@ -267,6 +273,7 @@
         "mode": 0,
         "resistance": 10000000,
         "scale": 0,
+        "showVoltage": true,
         "circleSymbol": true
       },
       "sign": 1
@@ -1614,21 +1621,20 @@
   };
   const basicDefinitions = {
     "npn": {
-      "drawingScale": 3.125,
       "prefix": "Q",
       "name": "NPN transistor",
       "pins": {
         "base": [
-          -150,
+          -200,
           0
         ],
         "collector": [
-          150,
-          -50
+          100,
+          -200
         ],
         "emitter": [
-          150,
-          50
+          100,
+          200
         ]
       },
       "parameters": {
@@ -2221,12 +2227,11 @@
       }
     },
     "output": {
-      "drawingScale": 3.125,
       "prefix": "O",
       "name": "Output marker",
       "pins": {
         "in": [
-          -150,
+          -100,
           0
         ]
       },
@@ -3014,10 +3019,11 @@
     return Array.from({length:count},()=>{if(i===0&&count%2===0)i++;return 16*i++;});
   }
   function validateGateParameters(p) {
-    const optional=['inputCount','propagationDelay','schmittInputs','invertInputs'];
+    const optional=['inputCount','propagationDelay','schmittInputs','invertInputs','initialOutputVoltage'];
     if(!p||Object.keys(p).some(k=>!['highVoltage',...optional].includes(k))||!Number.isFinite(p.highVoltage)||p.highVoltage<=0||
       !Number.isInteger(p.inputCount??2)||(p.inputCount??2)<1||(p.inputCount??2)>8||
       !Number.isFinite(p.propagationDelay??0)||(p.propagationDelay??0)<0||
+      Object.hasOwn(p,'initialOutputVoltage')&&!Number.isFinite(p.initialOutputVoltage)||
       ['schmittInputs','invertInputs'].some(k=>Object.hasOwn(p,k)&&typeof p[k]!=='boolean'))throw new Error('Invalid gate input count, delay or logic parameters');
     return structuredClone(p);
   }
@@ -3042,6 +3048,7 @@
       })).flat());
     }
     if(transistorKind(kind)&&p.swapTerminals){const pins=definition.pins;return {...pins,collector:pins.emitter,emitter:pins.collector};}
+    if(kind==='transformer'&&p.reverseSecondary){const pins=definition.pins;return {...pins,s1:pins.s2,s2:pins.s1};}
     if(mosfetKind(kind)) {
       const pins={...definition.pins};
       if(p.swapTerminals){const source=pins.source;pins.source=pins.drain;pins.drain=source;}
@@ -3067,8 +3074,8 @@
   const switchKind=kind=>['switch','pushSwitch','spdtSwitch','dpdtSwitch','mbbSwitch'].includes(kind);
   function switchDefaults(kind){return {onResistance:0,momentary:kind==='pushSwitch',linkLabel:'',iecSymbol:false,
     ...(kind==='spdtSwitch'?{group:0,throwCount:2,centerOff:false}:kind==='mbbSwitch'?{group:0}:kind==='dpdtSwitch'?{poleCount:2}:{})};}
-  const switchPositionCount=c=>c.kind==='spdtSwitch'?((c.parameters.centerOff??false)&&(c.parameters.throwCount??2)===2?3:c.parameters.throwCount??2):c.kind==='mbbSwitch'?4:2;
-  const momentary=c=>switchKind(c?.kind)&&(c.parameters.momentary??c.kind==='pushSwitch');
+  const switchPositionCount=c=>c.kind==='spdtSwitch'?((c.parameters.centerOff??false)&&(c.parameters.throwCount??2)===2?3:c.parameters.throwCount??2):c.kind==='mbbSwitch'?4:c.kind==='logicInput'&&c.parameters.mode==='ternary'?3:2;
+  const momentary=c=>c?.kind==='logicInput'?c.parameters.momentary===true:switchKind(c?.kind)&&(c.parameters.momentary??c.kind==='pushSwitch');
   function validateSwitchParameters(kind,p){
     const defaults=switchDefaults(kind),state=kind==='switch'?'closed':kind==='pushSwitch'?'normallyClosed':'position';
     if(!p||Object.keys(p).some(k=>![state,...Object.keys(defaults)].includes(k)))throw new Error('Unexpected switch parameters');

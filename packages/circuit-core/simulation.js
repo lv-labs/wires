@@ -12,17 +12,19 @@
       frame.frameSequence > lastSequence;
   }
   function create({workerFactory, onFrame, onState,
-      autoRun = true, batchSteps = 128, intervalMs = 16, retainSampleBatches = true,
+      autoRun = true, batchSteps = 128, intervalMs = 16, retainSampleBatches = true, autoBatchBudgetMs = 0,
       scheduleTask = setTimeout, cancelTask = clearTimeout} = {}) {
     if(typeof workerFactory!=='function')throw failure('INVALID_RUN_OPTIONS','A workerFactory transport is required');
     if (!Number.isSafeInteger(batchSteps) || batchSteps < 1 || batchSteps > 10000 ||
-        !Number.isFinite(intervalMs) || intervalMs < 0) throw failure('INVALID_RUN_OPTIONS', 'Invalid batch size or interval');
+        !Number.isFinite(intervalMs) || intervalMs < 0 || !Number.isFinite(autoBatchBudgetMs) || autoBatchBudgetMs < 0)
+      throw failure('INVALID_RUN_OPTIONS', 'Invalid batch size, interval or time budget');
     let active = null, candidate = null, stepPending = null, replacement = null;
     let desiredDocument = null, desiredCanonical = null, desiredDocumentId = null;
     let documentRevision = 0, circuitRevision = 0, nextEpoch = 0, generation = 0, acquisitionEpoch = 0;
     let sampleChannels=[];
-    let lastFrame = null, status = 'empty', lastError = null, disposed = false;
+    let lastFrame = null, status = 'empty', lastError = null, disposed = false, queuedPreview = null;
     let runRequested = autoRun, timer = null, livePending = null;
+    let previewNeedsBatch = false;
     const idleStatus = () => runRequested ? 'running' : 'paused';
     function cancelTick() {
       if (timer !== null) {cancelTask(timer); timer = null;}
@@ -31,15 +33,30 @@
       runRequested = false;
       cancelTick();
     }
-    function schedule(prompt = false) {
+    function automaticBatchCount(record) {
+      const requested = batchSteps || 1;
+      return autoBatchBudgetMs
+        ? Math.min(requested, Math.max(1, Math.floor(autoBatchBudgetMs / (record.msPerStep ?? .5))))
+        : requested;
+    }
+    function schedule(prompt = false, elapsedMs = 0) {
+      // Apply a waiting slider value at the batch boundary, before starting another solve.
+      if (!disposed && queuedPreview && (status === 'paused' || status === 'error' ||
+          status === 'running' && (!batchSteps ||
+            !previewNeedsBatch && isCurrentFrame(lastFrame, identity(active))))) {
+        const preview = queuedPreview;
+        queuedPreview = null;
+        notify(preview, () => undefined);
+      }
       if (!runRequested || disposed || timer !== null || stepPending || livePending ||
           (!batchSteps && !prompt) ||
           !current() || !['paused', 'running'].includes(status)) return;
       timer = scheduleTask(() => {
         timer = null;
-        if (runRequested && !disposed && !stepPending && !livePending && current() && status === 'running')
-          step(batchSteps || 1, true).catch(() => {});
-      }, prompt ? 0 : intervalMs);
+        if (runRequested && !disposed && !stepPending && !livePending && current() && status === 'running') {
+          step(automaticBatchCount(active), true).catch(() => {});
+        }
+      }, prompt ? 0 : Math.max(0, intervalMs - elapsedMs));
     }
     function setRunPacing(steps, interval) {
       assertOpen();
@@ -68,10 +85,20 @@
           isCurrentFrame(lastFrame, identity(active)) ? lastFrame : null,
         historicalFrame: lastFrame, error: lastError ? {code: lastError.code, message: lastError.message} : null});
     }
-    function notify(callback, value) {
-      try {callback?.(value());} catch (cause) {console.error('Simulation observer failed', cause);}
+    function notify(callback, value, metadata) {
+      try {callback?.(value(), metadata);} catch (cause) {console.error('Simulation observer failed', cause);}
     }
     function publish() {notify(onState, state);}
+    function acceptFrame(frame, preview) {
+      if (retainSampleBatches) lastFrame = copy(frame);
+      else {
+        // Acquisition consumes samples once. The sheet only needs telemetry.
+        const {sampleBatch, ...telemetry} = frame;
+        lastFrame = copy(telemetry);
+      }
+      if (frame.stopRequested) stopRun();
+      notify(onFrame, () => copy(frame), preview ? { preview: true } : undefined);
+    }
     function assertOpen() {if (disposed) throw failure('DISPOSED', 'Coordinator has been disposed');}
     function cancelCandidate() {
       if (candidate) {candidate.worker?.terminate(); candidate = null;}
@@ -90,6 +117,7 @@
     }
     function replace(compiled) {
       cancelTick();
+      previewNeedsBatch = false;
       const token = ++generation;
       const pendingChanges = livePending?.promise;
       cancelCandidate();
@@ -110,6 +138,8 @@
           const liveChanges=ready.capabilities?.liveChanges||ready.liveChanges||[];
           record.canUpdate=liveChanges.includes('updateCircuit');
           record.canSetSourceFrequency=liveChanges.includes('setSourceFrequency');
+          record.canSetPotPosition=liveChanges.includes('setPotPosition');
+          record.canLiveStep=(ready.capabilities?.liveStep??ready.liveStep)===true;
           const installed = await record.worker.request('installCircuit', {
             target: {documentId: record.documentId, circuitRevision: record.circuitRevision, runEpoch: record.runEpoch},
             payload: {circuit: JSON.parse(compiled.canonical)}
@@ -149,6 +179,14 @@
       const changed = [];
       before.devices.forEach((device, i) => {
         const next = after.devices[i];
+        if (active?.canSetPotPosition && device.id === next.id &&
+            device.kind === 'potentiometer' && next.kind === device.kind) {
+          const previous = device.parameters.position, position = next.parameters.position;
+          if (previous !== position) {
+            changed.push({componentId:device.id,position});
+            device.parameters.position = position;
+          }
+        }
         if (active?.canSetSourceFrequency && device.id === next.id && device.kind === next.kind &&
             (device.kind === 'voltageSource' || device.kind === 'voltageRail')) {
           const previous = device.parameters.waveform, waveform = next.parameters.waveform;
@@ -170,12 +208,13 @@
       });
       return changed.length === 1 && JSON.stringify(before) === compiled.canonical ? changed[0] : null;
     }
-    function commitLiveChange(saved, compiled, change) {
+    function commitLiveChange(saved, compiled, change, preview) {
       const token = generation, record = active, previous = livePending?.promise;
       desiredDocument = saved; desiredDocumentId = compiled.documentId; desiredCanonical = compiled.canonical;
       const revision = ++circuitRevision;
       status = 'updating'; lastError = null;
       const pending = {token};
+      let liveStepElapsed = null;
       pending.promise = (async () => {
         try {
           await Promise.resolve(); // register queue bookkeeping before any callbacks
@@ -186,10 +225,16 @@
           const operation = Object.hasOwn(change,'circuit') ? 'updateCircuit' :
             Object.hasOwn(change,'frequency') ? 'setSourceFrequency' :
             Object.hasOwn(change,'voltage') ? 'setVariableVoltage' :
+            Object.hasOwn(change,'position') ? 'setPotPosition' :
             Object.hasOwn(change,'field') ? 'setContact' : 'setSwitch';
+          const liveStep = preview && record.canLiveStep && runRequested && batchSteps
+            ? {count: automaticBatchCount(record), channels: copy(sampleChannels)}
+            : null;
+          pending.sampling = !!liveStep;
+          const started = liveStep ? performance.now() : 0;
           const ack = await record.worker.request(operation, {
             target: {documentId: record.documentId, circuitRevision: revision, runEpoch: record.runEpoch},
-            payload: {...change, statePolicy: 'preserve'}
+            payload: {...change, statePolicy: 'preserve', ...(liveStep ? {liveStep} : {})}
           });
           if (ack.sessionId !== record.sessionId || ack.documentId !== record.documentId ||
               ack.circuitRevision !== revision || ack.runEpoch !== record.runEpoch)
@@ -198,6 +243,17 @@
           // it meanwhile. Retained worker identity must describe its real state.
           record.circuitRevision = revision; record.canonical = compiled.canonical;
           if (disposed || token !== generation || active !== record) return {superseded: true};
+          if (liveStep) {
+            if (!isCurrentFrame(ack.frame, identity(record), lastFrame?.frameSequence || 0))
+              throw failure('INVALID_REPLY', 'Live step frame identity mismatch');
+            liveStepElapsed = performance.now() - started;
+            if (current(record)) {
+              // Acquisition needs the new revision before seeing its samples.
+              publish();
+              if (!disposed && token === generation && active === record && current(record))
+                acceptFrame(ack.frame, true);
+            }
+          }
           return ack;
         } catch (cause) {
           if (cause.code === 'ENGINE_FAILURE' || cause.disposition === 'faulted' || cause.code === 'INVALID_REPLY') record.dead = true;
@@ -211,8 +267,12 @@
           publish();
           // A drag must not repeatedly postpone physics by a full display interval.
           // Replace an older timer with a prompt solve once the latest edit lands.
-          if(!livePending && token===generation && status==='running'){cancelTick();schedule(true);}
-          else schedule();
+          if (!livePending && token === generation && status === 'running') {
+            cancelTick();
+            if (liveStepElapsed !== null) schedule(false, liveStepElapsed);
+            else if (preview && autoBatchBudgetMs) step(1, true, true).catch(() => {});
+            else schedule(true);
+          } else schedule();
         }
       })();
       livePending = pending;
@@ -220,7 +280,7 @@
       publish();
       return pending.promise;
     }
-    function setDocument(document) {
+    function setDocument(document, {preview = false} = {}) {
       assertOpen();
       const saved = copy(document);
       if(desiredDocumentId!==(typeof saved?.id==='string'?saved.id:null))acquisitionEpoch++;
@@ -238,10 +298,10 @@
       const change = !sameElectrical && singleLiveChange(compiled);
       if (change && active && !active.dead && status !== 'error' &&
           !(replacement?.token === generation) && (current() || livePending?.token === generation))
-        return commitLiveChange(saved, compiled, change);
+        return commitLiveChange(saved, compiled, change, preview);
       if(!sameElectrical&&active?.canUpdate&&!active.dead&&active.documentId===compiled.documentId&&
           !(replacement?.token===generation))
-        return commitLiveChange(saved,compiled,{circuit:JSON.parse(compiled.canonical)});
+        return commitLiveChange(saved,compiled,{circuit:JSON.parse(compiled.canonical)},preview);
       desiredDocument = saved; desiredDocumentId = compiled.documentId; desiredCanonical = compiled.canonical;
       if (!sameElectrical) circuitRevision++;
       if (sameElectrical && replacement?.token === generation) {publish(); return replacement.promise;}
@@ -249,7 +309,7 @@
       if (sameElectrical && current() && status !== 'error') {publish(); return Promise.resolve({reused: true, ...identity(active)});}
       return replace(compiled);
     }
-    function step(count, automatic = false) {
+    function step(count, automatic = false, preview = false) {
       assertOpen();
       if (!Number.isSafeInteger(count) || count < 1 || count > 10000)
         return Promise.reject(failure('INVALID_STEP', 'Step count must be 1–10000'));
@@ -260,20 +320,22 @@
       const previousSequence = lastFrame?.frameSequence || 0;
       const stepGeneration = generation;
       const pending = {};
+      const timed = automatic && autoBatchBudgetMs > 0 && !preview;
+      const started = timed ? performance.now() : 0;
+      let elapsed = 0;
       status = 'stepping';
+      if (!preview) previewNeedsBatch = false;
       pending.promise = (async () => {
         try {
           const frame = await Promise.resolve().then(() => record.worker.request('step', {payload: {count, ...(channels.length?{channels}:{})}}));
+          if (timed) {
+            elapsed = performance.now() - started;
+            const measured = Math.max(.001, elapsed / count);
+            record.msPerStep = (record.msPerStep ?? measured) * .5 + measured * .5;
+          }
           if (disposed || active !== record || !current(record) || stepGeneration !== generation ||
               !isCurrentFrame(frame, identity(record), previousSequence)) return null;
-          if (retainSampleBatches) lastFrame = copy(frame);
-          else {
-            // The acquisition observer consumes these once. The sheet only needs telemetry.
-            const {sampleBatch, ...telemetry} = frame;
-            lastFrame = copy(telemetry);
-          }
-          if(frame.stopRequested)stopRun();
-          notify(onFrame, () => copy(frame));
+          acceptFrame(frame, preview);
           return automatic ? null : copy(frame);
         } catch (cause) {
           if (!disposed && active === record && current(record) && stepGeneration === generation) {
@@ -284,7 +346,10 @@
         } finally {
           if (stepPending === pending) stepPending = null;
           if (!disposed && ['stepping', 'pausing'].includes(status)) status = idleStatus();
-          publish(); schedule();
+          // A stream of pointer values must leave room for a regular acquisition
+          // batch between one-step feedback frames.
+          if (preview && status === 'running') previewNeedsBatch = true;
+          publish(); schedule(false, preview ? intervalMs : elapsed);
         }
       })();
       stepPending = pending;
@@ -300,6 +365,7 @@
       return copy(result);
     }
     return {setDocument, readCapture, setRunPacing, setSampleChannels: channels=>{assertOpen();sampleChannels=Adapter.normalizeSampleChannels(channels);}, step: count => step(count), getState: state,
+      requestPreview: preview => {queuedPreview = disposed ? null : preview; if(queuedPreview)schedule();},
       run: () => {
         assertOpen();
         // Keep the user's intent even while an edit is being installed or repaired.
@@ -314,6 +380,7 @@
         if (status === 'stepping') status = 'pausing';
         publish();
         if (stepPending) await stepPending.promise.catch(() => {});
+        if (livePending?.sampling) await livePending.promise.catch(() => {});
         return state();
       },
       setSwitch: (componentId, closed) => {
@@ -336,7 +403,7 @@
         if (disposed) return;
         stopRun();
         disposed = true; generation++; cancelCandidate(); active?.worker.terminate();
-        active = null; lastFrame = null; status = 'disposed'; publish();
+        active = null; lastFrame = null; queuedPreview = null; status = 'disposed'; publish();
       }};
   }
   function presentationFrame(state){

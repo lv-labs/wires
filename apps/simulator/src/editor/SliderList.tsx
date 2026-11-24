@@ -57,6 +57,7 @@ export function SliderList({
   const scrollFrame = useRef<number | null>(null)
   const focusedHandle = useRef<HTMLButtonElement | null>(null)
   const [drop, setDrop] = useState<Drop | null>(null)
+  const [thumb, setThumb] = useState<{ id: string; value: number } | null>(null)
   const [announcement, setAnnouncement] = useState("")
   const instructions = useId()
 
@@ -150,7 +151,10 @@ export function SliderList({
       <ol
         ref={list}
         className="relative"
+        onPointerCancelCapture={() => setThumb(null)}
+        onTouchCancelCapture={() => setThumb(null)}
         onKeyDownCapture={(event) => {
+          if (event.key === "Escape") setThumb(null)
           if (event.key !== "Escape" || !drag.current) return
           event.stopPropagation()
           event.preventDefault()
@@ -170,9 +174,12 @@ export function SliderList({
             config,
           } = item
           const value =
-            adjustment?.id === component.id && sliderField(adjustment) === field
-              ? adjustment.value
-              : item.value
+            thumb?.id === id
+              ? thumb.value
+              : adjustment?.id === component.id &&
+                  sliderField(adjustment) === field
+                ? adjustment.value
+                : item.value
           const logarithmic = config?.logarithmic === true && min > 0
           const valueAt = (position: number) =>
             logarithmic
@@ -327,9 +334,13 @@ export function SliderList({
                 getAriaLabel={() => label}
                 getAriaValueText={(_, value) => displayValue(valueAt(value))}
                 onValueChange={(next) => {
-                  if (typeof next === "number") onPreview(item, valueAt(next))
+                  if (typeof next !== "number") return
+                  const value = valueAt(next)
+                  setThumb({ id, value })
+                  onPreview(item, value)
                 }}
                 onValueCommitted={(next) => {
+                  setThumb(null)
                   if (typeof next === "number")
                     onCommit(component.id, valueAt(next))
                 }}

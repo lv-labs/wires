@@ -26,8 +26,10 @@ export type TraceSettings = {
   scale?: number
   offset?: number
   coupling?: string
+  showRms?: boolean
   kind?: string
 }
+export type ScopeSamples = number[] | Float64Array
 export type ScopeChannel = SampleChannel & TraceSettings & { label: string }
 export type Hit = (Entity & { anchor?: boolean }) | Target
 export type Component = {
@@ -45,6 +47,7 @@ export type ScopePaneLayout = {
     level: number
   }
   sheetScale?: number
+  hideUi?: boolean
   order?: number
   x: number
   y: number
@@ -178,13 +181,14 @@ export type RunState = {
   frame?: Frame | null
 }
 export type Run = {
-  setDocument(d: CircuitDocument): Promise<{ activated?: boolean }>
+  setDocument(d: CircuitDocument, options?: { preview?: boolean }): Promise<{ activated?: boolean }>
   getState(): RunState
   run(): unknown
   pause(): Promise<unknown>
   step(count?: number): Promise<unknown>
   reset(): Promise<unknown>
   setRunPacing(steps: number, intervalMs: number): void
+  requestPreview(preview: (() => void) | null): void
   setSampleChannels(channels: SampleChannel[]): unknown
   readCapture(
     id: string
@@ -237,6 +241,7 @@ export const core = implementation as {
   }
   geometry: {
     distance(a: Point, b: Point): number
+    rotateOffset(x: number, y: number, rotation: number): [number, number]
     drawingBounds(drawing: Drawing): {
       x: number
       y: number
@@ -286,7 +291,10 @@ export const core = implementation as {
       d: CircuitDocument,
       a: Point,
       b: Point,
-      frame?: Frame | null
+      frame?: Frame | null,
+      componentBounds?: (
+        component: Component
+      ) => ReturnType<typeof core.geometry.bounds>
     ): Set<string>
     zoom(
       camera: Point & { scale: number },
@@ -441,9 +449,10 @@ export const core = implementation as {
     create(options: {
       workerFactory: unknown
       onState: (state: RunState) => void
-      onFrame?: (frame: Frame) => void
+      onFrame?: (frame: Frame, metadata?: { preview: true }) => void
       batchSteps?: number
       intervalMs?: number
+      autoBatchBudgetMs?: number
       retainSampleBatches?: boolean
     }): Run
     presentationFrame(s: RunState): Frame | null
@@ -457,17 +466,17 @@ export const core = implementation as {
       append(frame: Frame): boolean
       clear(): void
       readonly count: number
-      window(span: number): {
+      window(span: number, options?: { typed?: boolean }): {
         start: number
         end: number
         stored: number
         capacity: number
-        times: number[]
+        times: ScopeSamples
         channels: (TraceSettings & {
           id: string
           label: string
           color: string
-          values: number[]
+          values: ScopeSamples
           min: number | null
           max: number | null
           last?: number
@@ -476,8 +485,8 @@ export const core = implementation as {
     }
     color(id: string): string
     envelope(
-      times: number[],
-      values: number[],
+      times: ScopeSamples,
+      values: ScopeSamples,
       start: number,
       end: number,
       width: number

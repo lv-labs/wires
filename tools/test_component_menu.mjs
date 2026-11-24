@@ -16,7 +16,7 @@ const leaves=tree.flatMap(e=>e.children||[e]).filter(e=>e.legacyClass);
 assert.deepEqual(leaves.filter(e=>e.label.startsWith('Add ')).map(e=>JSON.stringify(e)).sort(),sourcePairs.map(e=>JSON.stringify(e)).sort(),'Every legacy component appears once, including named subcircuits and unresolved classes');
 const resolved=CircuitComponentMenu.entries(M.placementDefinitions),available=resolved.flatMap(e=>e.children||[e]);
 for(const entry of available){if(entry.available)assert.ok(['wire','select'].includes(entry.tool)||M.placementDefinitions[entry.tool]);else assert.ok(!entry.tool&&entry.reason);}
-for(const [label,tool] of [['Add Resistor','resistor'],['Add Counter','counter'],['Add Latch','latch'],['Add Adder','fullAdder'],['Add Half Adder','halfAdder'],['Add Clock','clockRail'],['Add Op Amp (ideal, + on top)','opampPlusTop'],['Add Op Amp (ideal, - on top)','opampMinusTop']])assert.equal(available.find(e=>e.label===label).tool,tool);
+for(const [label,tool] of [['Add Resistor','resistor'],['Add Counter','counter'],['Add 555 Timer','timer555'],['Add Relay','relay'],['Add Latch','latch'],['Add Adder','fullAdder'],['Add Half Adder','halfAdder'],['Add Clock','clockRail'],['Add Op Amp (ideal, + on top)','opampPlusTop'],['Add Op Amp (ideal, - on top)','opampMinusTop']])assert.equal(available.find(e=>e.label===label).tool,tool);
 assert.equal(available.find(e=>e.legacyClass==='CustomCompositeElm:~LM317-v2').available,false);
 assert.equal(available.find(e=>e.legacyClass==='PushSwitchElm').tool,'pushSwitch','Momentary switch has its own tool');
 assert.equal(available.find(e=>e.legacyClass==='RoutedWireElm').available,false);

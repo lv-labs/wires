@@ -64,6 +64,27 @@ for(const kind of ['corner','branch','pin','contact','probed']){
  const bends=d.electrical.wires.filter(w=>['lead','second'].includes(w.id)).map(w=>d.layout.wires[w.id].bends[0]?.x);assert.equal(new Set(bends).size,2,'Parallel attached wires get staggered bends');
  valid(drag.finish(),canonical);
 }
+
+// Several dropped pins can split the same wire at distinct points in one edit.
+{
+ const base=M.empty(),moving=new Set();
+ for(const [id,x] of [['first',200],['second',400]]){
+  base.electrical.components.push({id,kind:'labeledNode',modelVersion:1,parameters:{name:id}});
+  base.layout.components[id]=M.placementPose('labeledNode',{x,y:150},0,false);
+  moving.add(M.token('component',id));
+ }
+ for(const [id,x] of [['left',0],['right',600]]){
+  base.electrical.junctions.push({id});
+  base.layout.junctions[id]={x,y:0};
+ }
+ base.electrical.wires.push({id:'span',from:{kind:'junction',junctionId:'left'},to:{kind:'junction',junctionId:'right'}});
+ base.layout.wires.span={bends:[]};
+ const drag=M.createDragSession(base,moving);
+ assert.equal(drag.update(0,-150).electrical.wires.length,1);
+ const result=M.validate(drag.finish({contacts:true}));
+ assert.equal(result.electrical.wires.length,5);
+ assert.deepEqual(M.junctionDots(result).map(({point})=>point.x).sort((a,b)=>a-b),[200,400]);
+}
 console.log(`Drag sessions passed: ${checks} incremental/reversal states, zero-length wires, branch/pin constraints, contacts, probe anchors, crossings, stable previews, cleanup, section drag, grouped bends, cancel and atomic undo/redo.`);
 
 // Deterministic long gestures exercise repeated reversals and temporary-edge

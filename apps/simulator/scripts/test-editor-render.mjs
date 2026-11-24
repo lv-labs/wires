@@ -2,10 +2,17 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {createServer} from 'vite'
 import React from 'react'
-import {renderToString} from 'react-dom/server'
+import {renderToStaticMarkup, renderToString} from 'react-dom/server'
+import {outputFamilyCircuit} from '../../../tools/output_family_fixtures.mjs'
+import {passiveSwitchCircuit} from '../../../tools/passive_switch_fixtures.mjs'
 const server=await createServer({server:{middlewareMode:true,ws:false,watch:null},appType:'custom'})
 try {
   const {CircuitEditor}=await server.ssrLoadModule('/src/editor/CircuitEditor.tsx')
+  const {ScopePane}=await server.ssrLoadModule('/src/editor/ScopePane.tsx')
+  const {SymbolBody, SymbolLayer}=await server.ssrLoadModule('/src/editor/SymbolLayer.tsx')
+  const {sheetScopeDisplay}=await server.ssrLoadModule('/src/editor/scopeViewport.ts')
+  const {snapSheetScopeSize}=await server.ssrLoadModule('/src/editor/scopeSnapping.ts')
+  const {core}=await server.ssrLoadModule('/src/editor/core.ts')
   const {simulationPacing,snapSimulationSpeed}=await server.ssrLoadModule('/src/editor/simulationSpeed.ts')
   const {nearestScopeSample, scopeBounds, scopeColumnPath, scopePath, scopeTimeRuler, scopeWindow, traceDisplay, updateAutoRange} = await server.ssrLoadModule('/src/editor/scopeDisplay.ts')
   const {adjacentPositions, adjacentValueDivisions} = await server.ssrLoadModule('/src/editor/scopeScales.ts')
@@ -24,6 +31,78 @@ try {
   assert.equal((html.match(/>1 kΩ<\/text>/g)||[]).length,2)
   assert.doesNotMatch(html,/>R[12]<\/text>/)
   assert.ok(!html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').includes('NaN'))
+
+  const potDocument = core.document.empty()
+  const pot = {id: 'pot', kind: 'potentiometer', modelVersion: 1, parameters: {resistance: 1000, position: 0.25}}
+  potDocument.electrical.components.push(pot)
+  potDocument.layout.components.pot = {x: 0, y: 0, rotation: 0, mirror: false}
+  const renderPot = sliderPreview => renderToStaticMarkup(React.createElement(SymbolLayer, {
+    document: potDocument, selected: [], sliderPreview,
+  }))
+  assert.doesNotMatch(renderPot(), />(250|750) Ω<\/text>/)
+  const potCanonical = core.adapter.compile(potDocument).canonical
+  pot.parameters.showValues = true
+  assert.equal(core.adapter.compile(potDocument).canonical, potCanonical)
+  assert.equal(core.document.validate(JSON.parse(JSON.stringify(potDocument))).electrical.components[0].parameters.showValues, true)
+  assert.match(renderPot(), /<text x="-100" y="35" text-anchor="end"[^>]*>250 Ω<\/text>/)
+  assert.match(renderPot(), /<text x="100" y="35" text-anchor="start"[^>]*>750 Ω<\/text>/)
+  potDocument.layout.components.pot = {x: 0, y: 0, rotation: 90, mirror: true}
+  const potPreview = renderPot({kind: 'potentiometer', id: 'pot', value: 0.4})
+  assert.match(potPreview, /<text x="-35" y="100" text-anchor="end"[^>]*>400 Ω<\/text>/)
+  assert.match(potPreview, /<text x="-35" y="-100" text-anchor="end"[^>]*>600 Ω<\/text>/)
+
+  for (const kind of ['voltageSource', 'voltageRail']) {
+    const renderSource = waveform => renderToStaticMarkup(React.createElement(SymbolBody, {
+      component: {kind, parameters: {waveform}},
+      pose: {rotation: 90, mirror: true},
+    }))
+    const dc = renderSource({kind: 'dc', voltage: 5})
+    assert.match(dc, /scale\(-1 1\) rotate\(-90\)[^>]*><path d="M -24 -9 H 24\s+M -24 9 H -14\s+M -5 9 H 5\s+M 14 9 H 24"/)
+    assert.doesNotMatch(dc, /C -20 -30/)
+    const sine = renderSource({kind: 'sine', amplitude: 1, frequency: 1000, offset: 0})
+    assert.match(sine, /M -25 0\s+C -20 -30/)
+  }
+
+  function renderAnalogSwitch(kind, control, inverted = false) {
+    const document = passiveSwitchCircuit(kind, {threshold: 3, inverted})
+    const frame = control === undefined ? null : {pinVoltages: {part: {control}}}
+    return renderToStaticMarkup(React.createElement(SymbolLayer, {document, selected: [], frame}))
+  }
+  assert.match(renderAnalogSwitch('analogSwitch'), /M -20 0\s+L 18 -12/)
+  assert.match(renderAnalogSwitch('analogSwitch', 2.9), /M -20 0\s+L 18 -12/)
+  assert.match(renderAnalogSwitch('analogSwitch', 3), /M -20 0\s+L 20 0/)
+  assert.match(renderAnalogSwitch('analogSwitch', 2.9, true), /M -20 0\s+L 20 0/)
+  assert.match(renderAnalogSwitch('analogSwitch', 3, true), /M -20 0\s+L 18 -12/)
+  assert.match(renderAnalogSwitch('analogSpdtSwitch'), /M -40 0\s+L 50 -50/)
+  assert.match(renderAnalogSwitch('analogSpdtSwitch', 2.9), /M -40 0\s+L 50 50/)
+  assert.match(renderAnalogSwitch('analogSpdtSwitch', 3), /M -40 0\s+L 50 -50/)
+  assert.match(renderAnalogSwitch('analogSpdtSwitch', 2.9, true), /M -40 0\s+L 50 -50/)
+  assert.match(renderAnalogSwitch('analogSpdtSwitch', 3, true), /M -40 0\s+L 50 50/)
+
+  const netDocument = outputFamilyCircuit('labeledNode', {name: 'POWER_SENSE'})
+  const netHtml = renderToString(React.createElement(CircuitEditor,{initialDocument:netDocument,autosave:false}))
+  const netLabels = netHtml.match(/<text\b[^>]*>POWER_SENSE<\/text>/g) ?? []
+  assert.equal(netLabels.length, 1)
+  assert.match(netLabels[0], /text-anchor="middle"/)
+  assert.match(netLabels[0], /dominant-baseline="central"/)
+
+  const netCanonical = core.adapter.compile(netDocument).canonical
+  for (const boxStyle of [undefined, 'solid', 'dashed', 'none']) {
+    const document = structuredClone(netDocument)
+    const component = document.electrical.components.find(({id}) => id === 'part')
+    if (boxStyle === undefined) delete component.parameters.boxStyle
+    else component.parameters.boxStyle = boxStyle
+    const saved = core.document.validate(JSON.parse(JSON.stringify(document)))
+    assert.equal(saved.electrical.components.find(({id}) => id === 'part').parameters.boxStyle, boxStyle)
+    assert.equal(core.adapter.compile(saved).canonical, netCanonical)
+    const symbol = renderToStaticMarkup(React.createElement(SymbolBody, {
+      component, pose: {...document.layout.components.part, rotation: 90, mirror: true},
+    }))
+    assert.match(symbol, />POWER_SENSE<\/text>/)
+    assert.match(symbol, /M -48 0\s+L -24 0/)
+    assert.equal(symbol.includes('<rect'), boxStyle === 'solid' || boxStyle === 'dashed')
+    assert.equal(symbol.includes('stroke-dasharray="5 4"'), boxStyle === 'dashed')
+  }
 
   const legacy=structuredClone(initialDocument)
   legacy.layout.probes={'probe-out':{x:50,y:-100,decimals:2,alignment:'center'}}
@@ -111,6 +190,80 @@ try {
   assert.equal(scopeWindow(triggerChannels, triggerTimes, 1, {...trigger, level: 2}).times.length, 0)
   assert.deepEqual(scopeWindow(triggerChannels, triggerTimes, 1, {...trigger, mode: 'auto', level: 2}).times, scopeWindow(triggerChannels, triggerTimes, 1).times)
   assert.equal(scopeWindow(triggerChannels, triggerTimes.slice(0, 2), 1, trigger).triggered, false, 'Incomplete sweeps wait')
+
+  const rmsDocument = structuredClone(initialDocument)
+  rmsDocument.probes[0].showRms = true
+  rmsDocument.probes[0].coupling = 'ac'
+  const savedRmsDocument = core.document.validate(JSON.parse(JSON.stringify(rmsDocument)))
+  const acquisition = core.signals.create()
+  acquisition.setChannels(core.geometry.scopeChannels(savedRmsDocument).channels)
+  const [voltageTrace] = acquisition.window(1).channels
+  const currentTrace = {id: 'current', label: 'Current', color: '#fff', kind: 'current', showRms: true}
+  const renderScopePane = (channels, times, end = 1, rendering = 'stepped', props = {}) =>
+    renderToStaticMarkup(React.createElement(ScopePane, {
+      id: 'scope', start: 0, end, times, timeDivision: 0.1, cursor: null,
+      channels, rendering, ...props,
+    }))
+  const rmsVoltage = {...voltageTrace, values: new Float64Array([3, 4, 100]), min: 3, max: 100}
+  const rmsCurrent = {...currentTrace, values: [0.003, -0.003, 100], min: -0.003, max: 100}
+  const rmsHtml = renderScopePane([rmsVoltage, rmsCurrent], [0, 0.5, 1.1])
+  assert.match(rmsHtml, />RMS 3\.536 V</)
+  assert.match(rmsHtml, />RMS 3 mA</)
+  assert.match(renderScopePane([
+    {...rmsVoltage, values: [-5, 5], min: -5, max: 5},
+    {...rmsCurrent, values: [0.003, -0.003], max: 0.003}],
+    [0.5, 1],
+  ), />RMS 5 V</)
+  assert.match(renderScopePane([voltageTrace, {...currentTrace, values: [], min: null, max: null}], []), />RMS —</)
+  assert.doesNotMatch(renderScopePane([{...rmsVoltage, showRms: undefined}, {...rmsCurrent, showRms: false}], [0, 0.5, 1.1]), />RMS /)
+
+  const triangle = {...voltageTrace, values: [0, 1, 2, 1, 0], min: 0, max: 2, scale: 1}
+  const triangleTimes = [0, 0.25, 0.5, 0.75, 1]
+  const wavePath = (mode) => renderScopePane([triangle], triangleTimes, 1, mode)
+    .match(/<path id="[^"]+-0" d="([^"]+)"/)?.[1]
+  assert.match(wavePath('smooth'), /L\d+ \d+/)
+  assert.match(wavePath('stepped'), /H\d+V\d+/)
+  assert.doesNotMatch(wavePath('stepped'), /L/)
+
+  const visualiserHtml = renderScopePane(
+    [{...triangle, showRms: true}], triangleTimes, 1, 'smooth',
+    {hideUi: true, cursor: 0.5, liveFraction: 0.25},
+  )
+  assert.match(visualiserHtml, /data-scope-trace=/)
+  assert.match(visualiserHtml, /<rect x="4" y="4" width="712" height="192"/)
+  assert.match(visualiserHtml, /data-scope-cursor-time="0.5" d="M182 4V196"/)
+  assert.doesNotMatch(visualiserHtml, /<text\b|Scope scales|Scope traces|data-scope-cursor-value=|<title\b/)
+  const lockedVisualiserHtml = renderScopePane([triangle], triangleTimes, 1, 'smooth',
+    {hideUi: true, cursor: 0.5},
+  )
+  assert.match(lockedVisualiserHtml, /data-scope-cursor-time="0.5" d="M360 4V196"/)
+  assert.doesNotMatch(lockedVisualiserHtml, /data-scope-cursor-value=/)
+  const scopeVisibilityDocument = structuredClone(initialDocument)
+  scopeVisibilityDocument.layout.scopes = {
+    version: 1, open: true, assignments: {}, activeTraces: {}, height: 260,
+    panes: {
+      visualiser: {mode: 'docked', x: 0, y: 0, width: 640, height: 280, weight: 1, timeDivision: 0.1, hideUi: true},
+    },
+  }
+  assert.equal(core.document.validate(JSON.parse(JSON.stringify(scopeVisibilityDocument)))
+    .layout.scopes.panes.visualiser.hideUi, true)
+
+  const resizedSheetScope = {width: 220, height: 100, sheetScale: 0.5}
+  const placedAtHighZoom = {...resizedSheetScope, sheetScale: 1.28}
+  const resizedDisplay = sheetScopeDisplay(resizedSheetScope, 0.5)
+  assert.deepEqual(resizedDisplay, sheetScopeDisplay(placedAtHighZoom, 0.5))
+  assert.deepEqual(resizedDisplay, {width: 440, height: 200, scale: 0.25})
+  assert.deepEqual(sheetScopeDisplay({width: 440, height: 200}, 0.5),
+    {width: 440, height: 200, scale: 0.5}, 'A proportional resize scales the UI with the plot')
+  const tallDisplay = sheetScopeDisplay({width: 220, height: 400}, 0.5)
+  assert.deepEqual(tallDisplay, {width: 440, height: 800, scale: 0.25},
+    'Resizing one axis preserves the requested aspect ratio with uniform text scaling')
+  const minimumSheetScope = snapSheetScopeSize(220, 100)
+  assert.deepEqual(minimumSheetScope, {width: 1250, height: 600})
+  assert.deepEqual(snapSheetScopeSize(1330, 680), {width: 1350, height: 700})
+  assert.ok(sheetScopeDisplay(minimumSheetScope, 0.32).scale > 0.9,
+    'At the standard sheet zoom the smallest scope retains near-normal text size')
+
   const bounds = scopeBounds(times, 2.75)
   assert.equal(nearestScopeSample(times, bounds.start, bounds.index), 2)
   assert.equal(nearestScopeSample(times, bounds.end, bounds.index), 4)

@@ -220,7 +220,7 @@
     for(const drawing of [...(document.layout.drawings||[])].reverse())if(drawingHit(drawing,point,scale))return {kind:'drawing',id:drawing.id};
     return null;
   }
-  function boxSelection(d, a, b, frame) {
+  function boxSelection(d, a, b, frame, componentBounds = c => bounds(d, c)) {
     const r = { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), right: Math.max(a.x, b.x), bottom: Math.max(a.y, b.y) }, crossing = b.x < a.x, result = new Set();
     const inside = p => p.x >= r.x && p.x <= r.right && p.y >= r.y && p.y <= r.bottom;
     const rectangle = q => crossing ? q.x <= r.right && q.right >= r.x && q.y <= r.bottom && q.bottom >= r.y : inside(q) && inside({ x: q.right, y: q.bottom });
@@ -233,7 +233,7 @@
         if (low > high) return false;
       } return true;
     };
-    for (const c of d.electrical.components) if (rectangle(bounds(d, c))) result.add(token('component', c.id));
+    for (const c of d.electrical.components) if (rectangle(componentBounds(c))) result.add(token('component', c.id));
     for (const w of d.electrical.wires) { const points = route(d, w); if (crossing ? points.some((p, i) => inside(p) || (i && segment(points[i - 1], p))) : points.every(inside)) result.add(token('wire', w.id)); }
     for (const j of d.electrical.junctions) if (inside(d.layout.junctions[j.id])) result.add(token('junction', j.id));
     for (const probe of d.probes) if (probe.kind === 'voltage' && d.layout.probes?.[probe.id] && rectangle(probeBounds(d, probe, probeVoltage(d, probe, frame)))) result.add(token('probe', probe.id));

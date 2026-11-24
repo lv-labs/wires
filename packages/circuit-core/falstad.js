@@ -13,16 +13,16 @@
     i:'currentSource',s:'switch',O:'output',L:'logicInput',M:'logicOutput',d:'diode',z:'zener','162':'led',
     a:'opamp',S:'spdtSwitch',t:'npn',f:'nmos',j:'njfet',p:'voltmeter',I:'inverter',n:'noiseSource',A:'antennaSource',T:'transformer',m:'memristor',
     '150':'andGate','151':'nandGate','152':'orGate','153':'norGate','154':'xorGate','431':'xnorGate',
-    '155':'dFlipFlop','156':'jkFlipFlop','193':'tFlipFlop',
+    '155':'dFlipFlop','156':'jkFlipFlop','193':'tFlipFlop','165':'timer555',
     '159':'analogSwitch','160':'analogSpdtSwitch','182':'schmittTrigger','183':'invertingSchmittTrigger',
     '169':'tappedTransformer','170':'sweepSource','171':'transmissionLine','172':'variableVoltage','173':'triode','174':'potentiometer',
-    '175':'tunnelDiode','176':'varactor','181':'lamp','187':'sparkGap','207':'labeledNode',
-    '200':'amSource','201':'fmSource','211':'audioOutput',
+    '175':'tunnelDiode','176':'varactor','177':'scr','178':'relay','181':'lamp','187':'sparkGap','207':'labeledNode',
+    '200':'amSource','201':'fmSource','203':'diac','206':'triac','211':'audioOutput',
     '209':'polarizedCapacitor','368':'testPoint','370':'ammeter','419':'decimalDisplay',
   };
   const quarterTurn=angle=>((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
   const midpoint=(a,b)=>({x:a.x+(b.x-a.x)/2,y:a.y+(b.y-a.y)/2});
-  const sidePins={a:'minus',S:'a',t:'collector',f:'source',j:'source','159':'control','160':'a','173':'plate','174':'wiper'};
+  const sidePins={a:'minus',S:'a',t:'collector',f:'source',j:'source','159':'control','160':'a','173':'plate','174':'wiper','177':'gate','206':'gate'};
   const drawingKinds={x:'text',b:'box','423':'line'};
   const textEscapes={n:'\n',r:'\r',s:' ',p:'+',q:'=',h:'#',a:'&'};
   const unescapeText=text=>text==='\\0'?'':text.replace(/\\(.)/gs,(_,key)=>textEscapes[key]??key);
@@ -78,12 +78,54 @@
     return {anchor:midpoint(start,corner),offsets,rotation,mirror,originOffset:[0,0],posts,along,across,minScale};
   }
 
+  function thyristorPosts({type,x1,y1,x2,y2,flags},grid) {
+    const dx=x2-x1,dy=y2-y1,horizontal=Math.abs(dx)>Math.abs(dy);
+    const end={x:horizontal?x2:x1,y:horizontal?y1:y2};
+    // Legacy SCRs used the diagonal length even after straightening the main posts.
+    const length=type==='177'&&!(flags&1)?Math.hypot(dx,dy):Math.max(Math.abs(dx),Math.abs(dy));
+    const leadLength=(length-16)/2;
+    const gateLength=grid+leadLength%grid;
+    if(leadLength<gateLength)throw new Error('Thyristor is too short for a gate post');
+    const direction=(horizontal?-1:1)*Math.sign(dx)*Math.sign(dy)||1;
+    const fraction=(length+16)/(2*length);
+    const round=value=>Math.floor(value+.48);
+    const lead={x:round(x1*(1-fraction)+end.x*fraction),y:round(y1*(1-fraction)+end.y*fraction)};
+    const gateFraction=gateLength/leadLength;
+    const side=2*grid*direction;
+    const gate={
+      x:round(lead.x*(1-gateFraction)+end.x*gateFraction+(horizontal?0:Math.sign(dy)*side)),
+      y:round(lead.y*(1-gateFraction)+end.y*gateFraction-(horizontal?Math.sign(dx)*side:0)),
+    };
+    if(type==='177'){
+      const snap=value=>Math.floor((value+grid/2-1)/grid)*grid;
+      gate.x=snap(gate.x);gate.y=snap(gate.y);
+    }
+    return [{x:x1,y:y1},end,gate];
+  }
+
   function symbolLayout(record,component) {
     const {type,pins,x1,y1,x2,y2}=record;
-    const start={x:x1,y:y1},end=type==='174'?record.posts[1]:{x:x2,y:y2};
+    const start={x:x1,y:y1},end=['174','177','206'].includes(type)?record.posts[1]:{x:x2,y:y2};
     const offsets=Catalog.componentPins(component),first=offsets[type==='173'?'grid':pins[0]];
     const dx=end.x-start.x,dy=end.y-start.y;
     if(Object.hasOwn(flipFlopPosts,type))return chipLayout(record,offsets,2,3,flipFlopPosts[type]);
+    if(type==='178'){
+      const {poleCount,coilStyle}=component.parameters,len=Math.hypot(dx,dy);
+      const direction=(dy===0?Math.sign(dx):Math.sign(dy))*(record.flags&8?-1:1);
+      const mirror=direction<0;
+      const rotation=quarterTurn(Math.atan2(dy,dx)+(mirror?Math.PI:0));
+      const posts=Catalog.relayPostOffsets(poleCount,coilStyle).map(([along,across])=>({
+        x:Math.floor(x1+along*dx-across*16*direction*dy/len+.48),
+        y:Math.floor(y1+along*dy+across*16*direction*dx/len+.48),
+      }));
+      const along=Math.abs(dx)>=Math.abs(dy)?'x':'y';
+      return {anchor:midpoint(start,end),offsets,rotation,mirror,originOffset:[0,0],posts,
+        along,across:along==='x'?'y':'x',minScale:Math.max(50/16,200/len)};
+    }
+    if(type==='165'){
+      const layout=chipLayout(record,offsets,3,5,Catalog.timerPostOffsets.slice(0,pins.length));
+      return {...layout,minScale:Catalog.grid/(record.flags&1?16:32)};
+    }
     if(type==='419')return chipLayout(record,offsets,3,4,[[-1,3],[-1,2],[-1,1],[-1,0]]);
     if(type==='171') {
       return rectangularLayout(offsets,record.posts,start,end,record.posts[1],'left','right','leftReturn');
@@ -127,6 +169,7 @@
     if(gate&&pins.length>3)minScale=Math.max(minScale,Catalog.grid/(record.flags&1?8:16));
     if(type==='159'||type==='160')minScale=Math.max(minScale,Math.abs(offsets.control[1])/16);
     if(type==='174')minScale=Math.max(minScale,Math.abs(offsets.wiper[1]/(posts[2][across]-anchor[across])));
+    if(type==='177'||type==='206')minScale=Math.max(minScale,Math.abs(offsets.gate[1])/Math.abs(posts[2][across]-end[across]));
     return {anchor,offsets,rotation,mirror,originOffset,posts,along,across,minScale};
   }
 
@@ -165,8 +208,10 @@
           if(flags&192)throw new Error('Adaptive timestep and automatic DC operating point are not supported');
           continue;
         }
-        if(type==='o'){
-          scopes.push({line,tokens,xml:xml?.scopes.get(line)});continue;
+        if(type==='o'||type==='403'){
+          // Embedded scopes occupy an element index in Falstad, even without posts.
+          if(type==='403')records.push({type,line});
+          scopes.push({line,tokens,xml:xml?.scopes.get(line),onSheet:type==='403'});continue;
         }
         if(['h','&','38'].includes(type)) {
           diagnostic('warning',line,'UNSUPPORTED_PRESENTATION',`${type==='h'?'Hint':'Slider'} settings are not imported yet`);continue;
@@ -220,6 +265,23 @@
           maxFields=10;
         }
         if(type==='187'){
+          flagsAllowed(flags,0);
+          parameters={onResistance:number(5),offResistance:number(6),breakdownVoltage:number(7),holdingCurrent:number(8)};
+          maxFields=9;
+        }
+        if(type==='177'||type==='206'){
+          const scr=type==='177',firstField=scr?7:5;
+          flagsAllowed(flags,scr?1:0);
+          parameters={triggerCurrent:number(firstField,.01),holdingCurrent:number(firstField+1,.0082),
+            gateResistance:number(firstField+2,scr?50:100)};
+          if(!scr&&!['true','false'].includes(tokens[8]))throw new Error('Invalid TRIAC state');
+          const hasSavedState=scr?[number(5,0),number(6,0)].some(value=>value!==0):tokens[8]==='true';
+          if(hasSavedState)
+            diagnostic('warning',line,'RESET_STATE',scr?'SCR starts at zero bias':'TRIAC starts in the off state');
+          maxFields=scr?10:9;
+          record.posts=thyristorPosts(record,legacyGrid);
+        }
+        if(type==='203'){
           flagsAllowed(flags,0);
           parameters={onResistance:number(5),offResistance:number(6),breakdownVoltage:number(7),holdingCurrent:number(8)};
           maxFields=9;
@@ -338,6 +400,23 @@
           else record.posts.push({x:x2,y:y2});
           record.posts.push(control);
           maxFields=8;
+        }
+        if(type==='178'){
+          flagsAllowed(flags,31);
+          if(x1===x2&&y1===y2)throw new Error('Zero-length relay layout is not supported');
+          const onCurrent=number(10);
+          parameters={poleCount:number(5),inductance:number(6),initialCoilCurrent:number(7),onResistance:number(8),
+            offResistance:number(9),onCurrent,coilResistance:number(11),offCurrent:number(12,onCurrent),
+            switchingTime:number(13,0),initialPosition:number(14,0),coilStyle:flags&1?2:flags&4?0:1,
+            showBox:!!(flags&2),pulldown:!!(flags&16)};
+          maxFields=15;
+        }
+        if(type==='165'){
+          flagsAllowed(flags,1|2|4|8|1024|2048|4096|8192);
+          const stateIndex=flags&8192?6:5;
+          if(flags&8192)number(5);
+          parameters={resetPin:!!(flags&2)||!!(flags&4),groundPin:!!(flags&4),pinNumbers:!!(flags&8),initialOutputVoltage:number(stateIndex)};
+          maxFields=stateIndex+1;
         }
         if(Object.hasOwn(flipFlopPosts,type)){
           const jk=type==='156';
@@ -507,7 +586,7 @@
         records.push({...record,kind,parameters,pins});
       }catch(error){diagnostic('error',line,'UNSUPPORTED_OR_INVALID_RECORD',error.message);}
     }
-    if(!records.some(r=>r.kind||Object.hasOwn(drawingKinds,r.type))&&(!header||records.length))diagnostic('error',0,'EMPTY_CIRCUIT','No supported components found');
+    if(!records.some(r=>r.kind||Object.hasOwn(drawingKinds,r.type))&&(!header||records.some(r=>r.type!=='403')))diagnostic('error',0,'EMPTY_CIRCUIT','No supported components found');
     if(diagnostics.some(d=>d.severity==='error'))return {document:null,diagnostics};
     // Use one scale for the circuit and snap the artwork independently. An odd
     // source coordinate should not force every symbol and wire farther apart.
@@ -531,6 +610,7 @@
       const id=`w${doc.electrical.wires.length+1}`;doc.electrical.wires.push({id,from,to});doc.layout.wires[id]={bends};
     }
     for(const r of records) {
+      if(r.type==='403')continue;
       const start={x:r.x1,y:r.y1};
       if(r.type==='w'){
         r.voltageTarget=junction(start);
@@ -567,7 +647,7 @@
         const [rx,ry]=Geometry.rotateOffset(mirror?-x:x,y,rotation);
         const pin={x:pose.x+rx,y:pose.y+ry},post=doc.layout.junctions[to.junctionId];
         const bends=[];
-        const branch=pinId==='control'&&(r.type==='159'||r.type==='160');
+        const branch=pinId==='control'&&(r.type==='159'||r.type==='160')||pinId==='gate'&&(r.type==='177'||r.type==='206');
         const axis=branch?across:along,cross=branch?along:across;
         if(axis&&pin[axis]!==post[axis]&&pin[cross]!==post[cross]) {
           const turn=r.pins.length===2?post[axis]:Geometry.snap(midpoint(pin,post)[axis]);
@@ -589,7 +669,7 @@
         wire({kind:'pin',componentId:id,pinId:'g'},junction(post));
       }
     }
-    Scopes.restore(doc,records,scopes,(line,code,message)=>diagnostic('warning',line,code,message));
+    Scopes.restore(doc,records,scopes,scale,(line,code,message)=>diagnostic('warning',line,code,message));
     try {Document.validate(doc);}catch(error){diagnostic('error',0,'INVALID_DOCUMENT',error.message);return {document:null,diagnostics};}
     return {document:doc,diagnostics};
   }

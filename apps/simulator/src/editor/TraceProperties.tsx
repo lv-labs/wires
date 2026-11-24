@@ -21,6 +21,7 @@ export type TraceEdits = {
   scale?: number
   offset: number
   coupling: string
+  showRms?: boolean
 }
 
 export function TraceProperties({
@@ -79,6 +80,7 @@ export function TraceProperties({
             scale,
             offset,
             coupling,
+            showRms: fields.has("showRms") || undefined,
           })
         }}
       >
@@ -202,6 +204,14 @@ export function TraceProperties({
             </p>
           )}
         </fieldset>
+        <label className="flex items-center gap-2 border-t pt-3">
+          <input
+            type="checkbox"
+            name="showRms"
+            defaultChecked={probe.showRms}
+          />
+          Show live RMS on scope
+        </label>
         <details className="border-t pt-3 text-xs">
           <summary className="cursor-pointer font-medium">
             Measurements{" "}

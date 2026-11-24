@@ -16,10 +16,12 @@ import {
   floatingBounds,
   snapFloating,
   snapFloatingSize,
+  snapSheetScopeSize,
 } from "./scopeSnapping"
 import type { PanelBox } from "./scopeSnapping"
 import { useScopeLayout } from "./scopeLayout"
-import type { ScopeLayout, ScopePaneLayout } from "./core"
+import type { ScopeLayout, ScopePaneLayout, ScopeSamples } from "./core"
+import { defaultScopeSize, sheetScopeDisplay } from "./scopeViewport"
 import type { ScopeViewportStore } from "./scopeViewport"
 import {
   memo,
@@ -39,6 +41,7 @@ import { GripIcon, GripVerticalIcon } from "lucide-react"
 import { ScopeContextMenu } from "./ScopeContextMenu"
 import type { ScopeMode, TracePatch } from "./ScopeContextMenu"
 import { scopeWindow, nearestScopeSample } from "./scopeDisplay"
+import type { ScopeRendering } from "./scopeDisplay"
 import { ScopePane } from "./ScopePane"
 import type { ScopeTrace } from "./ScopePane"
 
@@ -68,13 +71,14 @@ const initialLayout = (): Layout => ({
   timeDivision: 0.02,
   x: 24,
   y: 64,
-  width: 640,
-  height: 280,
+  ...defaultScopeSize,
   weight: 1,
 })
 const stationaryViewport = { x: 0, y: 0, scale: 1, top: 0 }
 const scopeGripClass =
   "flex w-5 shrink-0 cursor-grab touch-none items-center justify-center border-r border-border/70 bg-muted/25 text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:outline-none active:cursor-grabbing"
+const revealScopeHandle =
+  "opacity-0 group-hover/scope-shell:opacity-100 group-focus-within/scope-shell:opacity-100 [@media(hover:none)]:opacity-100"
 /** Pointer capture keeps resizing local, including when the pointer leaves the handle. */
 function DragHandle({
   label,
@@ -180,6 +184,7 @@ export function ScopeWorkspace({
   times,
   cursor,
   open,
+  rendering,
   sheet,
   onCursorCommit,
   onLeave,
@@ -194,9 +199,10 @@ export function ScopeWorkspace({
   onDockOpen,
 }: {
   channels: ScopeTrace[]
-  times: number[]
+  times: ScopeSamples
   cursor: number | null
   open: boolean
+  rendering: ScopeRendering
   sheet: RefObject<HTMLDivElement | null>
   onCursorCommit: (time: number | null) => void
   onLeave: () => void
@@ -325,16 +331,14 @@ export function ScopeWorkspace({
 
   const dockTree = normalizeDock(dock, docked, (id) => layoutFor(id).weight)
   const dockMinimum = dockSize(dockTree)
-  const maxTimeDivision = Math.max(
-    0.02,
-    ...[...groups.keys()].map(
-      (id) =>
-        layoutFor(id).timeDivision *
-        (layoutFor(id).trigger?.mode && layoutFor(id).trigger?.mode !== "off"
-          ? 2
-          : 1)
-    )
-  )
+  const maxTimeDivision = groups.size
+    ? Math.max(
+        ...[...groups.keys()].map((id) => {
+          const { timeDivision, trigger } = layoutFor(id)
+          return timeDivision * (trigger && trigger.mode !== "off" ? 2 : 1)
+        })
+      )
+    : 0.02
   useEffect(() => {
     onTimeWindow(maxTimeDivision)
   }, [maxTimeDivision, onTimeWindow])
@@ -423,12 +427,6 @@ export function ScopeWorkspace({
   ) {
     return snapFloating(layout, x, y, bounds, snapTargets.current)
   }
-  function gridSize(value: number, minimum: number) {
-    return Math.max(
-      Math.ceil(minimum / core.geometry.grid) * core.geometry.grid,
-      core.geometry.snap(value)
-    )
-  }
   function boundedPanelHeight(value: number) {
     const maximum = window.innerHeight * 0.5
     return Math.min(maximum, Math.max(Math.min(180, maximum), value))
@@ -512,13 +510,16 @@ export function ScopeWorkspace({
     [cancelHoverFrame, times, layouts, groups, onCursorCommit]
   )
   function renderPane(id: string) {
+    const layout = layoutFor(id)
     return (
       <ScopeContent
         id={id}
         channels={groups.get(id)!}
         times={times}
-        timeDivision={layoutFor(id).timeDivision}
-        trigger={layoutFor(id).trigger}
+        rendering={rendering}
+        timeDivision={layout.timeDivision}
+        trigger={layout.trigger}
+        hideUi={layout.hideUi}
         onTrigger={(trigger) => {
           updateLayout(id, { trigger })
           leaveCursor()
@@ -788,26 +789,29 @@ export function ScopeWorkspace({
       width: Math.min(screen.width, floatingBounds(bounds).width),
       height: Math.min(screen.height, floatingBounds(bounds).height),
     }
-    const point = floatingPosition(dimensions, screen.x, screen.y)
-    updateLayout(
-      id,
-      mode === "sheet"
-        ? {
-            mode,
-            x: core.geometry.snap((point.x - camera.x) / camera.scale),
-            y: core.geometry.snap((point.y - camera.y) / camera.scale),
-            width: gridSize(
-              dimensions.width / camera.scale,
-              320 / camera.scale
-            ),
-            height: gridSize(
-              dimensions.height / camera.scale,
-              220 / camera.scale
-            ),
-            sheetScale: camera.scale,
-          }
-        : { mode, ...point, ...dimensions }
-    )
+    if (mode === "sheet") {
+      const size = snapSheetScopeSize(
+        dimensions.width / camera.scale,
+        dimensions.height / camera.scale
+      )
+      const point = floatingPosition(
+        {
+          width: size.width * camera.scale,
+          height: size.height * camera.scale,
+        },
+        screen.x,
+        screen.y
+      )
+      updateLayout(id, {
+        mode,
+        x: core.geometry.snap((point.x - camera.x) / camera.scale),
+        y: core.geometry.snap((point.y - camera.y) / camera.scale),
+        ...size,
+      })
+    } else {
+      const point = floatingPosition(dimensions, screen.x, screen.y)
+      updateLayout(id, { mode, ...point, ...dimensions })
+    }
     setFront(id)
     setMenu(null)
   }
@@ -830,7 +834,7 @@ export function ScopeWorkspace({
         <div
           key={id}
           data-docked-scope={id}
-          className="relative flex h-full min-h-0 min-w-0 outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary data-[selected=true]:ring-inset"
+          className="group/scope-shell relative flex h-full min-h-0 min-w-0 outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary data-[selected=true]:ring-inset"
           data-selected={front === id}
           {...contextEvents(id)}
           style={{
@@ -839,7 +843,11 @@ export function ScopeWorkspace({
         >
           <DragHandle
             label={`Reorder or undock scope ${groups.get(id)?.[0].label}`}
-            className={scopeGripClass}
+            className={
+              layoutFor(id).hideUi
+                ? `${scopeGripClass} ${revealScopeHandle} absolute inset-y-0 left-0 z-10`
+                : scopeGripClass
+            }
             onStart={(handle, event) => beginScopeDrag(id, handle, event)}
             onDelta={(_, __, event) => moveScopeDrag(event)}
             onFinish={finishScopeDrag}
@@ -992,14 +1000,9 @@ export function ScopeWorkspace({
                 y: saved.y * camera.scale + camera.y,
               }
             : position(layout, layout.x, layout.y)
-          // Keep placement visually unchanged, then scale with the sheet from that zoom.
-          const referenceScale = saved.sheetScale || 1
-          const localWidth = anchored
-            ? layout.width * referenceScale
-            : layout.width
-          const localHeight = anchored
-            ? layout.height * referenceScale
-            : layout.height
+          const display = anchored
+            ? sheetScopeDisplay(layout, camera.scale)
+            : null
           const inView =
             !anchored ||
             (point.x + layout.width * camera.scale > 0 &&
@@ -1021,7 +1024,7 @@ export function ScopeWorkspace({
               }}
             >
               <div
-                className="pointer-events-auto absolute flex min-h-0 overflow-hidden rounded-lg border bg-background shadow-xl outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary"
+                className="group/scope-shell pointer-events-auto absolute flex min-h-0 overflow-hidden rounded-lg border bg-background shadow-xl outline-none data-[selected=true]:ring-2 data-[selected=true]:ring-primary"
                 data-selected={front === id}
                 {...contextEvents(id)}
                 data-scope-workspace
@@ -1037,11 +1040,9 @@ export function ScopeWorkspace({
                       : 20,
                   left: point.x,
                   top: point.y,
-                  width: localWidth,
-                  height: localHeight,
-                  transform: anchored
-                    ? `scale(${camera.scale / referenceScale})`
-                    : undefined,
+                  width: display?.width ?? layout.width,
+                  height: display?.height ?? layout.height,
+                  transform: display ? `scale(${display.scale})` : undefined,
                   transformOrigin: "top left",
                 }}
                 role="region"
@@ -1052,7 +1053,11 @@ export function ScopeWorkspace({
               >
                 <DragHandle
                   label={`Move scope ${groups.get(id)?.[0].label}`}
-                  className={scopeGripClass}
+                  className={
+                    saved.hideUi
+                      ? `${scopeGripClass} ${revealScopeHandle} absolute inset-y-0 left-0 z-10`
+                      : scopeGripClass
+                  }
                   onStart={(handle, event) => {
                     beginScopeDrag(id, handle, event)
                     floatStart.current = { ...layout, ...point }
@@ -1107,7 +1112,7 @@ export function ScopeWorkspace({
                 </div>
                 <DragHandle
                   label={`Resize ${anchored ? "sheet" : "floating"} scope ${groups.get(id)?.[0].label}`}
-                  className="absolute right-0 bottom-0 z-10 h-4 w-4 cursor-nwse-resize touch-none border-r-2 border-b-2 border-muted-foreground"
+                  className={`absolute right-0 bottom-0 z-10 h-4 w-4 cursor-nwse-resize touch-none border-r-2 border-b-2 border-muted-foreground ${saved.hideUi ? revealScopeHandle : ""}`}
                   onStart={() => {
                     collectSnapTargets(id)
                     floatStart.current = { ...layout, ...point }
@@ -1116,16 +1121,10 @@ export function ScopeWorkspace({
                     updateLayout(
                       id,
                       anchored
-                        ? {
-                            width: gridSize(
-                              floatStart.current.width + x / camera.scale,
-                              320 / referenceScale
-                            ),
-                            height: gridSize(
-                              floatStart.current.height + y / camera.scale,
-                              220 / referenceScale
-                            ),
-                          }
+                        ? snapSheetScopeSize(
+                            floatStart.current.width + x / camera.scale,
+                            floatStart.current.height + y / camera.scale
+                          )
                         : snapFloatingSize(
                             floatStart.current.width + x,
                             floatStart.current.height + y,
@@ -1144,16 +1143,10 @@ export function ScopeWorkspace({
                     updateLayout(
                       id,
                       anchored
-                        ? {
-                            width: gridSize(
-                              layout.width + x * core.geometry.grid,
-                              320 / referenceScale
-                            ),
-                            height: gridSize(
-                              layout.height + y * core.geometry.grid,
-                              220 / referenceScale
-                            ),
-                          }
+                        ? snapSheetScopeSize(
+                            layout.width + x * core.geometry.grid,
+                            layout.height + y * core.geometry.grid
+                          )
                         : snapFloatingSize(
                             layout.width + x * 16,
                             layout.height + y * 16,
@@ -1206,6 +1199,12 @@ export function ScopeWorkspace({
             }))}
           mode={layoutFor(menu.id).mode}
           timeDivision={layoutFor(menu.id).timeDivision}
+          hideUi={!!layoutFor(menu.id).hideUi}
+          onToggleUi={() => {
+            updateLayout(menu.id, { hideUi: !layoutFor(menu.id).hideUi })
+            leaveCursor()
+            setMenu(null)
+          }}
           owner={menuOwner}
           onClose={() => setMenu(null)}
           onDelete={() => deleteScope(menu.id)}
@@ -1275,6 +1274,8 @@ const ScopeContent = memo(function ScopeContent({
   id,
   channels,
   times,
+  rendering,
+  hideUi,
   timeDivision,
   trigger,
   onTrigger,
@@ -1292,7 +1293,9 @@ const ScopeContent = memo(function ScopeContent({
 }: {
   id: string
   channels: ScopeTrace[]
-  times: number[]
+  times: ScopeSamples
+  rendering: ScopeRendering
+  hideUi?: boolean
   trigger?: ScopePaneLayout["trigger"]
   onTrigger: (trigger: NonNullable<ScopePaneLayout["trigger"]>) => void
   timeDivision: number
@@ -1345,6 +1348,8 @@ const ScopeContent = memo(function ScopeContent({
     <ScopePane
       id={id}
       {...window}
+      rendering={rendering}
+      hideUi={hideUi}
       timeDivision={timeDivision}
       trigger={trigger}
       onTrigger={onTrigger}

@@ -7,7 +7,7 @@
     SparkGapElm:'sparkGap', MemristorElm:'memristor', TunnelDiodeElm:'tunnelDiode', FuseElm:'fuse', LDRElm:'photoresistor', ThermistorNTCElm:'thermistor',
     SCRElm:'scr', DiacElm:'diac', TriacElm:'triac', VaractorElm:'varactor', TriodeElm:'triode',
     VarRailElm:'variableVoltage', LampElm:'lamp', TextElm:'text', BoxElm:'box', LineElm:'line', LabeledNodeElm:'labeledNode', ProbeElm:'voltmeter', OhmMeterElm:'ohmmeter', AmmeterElm:'ammeter', WattmeterElm:'wattmeter', TestPointElm:'testPoint', DecimalDisplayElm:'decimalDisplay', InstructionDisplayElm:'instructionDisplay', LEDArrayElm:'ledArray', DataRecorderElm:'dataExport', AudioOutputElm:'audioOutput', StopTriggerElm:'stopTrigger', DCMotorElm:'dcMotor', ThreePhaseMotorElm:'threePhaseMotor', WireElm:'wire', ResistorElm:'resistor', CapacitorElm:'capacitor', PolarCapacitorElm:'polarizedCapacitor',
-    InductorElm:'inductor', PushSwitchElm:'pushSwitch', MBBSwitchElm:'mbbSwitch', TappedTransformerElm:'tappedTransformer', CustomTransformerElm:'customTransformer', TransLineElm:'transmissionLine', SwitchElm:'switch', Switch2Elm:'spdtSwitch', DPDTSwitchElm:'dpdtSwitch',
+    RelayElm:'relay', InductorElm:'inductor', PushSwitchElm:'pushSwitch', MBBSwitchElm:'mbbSwitch', TappedTransformerElm:'tappedTransformer', CustomTransformerElm:'customTransformer', TransLineElm:'transmissionLine', SwitchElm:'switch', Switch2Elm:'spdtSwitch', DPDTSwitchElm:'dpdtSwitch',
     PotElm:'potentiometer', TransformerElm:'transformer', GroundElm:'ground', DCVoltageElm:'voltageSource',
     ACVoltageElm:'acSource', RailElm:'voltageRail', ACRailElm:'acRail', SquareRailElm:'squareRail', ClockElm:'clockRail',
     CurrentElm:'currentSource', OutputElm:'output', LEDElm:'led', DiodeElm:'diode', ZenerElm:'zener',
@@ -16,7 +16,7 @@
     LogicInputElm:'logicInput', LogicOutputElm:'logicOutput', InverterElm:'inverter', AndGateElm:'andGate',
     NandGateElm:'nandGate', OrGateElm:'orGate', NorGateElm:'norGate', XorGateElm:'xorGate',
     DFlipFlopElm:'dFlipFlop', JKFlipFlopElm:'jkFlipFlop', TFlipFlopElm:'tFlipFlop',
-    CounterElm:'counter', LatchElm:'latch', HalfAdderElm:'halfAdder', FullAdderElm:'fullAdder', Select:'select'
+    TimerElm:'timer555', CounterElm:'counter', LatchElm:'latch', HalfAdderElm:'halfAdder', FullAdderElm:'fullAdder', Select:'select'
   };
   function entries(definitions) {
     const visit = entry => {

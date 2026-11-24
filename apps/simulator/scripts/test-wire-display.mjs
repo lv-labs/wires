@@ -39,6 +39,7 @@ try {
   const ambiguous=wireSignals(loop,frame);assert.equal(ambiguous.currents.w1,undefined);assert.equal(ambiguous.currents.parallel,undefined)
   const html=renderToStaticMarkup(React.createElement(WireLayer,{document,selection:[],frame,showVoltage:true,showCurrent:true,running:false}))
   assert.ok(html.includes('wire-current-dots'));assert.ok(!html.includes('wire-current-flow'),'Dots no longer depend on independent CSS dash animations')
+  assert.match(html,/<polyline class="wire-current-dots"[^>]*stroke-dasharray="0 50"/,'Each active wire draws its dots with one stroke')
   for(const [dx,dy] of [[200,0],[-200,0],[0,200],[0,-200]]) {
     const points=[{x:0,y:0},{x:dx,y:dy}]
     const before=wireDisplayGeometry(points,25).dots[0]

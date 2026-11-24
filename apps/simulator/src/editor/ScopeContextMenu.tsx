@@ -26,9 +26,11 @@ export function ScopeContextMenu({
   scopes,
   mode,
   timeDivision,
+  hideUi,
   owner,
   onClose,
   onTime,
+  onToggleUi,
   onTrace,
   getDisplayScale,
   onMode,
@@ -44,9 +46,11 @@ export function ScopeContextMenu({
   scopes: { id: string; label: string }[]
   mode: ScopeMode
   timeDivision: number
+  hideUi: boolean
   owner: RefObject<HTMLDivElement | null>
   onClose: () => void
   onTime: (value: number) => void
+  onToggleUi: () => void
   onTrace: (id: string, patch: TracePatch) => void
   getDisplayScale: (id: string) => number | undefined
   onMode: (mode: ScopeMode) => void
@@ -141,6 +145,10 @@ export function ScopeContextMenu({
         alignOffset={0}
         finalFocus={() => (owner.current?.isConnected ? owner.current : false)}
       >
+        <DropdownMenuItem onClick={onToggleUi}>
+          {hideUi ? "Show UI" : "Hide UI"}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Time scale</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>

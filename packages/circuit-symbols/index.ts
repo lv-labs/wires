@@ -70,6 +70,8 @@ export { Symbol as tappedTransformer } from "./src/tappedTransformer";
 export { Symbol as customTransformer } from "./src/customTransformer";
 export { Symbol as transmissionLine } from "./src/transmissionLine";
 export { Symbol as counter } from "./src/counter";
+export { Symbol as relay } from "./src/relay";
+export { Symbol as timer555 } from "./src/timer555";
 export { Symbol as latch } from "./src/latch";
 export { Symbol as halfAdder } from "./src/halfAdder";
 export { Symbol as fullAdder } from "./src/fullAdder";

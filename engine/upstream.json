@@ -4,6 +4,8 @@
   "patches": [
     "01-older-compatibility.patch",
     "02-headless.patch",
-    "03-correctness.patch"
+    "03-correctness.patch",
+    "04-batched-sampling.patch",
+    "05-dense-factorization-locality.patch"
   ]
 }

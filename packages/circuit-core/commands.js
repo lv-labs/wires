@@ -269,7 +269,20 @@
     }
     c.parameters=clone(parameters);
   }
-  function insertInline(document, componentId) {
+  // Contact checks may read a wire's route for many pins at the same positions.
+  // Splitting a wire replaces its bend array, invalidating only that route.
+  function contactPaths(document) {
+    const paths = new WeakMap();
+    return wire => {
+      const bends = document.layout.wires[wire.id]?.bends;
+      const path = paths.get(wire);
+      if (path && path.bends === bends) return path.points;
+      const points = route(document, wire);
+      paths.set(wire, { bends, points });
+      return points;
+    };
+  }
+  function insertInline(document, componentId, wirePath) {
     const component = document.electrical.components.find(c => c.id === componentId);
     const pins = Object.keys(Catalog.componentPins(component));
     if (pins.length !== 2) return false;
@@ -282,7 +295,7 @@
       const found = new Map();
       for (const wire of document.electrical.wires) {
         if ([wire.from, wire.to].some(ref => ref.componentId === componentId)) continue;
-        const path = route(document, wire);
+        const path = wirePath(wire);
         if (!path.some((a, i) => i < path.length - 1 && onLine(a) && onLine(path[i + 1]) && distance(closest(point, a, path[i + 1]), point) < .001)) continue;
         const target = distance(point, path[0]) < .001 ? wire.from : distance(point, path.at(-1)) < .001 ? wire.to : { kind: 'wire', id: wire.id, point };
         found.set(target.kind === 'wire' ? token('wire', target.id) : referenceKey(target), target);
@@ -331,11 +344,12 @@
   // component insertion here: moving a wire across two pins must not remove it.
   function connectWireContacts(document, paths) {
     const on=(p,path)=>distance(closest(p,path[0],path[1]),p)<.001,resolve=connectionResolver(document);
+    const wirePath = contactPaths(document);
     for(const c of document.electrical.components)for(const pinId of Object.keys(Catalog.componentPins(c))){
       const from={kind:'pin',componentId:c.id,pinId},p=pin(document,from);
       if(!paths.some(path=>on(p,path)))continue;
       for(const wire of [...document.electrical.wires]){
-        const points=route(document,wire);
+        const points=wirePath(wire);
         if(!points.some((a,i)=>i+1<points.length&&on(p,[a,points[i+1]])))continue;
         const to=resolve({kind:'wire',id:wire.id,point:p}),a=referenceKey(from),b=referenceKey(to);
         if(a===b||document.electrical.wires.some(w=>referenceKey(w.from)===a&&referenceKey(w.to)===b||referenceKey(w.from)===b&&referenceKey(w.to)===a))continue;
@@ -344,35 +358,51 @@
     }
   }
   function connectContacts(document, componentIds) {
-    for (const id of componentIds) insertInline(document, id);
-    const refKey = referenceKey;
-    function connected(a, b) {
-      const target = refKey(b), visited = new Set(), queue = [a];
-      for (let i = 0; i < queue.length; i++) {
-        const ref = queue[i], key = refKey(ref); if (key === target) return true; if (visited.has(key)) continue; visited.add(key);
-        for (const w of document.electrical.wires) { if (refKey(w.from) === key) queue.push(w.to); else if (refKey(w.to) === key) queue.push(w.from); }
+    if (!componentIds.size) return;
+    const wirePath = contactPaths(document);
+    for (const id of componentIds) insertInline(document, id, wirePath);
+    const parents = new Map();
+    function root(ref) {
+      let key = referenceKey(ref);
+      while (parents.has(key)) {
+        const parent = parents.get(key);
+        if (parents.has(parent)) parents.set(key, parents.get(parent));
+        key = parent;
       }
-      return false;
+      return key;
     }
+    function join(a, b) {
+      const left = root(a), right = root(b);
+      if (left !== right) parents.set(right, left);
+    }
+    for (const wire of document.electrical.wires) join(wire.from, wire.to);
     function attach(from, to) {
-      if (connected(from, to)) return;
+      if (root(from) === root(to)) return;
       const wireId = crypto.randomUUID(); document.electrical.wires.push({ id: wireId, from: clone(from), to: clone(to) });
       document.layout.wires[wireId] = { bends: [] };
+      join(from, to);
     }
     const resolve = connectionResolver(document);
-    for (const c of document.electrical.components) if (componentIds.has(c.id)) for (const pinId of Object.keys(Catalog.componentPins(c))) {
-      const from = { kind: 'pin', componentId: c.id, pinId }, point = pin(document, from);
-      for (const other of document.electrical.components) if (other.id !== c.id) for (const otherPin of Object.keys(Catalog.componentPins(other))) {
-        const to = { kind: 'pin', componentId: other.id, pinId: otherPin };
-        if (distance(point, pin(document, to)) < .001) attach(from, to);
+    const terminals = document.electrical.components.flatMap(c =>
+      Object.keys(Catalog.componentPins(c)).map(pinId => {
+        const ref = { kind: 'pin', componentId: c.id, pinId };
+        return { ref, point: pin(document, ref) };
+      })
+    );
+    for (const { ref: from, point } of terminals) if (componentIds.has(from.componentId)) {
+      for (const { ref: to, point: other } of terminals) {
+        if (to.componentId !== from.componentId && distance(point, other) < .001) attach(from, to);
       }
       for (const j of document.electrical.junctions) if (distance(point, document.layout.junctions[j.id]) < .001)
         attach(from, { kind: 'junction', junctionId: j.id });
       for (const wire of [...document.electrical.wires]) {
-        if (connected(from, wire.from) || connected(from, wire.to)) continue;
-        const points = route(document, wire);
-        if (points.some((p, i) => i < points.length - 1 && distance(closest(point, p, points[i + 1]), point) < .001))
-          attach(from, resolve({ kind: 'wire', id: wire.id, point }));
+        const points = wirePath(wire);
+        if (!points.some((p, i) => i < points.length - 1 && distance(closest(point, p, points[i + 1]), point) < .001)) continue;
+        if (root(from) === root(wire.from)) continue;
+        const to = resolve({ kind: 'wire', id: wire.id, point });
+        // A new split point belongs to the same net as the original wire.
+        join(wire.from, to);
+        attach(from, to);
       }
     }
   }
@@ -412,7 +442,10 @@
     for(const w of d.electrical.wires){const a=net(key(w.from)),b=net(key(w.to));if(a!==b)nets.set(b,a);}
     const originalDegree=new Map();
     for(const w of d.electrical.wires)for(const ref of [w.from,w.to])originalDegree.set(key(ref),(originalDegree.get(key(ref))||0)+1);
-    const sections = d.electrical.wires.map(w => ({w, a:pin(d,w.from), b:pin(d,w.to), cuts:[{p:pin(d,w.from),ref:w.from},{p:pin(d,w.to),ref:w.to}]}));
+    const sections = d.electrical.wires.map(w => {
+      const a = pin(d, w.from), b = pin(d, w.to);
+      return {w, a, b, net:net(key(w.from)), length:distance(a,b), cuts:[{p:a,ref:w.from},{p:b,ref:w.to}]};
+    });
     const on = (p,s) => distance(closest(p,s.a,s.b),p)<.001;
     function cut(s,p) {
       let item = s.cuts.find(c=>distance(c.p,p)<.001);
@@ -425,8 +458,7 @@
     let changed=false;
     for(let i=0;i<sections.length;i++)for(let j=i+1;j<sections.length;j++) {
       const a=sections[i],b=sections[j];
-      if(net(key(a.w.from))!==net(key(b.w.from)))continue;
-      if(distance(a.a,a.b)<.001||distance(b.a,b.b)<.001)continue;
+      if(a.net!==b.net||a.length<.001||b.length<.001)continue;
       const horizontal=Math.abs(a.a.y-a.b.y)<.001&&Math.abs(b.a.y-b.b.y)<.001&&Math.abs(a.a.y-b.a.y)<.001;
       const vertical=Math.abs(a.a.x-a.b.x)<.001&&Math.abs(b.a.x-b.b.x)<.001&&Math.abs(a.a.x-b.a.x)<.001;
       if(!horizontal&&!vertical)continue;

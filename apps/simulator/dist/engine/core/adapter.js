@@ -173,7 +173,10 @@
       if (!model || component.modelVersion !== 1)
         fail('UNSUPPORTED_MODEL', 'Unsupported model/version: ' + component.kind + ' (' + component.id + ')');
       let parameters;
-      if(outputSpecs[component.kind]){try{parameters=validateOutput(component,document.simulation.timeStep);}catch(error){check(false,component.id+': '+error.message);}}
+      if(outputSpecs[component.kind]){
+        try{parameters=validateOutput(component,document.simulation.timeStep);}catch(error){check(false,component.id+': '+error.message);}
+        if(component.kind==='voltmeter')delete parameters.showVoltage;
+      }
       else if(Catalog.switchKind(component.kind)){
         parameters=Catalog.validateSwitchParameters(component.kind,component.parameters);
       }else if(component.kind==='transmissionLine'){
@@ -199,10 +202,11 @@
         check(Number.isFinite(threshold) && logicMode(mode) && typeof pulldown === 'boolean', component.id + ': invalid logic output');
         parameters = {threshold, mode, pulldown};
       } else if (component.kind === 'logicInput') {
-        exactFields(component.parameters, ['state', 'highVoltage', 'lowVoltage', 'mode'], component.id);
-        const {state, highVoltage, lowVoltage, mode} = component.parameters;
+        const hasMomentary=Object.hasOwn(component.parameters,'momentary');
+        exactFields(component.parameters, ['state', 'highVoltage', 'lowVoltage', 'mode',...(hasMomentary?['momentary']:[])], component.id);
+        const {state, highVoltage, lowVoltage, mode, momentary} = component.parameters;
         check(logicMode(mode) && Number.isInteger(state) && state >= 0 && state <= (mode === 'ternary' ? 2 : 1) &&
-          Number.isFinite(highVoltage) && Number.isFinite(lowVoltage) && Number.isFinite(highVoltage - lowVoltage),
+          Number.isFinite(highVoltage) && Number.isFinite(lowVoltage) && Number.isFinite(highVoltage - lowVoltage) && (!hasMomentary||typeof momentary==='boolean'),
           component.id + ': invalid logic input state or voltage');
         parameters = {state, highVoltage, lowVoltage, mode};
       } else if(nextChip(component.kind)){
@@ -224,7 +228,9 @@
         parameters={highVoltage, initialState};
         if(component.kind==='jkFlipFlop')parameters.positiveEdge=component.parameters.positiveEdge;
       } else if(component.kind==='transformer'||component.kind==='tappedTransformer'){
-        exactFields(component.parameters,['inductance','ratio','coupling','integration'],component.id);
+        const hasReverse=component.kind==='transformer'&&Object.hasOwn(component.parameters,'reverseSecondary');
+        exactFields(component.parameters,['inductance','ratio','coupling','integration',...(hasReverse?['reverseSecondary']:[])],component.id);
+        check(!hasReverse||typeof component.parameters.reverseSecondary==='boolean',component.id+': invalid secondary orientation');
         const {inductance,ratio,coupling,integration}=component.parameters;
         const l2=inductance*ratio*ratio/(component.kind==='tappedTransformer'?4:1),mutual=coupling*Math.sqrt(inductance*l2),det=inductance*l2-mutual*mutual;
         check(Number.isFinite(inductance)&&inductance>0&&Number.isFinite(ratio)&&ratio>0&&Number.isFinite(coupling)&&coupling>0&&coupling<1&&Number.isFinite(det)&&det>0&&Number.isFinite(1/det)&&['backwardEuler','trapezoidal'].includes(integration),component.id+': invalid transformer inductance, ratio, coupling or integration');
@@ -356,8 +362,9 @@
     function sourceRoot(k) { while (sourceParent.get(k) !== k) k = sourceParent.get(k); return k; }
     const groundNet = nets.find(net => net.ground)?.key || ground;
     if(!adjacency.has(groundNet)){adjacency.set(groundNet,new Set());sourceParent.set(groundNet,groundNet);}
+    // Transmission line returns may be at zero through Falstad's floating-net
+    // stabilization. The native model checks their solved voltages during stepping.
     for (const device of devices) {
-      if(device.kind==='transmissionLine')check(device.pins.leftReturn===groundNet&&device.pins.rightReturn===groundNet,'Transmission line return pins must connect directly to ground: '+device.id);
       if (railSource(device.kind) || logicSource(device.kind)) {
         const idealPin = railSource(device.kind) ? device.pins.p : device.pins.out;
         adjacency.get(idealPin).add(groundNet);adjacency.get(groundNet).add(idealPin);
@@ -550,7 +557,7 @@
         flags|=(p.bodyDiode?32:0)|(p.bodyTerminal?64:0)|(p.showBulk===false?16:0)|(p.digitalSymbol?4:0)|(p.showBodyDiode?128:0)|(p.swapTerminals?8:0);
       }
       if(Catalog.gateKind(device.kind))flags=(device.parameters.schmittInputs?2:0)|(device.parameters.invertInputs?4:0);
-      if(logic(device.kind)&&!outputSpecs[device.kind])parameters=device.kind==='inverter'?` ${device.parameters.slewRate} ${device.parameters.highVoltage}`:` ${device.parameters.inputCount??2} 0 ${device.parameters.highVoltage} ${device.parameters.propagationDelay??0}`;
+      if(logic(device.kind)&&!outputSpecs[device.kind])parameters=device.kind==='inverter'?` ${device.parameters.slewRate} ${device.parameters.highVoltage}`:` ${device.parameters.inputCount??2} ${device.parameters.initialOutputVoltage??0} ${device.parameters.highVoltage} ${device.parameters.propagationDelay??0}`;
       if(device.kind==='inductor'){
         flags=device.parameters.integration==='backwardEuler'?2:0;
         parameters=` ${device.parameters.inductance} ${device.parameters.initialCurrent} ${device.parameters.initialCurrent} 0`;
@@ -620,7 +627,13 @@
     const seen=new Set();
     const terminal=ref=>{exactFields(ref,['componentId','pinId'],'sample terminal');check(id(ref.componentId)&&id(ref.pinId),'Invalid sample terminal');return {componentId:ref.componentId,pinId:ref.pinId};};
     return channels.map(channel=>{
-      if(channel.kind==='current'){exactFields(channel,['id','kind','componentId'],'sample channel');check(id(channel.id)&&!seen.has(channel.id)&&id(channel.componentId),'Invalid current sample channel');seen.add(channel.id);return {id:channel.id,kind:'current',componentId:channel.componentId};}
+      if(channel.kind==='current'){
+        exactFields(channel,['id','kind','componentId',...(Object.hasOwn(channel,'polarity')?['polarity']:[])],'sample channel');
+        const polarity=Object.hasOwn(channel,'polarity')?channel.polarity:1;
+        check(id(channel.id)&&!seen.has(channel.id)&&id(channel.componentId)&&[1,-1].includes(polarity),'Invalid current sample channel');
+        seen.add(channel.id);
+        return {id:channel.id,kind:'current',componentId:channel.componentId,...(polarity===-1?{polarity}:{})};
+      }
       exactFields(channel,['id','positive','negative'],'sample channel');check(id(channel.id)&&!seen.has(channel.id),'Missing/duplicate sample channel ID');seen.add(channel.id);
       return {id:channel.id,positive:terminal(channel.positive),negative:channel.negative===null?null:terminal(channel.negative)};
     }).sort((a,b)=>compare(a.id,b.id));
@@ -688,10 +701,24 @@
       },
       setVariableVoltage:(componentId,voltage)=>{
         active();const entry=compiled.mapping.find(item=>item.id===componentId&&item.kind==='variableVoltage');check(entry&&Number.isFinite(voltage),'Expected variable source ID and finite voltage');
-        const projection=JSON.parse(compiled.canonical);projection.devices.find(item=>item.id===componentId).parameters.voltage=voltage;
-        const next=fromProjection(projection,compiled.documentId),raw=invoke(()=>engine.setVariableVoltage(entry.index,voltage));compiled=next;hasFrame=false;
+        const projection=JSON.parse(compiled.canonical),p=projection.devices.find(item=>item.id===componentId).parameters;
+        check(voltage>=Math.min(p.minVoltage,p.maxVoltage)&&voltage<=Math.max(p.minVoltage,p.maxVoltage),'Voltage outside source range');
+        const raw=invoke(()=>engine.setVariableVoltage(entry.index,voltage));
+        p.voltage=voltage;compiled={...compiled,canonical:JSON.stringify(projection),text:null};hasFrame=false;
         return {appliedAtTime:raw.time,frameAvailable:false};
       },
+      ...(typeof engine.setPotPosition==='function'?{setPotPosition:(componentId,position)=>{
+        active();
+        const entry=compiled.mapping.find(item=>item.id===componentId&&item.kind==='potentiometer');
+        check(entry&&typeof position==='number'&&position>=0&&position<=1,'Expected potentiometer ID and wiper position between 0 and 1');
+        const projection=JSON.parse(compiled.canonical),p=projection.devices.find(item=>item.id===componentId).parameters;
+        const changesTopology=p.position!==position&&(p.position===0||p.position===1||position===0||position===1);
+        p.position=position;
+        const next=changesTopology?fromProjection(projection,compiled.documentId):{...compiled,canonical:JSON.stringify(projection),text:null};
+        const appliedAtTime=invoke(()=>engine.setPotPosition(entry.index,position));
+        compiled=next;hasFrame=false;
+        return {appliedAtTime,frameAvailable:false};
+      }}:{}),
       ...(typeof engine.setSourceFrequency==='function' ? {setSourceFrequency:(componentId,frequency)=>{
         active();
         const entry=compiled.mapping.find(item=>item.id===componentId&&
@@ -739,17 +766,23 @@
         };
         // Validate every channel before advancing the solver. Only one batch crosses
         // the worker boundary; no display-frame downsampling hides intermediate peaks.
-        const targets=normalized.map(channel=>{if(channel.kind==='current'){const entry=compiled.mapping.find(item=>item.id===channel.componentId);check(entry&&entry.sign!==null,'Current unavailable for scope component');return {current:entry};}return {positive:locate(channel.positive),negative:locate(channel.negative)};});
+        const targets=normalized.map(channel=>{if(channel.kind==='current'){const entry=compiled.mapping.find(item=>item.id===channel.componentId);check(entry&&entry.sign!==null,'Current unavailable for scope component');return {current:entry.index,sign:entry.sign*(channel.polarity??1)};}return {positive:locate(channel.positive),negative:locate(channel.negative)};});
         return invoke(() => {
           if(!normalized.length){const raw=engine.step(count);sequence++;hasFrame=true;return frame(raw);}
-          const times=[],values=normalized.map(()=>[]);let raw;
-          const voltage=ref=>ref===null?0:raw.elements[ref.index]?.voltages[ref.post];
-          for(let i=0;i<count;i++){
-            raw=engine.step(1);
-            check(Number.isFinite(raw.time)&&Number.isFinite(raw.timeStep)&&raw.timeStep>0,'Invalid scope sample time');
-            times.push(Math.max(0,raw.time-raw.timeStep));
-            targets.forEach((target,j)=>{const value=target.current?target.current.sign*raw.elements[target.current.index].current:voltage(target.positive)-voltage(target.negative);check(Number.isFinite(value),'Invalid scope sample voltage');values[j].push(value);});
-            if(raw.stopRequested)break;
+          let raw,times,values;
+          if(typeof engine.stepSampled==='function') {
+            ({raw,times,values}=engine.stepSampled(count,targets));
+            times=Array.from(times);values=Array.from(values,samples=>Array.from(samples));
+          } else {
+            times=[];values=normalized.map(()=>[]);
+            const voltage=ref=>ref===null?0:raw.elements[ref.index]?.voltages[ref.post];
+            for(let i=0;i<count;i++){
+              raw=engine.step(1);
+              check(Number.isFinite(raw.time)&&Number.isFinite(raw.timeStep)&&raw.timeStep>0,'Invalid scope sample time');
+              times.push(Math.max(0,raw.time-raw.timeStep));
+              targets.forEach((target,j)=>{const value=target.current!==undefined?target.sign*raw.elements[target.current].current:voltage(target.positive)-voltage(target.negative);check(Number.isFinite(value),'Invalid scope sample voltage');values[j].push(value);});
+              if(raw.stopRequested)break;
+            }
           }
           sequence++;hasFrame=true;
           return {...frame(raw),sampleBatch:{channels:normalized,times,values:Object.fromEntries(normalized.map((channel,i)=>[channel.id,values[i]]))}};

@@ -26,6 +26,7 @@ assert.equal(scope.append(frame(9,[1],{in:[1],out:[2]})),false,'Old channel targ
 assert.throws(()=>scope.setChannels([...channels,channels[0]]),/duplicate/);
 const xs=Array.from({length:1000},(_,i)=>i/1000),ys=xs.map((x,i)=>i===501?100:0),reduced=S.envelope(xs,ys,0,1,50);
 assert.ok(reduced.some(([,y])=>y===100),'Peak retained during pixel decimation');assert.ok(reduced.length<=204);
+assert.deepEqual(S.envelope(new Float64Array([0,.5]),new Float64Array([1,4]),0,1,10),[[0,1],[.5,4]]);
 assert.deepEqual(
   S.envelope([0,1,2,3,4,5,6,10],[0,5,1,-4,0,3,1,0],0,10,1),
   [[0,0],[1,5],[3,-4],[6,1],[10,0]],
@@ -54,6 +55,13 @@ for(const step of [1e-5,5e-6,1e-6]){
   assert.ok(view.times.length>=Math.floor(.2/step),'Raw sample resolution retained');
   assert.equal(view.channels[0].max,100,'Narrow peak retained');
   assert.equal(view.channels[1].min,-100,'Channels remain aligned after buffer growth');
+  const typed=timed.window(.2,{typed:true});
+  assert.ok(typed.times instanceof Float64Array);
+  assert.deepEqual(Array.from(typed.times),view.times);
+  for(const [index,channel] of typed.channels.entries()){
+    assert.ok(channel.values instanceof Float64Array);
+    assert.deepEqual({...channel,values:Array.from(channel.values)},view.channels[index]);
+  }
   const grownCapacity=view.capacity;
   timed.setHistorySpan(.4);
   const times=Array.from({length:1000},(_,i)=>.3+(i+1)*step);

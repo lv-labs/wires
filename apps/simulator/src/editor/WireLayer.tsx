@@ -1,5 +1,5 @@
 import { wireSignals, voltageColour } from "./wireSignals"
-import { memo, useMemo, useEffect, useRef, useState } from "react"
+import { memo, useMemo, useEffect, useRef } from "react"
 import { advanceCurrentPhase, wireDisplayGeometry } from "./wireDisplay"
 import { format } from "./componentValue"
 import { core } from "./core"
@@ -21,13 +21,52 @@ export const WireLayer = memo(function WireLayer({
   showCurrent?: boolean
   running?: boolean
 }) {
-  const dots = core.editing.junctionDots(document)
+  const { dots, looseJunctions, wires } = useMemo(() => {
+    const connections = new Map<string, number>()
+    function countJunction(id: string) {
+      connections.set(id, (connections.get(id) ?? 0) + 1)
+    }
+    const wires = document.electrical.wires.map((wire) => {
+      if (wire.from.kind === "junction") countJunction(wire.from.junctionId)
+      if (
+        wire.to.kind === "junction" &&
+        (wire.from.kind !== "junction" ||
+          wire.from.junctionId !== wire.to.junctionId)
+      )
+        countJunction(wire.to.junctionId)
+      const route = core.geometry.route(document, wire)
+      const display = document.layout.wires[wire.id]
+      return {
+        id: wire.id,
+        display,
+        points: route.map((point) => `${point.x},${point.y}`).join(" "),
+        geometry:
+          display.showVoltage || display.showCurrent
+            ? wireDisplayGeometry(route)
+            : null,
+      }
+    })
+    return {
+      wires,
+      dots: core.editing.junctionDots(document),
+      looseJunctions: document.electrical.junctions.filter(
+        ({ id }) => connections.get(id) === 1
+      ),
+    }
+  }, [document])
   const signals = useMemo(() => wireSignals(document, frame), [document, frame])
   const liveSignals = useRef(signals)
-  const [phases, setPhases] = useState<Record<string, number>>({})
+  const phases = useRef(new Map<string, number>())
+  const currentPaths = useRef(new Map<string, SVGPolylineElement>())
   useEffect(() => {
     liveSignals.current = signals
   }, [signals])
+  useEffect(() => {
+    const ids = new Set(wires.map(({ id }) => id))
+    for (const id of phases.current.keys()) {
+      if (!ids.has(id)) phases.current.delete(id)
+    }
+  }, [wires])
   useEffect(() => {
     if (!running || !showCurrent) return
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -36,17 +75,20 @@ export const WireLayer = memo(function WireLayer({
     function tick(now: number) {
       const elapsed = last === undefined ? 0 : (now - last) / 1000
       last = now
-      if (!motion.matches)
-        setPhases((previous) =>
-          Object.fromEntries(
-            Object.entries(liveSignals.current.currents).map(
-              ([id, current]) => [
-                id,
-                advanceCurrentPhase(previous[id] || 0, current, elapsed),
-              ]
-            )
+      if (!motion.matches) {
+        for (const [id, path] of currentPaths.current) {
+          const previous = phases.current.get(id) ?? 0
+          const phase = advanceCurrentPhase(
+            previous,
+            liveSignals.current.currents[id],
+            elapsed
           )
-        )
+          if (phase !== previous) {
+            phases.current.set(id, phase)
+            path.setAttribute("stroke-dashoffset", String(-phase))
+          }
+        }
+      }
       request = requestAnimationFrame(tick)
     }
     request = requestAnimationFrame(tick)
@@ -54,21 +96,18 @@ export const WireLayer = memo(function WireLayer({
   }, [running, showCurrent])
   return (
     <g fill="none" stroke="currentColor" strokeWidth={6.25}>
-      {document.electrical.wires.map((w) => {
+      {wires.map(({ id, display, points, geometry }) => {
         const isSelected = selection.some(
-          (s) => s.kind === "wire" && s.id === w.id
+          (s) => s.kind === "wire" && s.id === id
         )
-        const scopeHighlighted = highlighted?.has(w.id)
-        const value = signals.voltages[w.id]
-        const current = signals.currents[w.id]
+        const scopeHighlighted = highlighted?.has(id)
+        const value = signals.voltages[id]
+        const current = signals.currents[id]
         const tint = showVoltage ? voltageColour(value) : "currentColor"
-        const route = core.geometry.route(document, w)
-        const points = route.map((p) => `${p.x},${p.y}`).join(" ")
-        const geometry = wireDisplayGeometry(route, phases[w.id] || 0)
-        const display = document.layout.wires[w.id]
         const direction = current < 0 ? -1 : 1
-        const arrow =
-          Math.abs(geometry.midpoint.dx) >= Math.abs(geometry.midpoint.dy)
+        const arrow = !geometry
+          ? ""
+          : Math.abs(geometry.midpoint.dx) >= Math.abs(geometry.midpoint.dy)
             ? geometry.midpoint.dx * direction >= 0
               ? "→"
               : "←"
@@ -86,13 +125,17 @@ export const WireLayer = memo(function WireLayer({
           .filter(Boolean)
           .join(" · ")
         return (
-          <g key={w.id}>
+          <g key={id}>
             <polyline
               className={
                 isSelected ? "text-blue-600 dark:text-blue-400" : undefined
               }
               stroke={
-                scopeHighlighted ? "var(--primary)" : isSelected ? undefined : tint
+                scopeHighlighted
+                  ? "var(--primary)"
+                  : isSelected
+                    ? undefined
+                    : tint
               }
               strokeWidth={scopeHighlighted || isSelected ? 9.375 : undefined}
               points={points}
@@ -100,18 +143,28 @@ export const WireLayer = memo(function WireLayer({
             {showCurrent &&
               Number.isFinite(current) &&
               Math.abs(current) > 1e-12 && (
-                <g
+                <polyline
                   className="wire-current-dots"
-                  fill="#e5b735"
-                  stroke="none"
+                  ref={(path) => {
+                    if (path) {
+                      currentPaths.current.set(id, path)
+                      if (!path.hasAttribute("stroke-dashoffset")) {
+                        path.setAttribute(
+                          "stroke-dashoffset",
+                          String(-(phases.current.get(id) ?? 0))
+                        )
+                      }
+                    } else currentPaths.current.delete(id)
+                  }}
+                  points={points}
+                  stroke="#e5b735"
+                  strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeDasharray="0 50"
                   pointerEvents="none"
-                >
-                  {geometry.dots.map((point, index) => (
-                    <circle key={index} cx={point.x} cy={point.y} r={5} />
-                  ))}
-                </g>
+                />
               )}
-            {label && geometry.length > 0.001 && (
+            {label && geometry && geometry.length > 0.001 && (
               <text
                 x={
                   geometry.midpoint.x +
@@ -161,31 +214,20 @@ export const WireLayer = memo(function WireLayer({
           stroke="none"
         />
       ))}
-      {document.electrical.junctions
-        .filter(
-          (junction) =>
-            document.electrical.wires.filter(
-              (wire) =>
-                (wire.from.kind === "junction" &&
-                  wire.from.junctionId === junction.id) ||
-                (wire.to.kind === "junction" &&
-                  wire.to.junctionId === junction.id)
-            ).length === 1
+      {looseJunctions.map(({ id }) => {
+        const point = document.layout.junctions[id]
+        return (
+          <rect
+            key={`loose-${id}`}
+            x={point.x - 9.375}
+            y={point.y - 9.375}
+            width={18.75}
+            height={18.75}
+            fill="var(--background)"
+            stroke="currentColor"
+          />
         )
-        .map(({ id }) => {
-          const point = document.layout.junctions[id]
-          return (
-            <rect
-              key={`loose-${id}`}
-              x={point.x - 9.375}
-              y={point.y - 9.375}
-              width={18.75}
-              height={18.75}
-              fill="var(--background)"
-              stroke="currentColor"
-            />
-          )
-        })}
+      })}
       {selection
         .filter(({ kind }) => kind === "junction")
         .map(({ id }) => {

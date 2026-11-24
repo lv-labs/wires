@@ -15,6 +15,7 @@ export const metadata = {
     resistance: 1000,
     position: 0.5,
     label: "",
+    showValues: false,
   },
 } as const;
 

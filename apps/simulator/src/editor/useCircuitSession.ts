@@ -43,7 +43,11 @@ export function useCircuitSession(
   const [scope] = useState(() =>
     core.signals.create({ capacity: 20000, historySpan: 0.2 })
   )
-  const [scopeData, setScopeData] = useState(() => scope.window(0.002))
+  // React's development profiler can describe typed arrays without diffing
+  // every sample when a full history reaches the scope components.
+  const [scopeData, setScopeData] = useState(() =>
+    scope.window(0.002, { typed: true })
+  )
   const scopeSpan = useRef(0.2)
   const [error, setError] = useState("")
   const [savedLocally, setSavedLocally] = useState<boolean | null>(null)
@@ -53,23 +57,33 @@ export function useCircuitSession(
     let displayFrame: number | null = null
     let latestState: RunState | null = null
     let scopeDirty = false
+    let previewReady = false
+    let lastPreviewDisplay = -Infinity
+    function display() {
+      if (scopeDirty) {
+        scopeDirty = false
+        setScopeData(scope.window(scopeSpan.current, { typed: true }))
+      }
+      if (latestState) {
+        setSimulation(latestState)
+        latestState = null
+      }
+    }
     function scheduleDisplay() {
       if (!active || displayFrame !== null) return
-      displayFrame = requestAnimationFrame(() => {
+      displayFrame = requestAnimationFrame((now) => {
         displayFrame = null
         if (!active) return
-        if (scopeDirty) {
-          scopeDirty = false
-          setScopeData(scope.window(scopeSpan.current))
-        }
-        if (latestState) {
-          setSimulation(latestState)
-          latestState = null
-        }
+        // A preview has already presented the latest data for this display
+        // interval. Keep acquiring samples and coalesce the next regular paint.
+        if (latestState?.status === "running" && now - lastPreviewDisplay < 16)
+          scheduleDisplay()
+        else display()
       })
     }
     const coordinator = core.simulation.create({
       ...simulationPacing(defaultSimulationSpeed),
+      autoBatchBudgetMs: 16,
       retainSampleBatches: false,
       workerFactory: core.browserTransport.factory({
         url: new URL(
@@ -77,11 +91,10 @@ export function useCircuitSession(
           location.href
         ),
       }),
-      onFrame: (frame) => {
-        if (active && scope.append(frame)) {
-          scopeDirty = true
-          scheduleDisplay()
-        }
+      onFrame: (frame, metadata) => {
+        if (!active) return
+        if (metadata?.preview) previewReady = true
+        if (scope.append(frame)) scopeDirty = true
       },
       onState: (state) => {
         if (!active) return
@@ -91,7 +104,13 @@ export function useCircuitSession(
         // An automatic batch leaves the Running UI unchanged until it produces a frame.
         if (state.status === "stepping" && state.runRequested) return
         latestState = state
-        scheduleDisplay()
+        if (previewReady) {
+          previewReady = false
+          if (displayFrame !== null) cancelAnimationFrame(displayFrame)
+          displayFrame = null
+          lastPreviewDisplay = performance.now()
+          display()
+        } else scheduleDisplay()
       },
     })
     run.current = coordinator
@@ -110,7 +129,7 @@ export function useCircuitSession(
     let current = true
     const channels = core.geometry.scopeChannels(document).channels.slice(0, 32)
     scope.setChannels(channels)
-    setScopeData(scope.window(scopeSpan.current))
+    setScopeData(scope.window(scopeSpan.current, { typed: true }))
     const coordinator = run.current
     coordinator?.setSampleChannels(
       channels.map(({ id, kind, componentId, positive, negative, polarity }) =>
@@ -167,13 +186,13 @@ export function useCircuitSession(
     (seconds: number) => {
       scopeSpan.current = seconds * 10
       scope.setHistorySpan(Math.max(0.2, scopeSpan.current))
-      setScopeData(scope.window(scopeSpan.current))
+      setScopeData(scope.window(scopeSpan.current, { typed: true }))
     },
     [scope]
   )
   const clearScope = useCallback(() => {
     scope.clear()
-    setScopeData(scope.window(scopeSpan.current))
+    setScopeData(scope.window(scopeSpan.current, { typed: true }))
   }, [scope])
   function openDocument(next: CircuitDocument) {
     const validated = splitLegacyProbes(core.document.validate(next))

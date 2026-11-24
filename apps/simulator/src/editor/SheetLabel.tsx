@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef } from "react"
 import type { CircuitDocument } from "./core"
 
+// The rail terminal and potentiometer wiper are below their bodies in local coordinates.
+const oppositeLowerPin = ["above", "right", "below", "left"] as const
+
 /** Keep labels upright and space them from the actual transformed artwork. */
 export function SheetLabel({ pose, kind, children }: {
   pose: CircuitDocument["layout"]["components"][string]
@@ -28,14 +31,26 @@ export function SheetLabel({ pose, kind, children }: {
     const right = Math.max(...points.map(p => p.x))
     const top = Math.min(...points.map(p => p.y))
     const bottom = Math.max(...points.map(p => p.y))
-    const position = ["voltageSource", "voltageRail", "variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(kind) || right - left > bottom - top ? "above" : "right"
+    const alignAbove = ["variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(kind) || right - left > bottom - top
+    let side: (typeof oppositeLowerPin)[number] = alignAbove ? "above" : "right"
+    if (kind === "voltageRail" || kind === "potentiometer")
+      side = oppositeLowerPin[pose.rotation / 90]
+    else if (kind === "voltageSource") side = "left"
+
     const gap = 25
-    const height = element.getBBox().height
     let x = (left + right) / 2
     let y = (top + bottom) / 2
     let anchor = "middle"
-    if (position === "right") { x = right + gap; anchor = "start" }
-    if (position === "above") y = top - gap - height / 2
+    if (side === "above" || side === "below") {
+      const clearance = gap + element.getBBox().height / 2
+      y = side === "above" ? top - clearance : bottom + clearance
+    } else if (side === "left") {
+      x = left - gap
+      anchor = "end"
+    } else {
+      x = right + gap
+      anchor = "start"
+    }
     element.setAttribute("x", String(x))
     element.setAttribute("y", String(y))
     element.setAttribute("text-anchor", anchor)

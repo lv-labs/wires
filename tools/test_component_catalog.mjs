@@ -45,6 +45,41 @@ for(const position of [0,.25,.5,.75,1]){
   const lower=1000*(1-position),parallel=lower*1000/(lower+1000),expected=position===0?5:5*parallel/(1000*position+parallel);
   near(f.pinVoltages.part.wiper,expected);
 }
+{
+  const fast = A.createSession(createEngine()), full = A.createSession(createEngine());
+  const initial = circuit('potentiometer', {position:.5});
+  fast.loadDocument(initial);
+  full.loadDocument(initial);
+  let previousTime = fast.step(10).time;
+  full.step(10);
+  for (const position of [1, .15, 0, .85, .45]) {
+    assert.equal(fast.setPotPosition('part', position).appliedAtTime, previousTime);
+    const edited = circuit('potentiometer', {position});
+    full.updateProjection(JSON.parse(A.compile(edited).canonical), edited.id);
+    const actual = fast.step(5), expected = full.step(5);
+    assert.equal(actual.time, expected.time);
+    near(actual.pinVoltages.part.wiper, expected.pinVoltages.part.wiper);
+    previousTime = actual.time;
+  }
+  assert.throws(() => fast.setPotPosition('part', -.01), /wiper position between 0 and 1/);
+  assert.equal(fast.snapshot().time, previousTime);
+  fast.reset();
+  full.reset();
+  near(fast.step(5).pinVoltages.part.wiper, full.step(5).pinVoltages.part.wiper);
+
+  const tiedWiper = circuit('potentiometer', {position:.5});
+  tiedWiper.electrical.wires.push({
+    id:'tied-wiper',
+    from:{kind:'pin', componentId:'part', pinId:'wiper'},
+    to:{kind:'pin', componentId:'part', pinId:'a'}
+  });
+  tiedWiper.layout.wires['tied-wiper'] = {bends:[]};
+  fast.loadDocument(tiedWiper);
+  fast.step(5);
+  const before = fast.snapshot();
+  assert.throws(() => fast.setPotPosition('part', 0), /ideal potentiometer loop/);
+  assert.deepEqual(fast.snapshot(), before);
+}
 for(const current of [-.01,0,.01]){session.loadDocument(circuit('currentSource',{current}));const f=session.step(2);near(f.pinVoltages.part.b,current*1000);near(f.componentCurrents.part,current);}
 for(const integration of ['backwardEuler','trapezoidal']){
   session.loadDocument(circuit('inductor',{initialCurrent:.002,integration}));const f=session.step(1);

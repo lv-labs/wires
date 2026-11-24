@@ -7,7 +7,7 @@ export const metadata = {
   prefix: "O",
   name: "Output marker",
   pins: {
-    in: [-50, 0],
+    in: [-100, 0],
   },
   parameters: {
     showVoltage: true,
@@ -18,7 +18,7 @@ export function Symbol(_: SymbolProps) {
   return (
     <>
       <Lead from={metadata.pins.in} to={[0, 0]} />
-      <circle r={10} fill="white" />
+      <polygon points="0,-20 0,20 25,20 40,0 25,-20" />
     </>
   );
 }

@@ -1,0 +1,51 @@
+--- a/src/com/lushprojects/circuitjs1/client/SimulationManager.java
++++ b/src/com/lushprojects/circuitjs1/client/SimulationManager.java
+@@ -1760,4 +1760,8 @@
+ 	}
+ 	
++        // Cache the column as it is calculated so the inner products read two
++        // contiguous arrays. Keep the same multiplication and subtraction order.
++        double[] column = new double[n];
++
+         // use Crout's method; loop through the columns
+ 	for (j = 0; j != n; j++) {
+@@ -1765,8 +1769,9 @@
+ 	    // calculate upper triangular elements for this column
+ 	    for (i = 0; i != j; i++) {
+-		double q = a[i][j];
++		double[] row = a[i];
++		double q = row[j];
+ 		for (k = 0; k != i; k++)
+-		    q -= a[i][k]*a[k][j];
+-		a[i][j] = q;
++		    q -= row[k]*column[k];
++		row[j] = column[i] = q;
+ 	    }
+ 
+@@ -1775,8 +1780,9 @@
+ 	    int largestRow = -1;
+ 	    for (i = j; i != n; i++) {
+-		double q = a[i][j];
++		double[] row = a[i];
++		double q = row[j];
+ 		for (k = 0; k != j; k++)
+-		    q -= a[i][k]*a[k][j];
+-		a[i][j] = q;
++		    q -= row[k]*column[k];
++		row[j] = q;
+ 		double x = Math.abs(q);
+ 		if (x >= largest) {
+@@ -1792,10 +1798,7 @@
+ 		    return false;
+ 		}
+-		double x;
+-		for (k = 0; k != n; k++) {
+-		    x = a[largestRow][k];
+-		    a[largestRow][k] = a[j][k];
+-		    a[j][k] = x;
+-		}
++		double[] row = a[largestRow];
++		a[largestRow] = a[j];
++		a[j] = row;
+ 	    }
+ 

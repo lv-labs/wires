@@ -1,3 +1,5 @@
+import { core } from "./core"
+
 export type PanelBox = { x: number; y: number; width: number; height: number }
 export const panelMargin = 12
 export const panelTop = 48
@@ -5,6 +7,15 @@ const threshold = 10
 const gap = panelMargin
 const clamp = (value: number, min: number, max: number) =>
   Math.max(min, Math.min(value, Math.max(min, max)))
+
+export function snapSheetScopeSize(width: number, height: number) {
+  const { grid, snap } = core.geometry
+  return {
+    width: Math.max(25 * grid, snap(width)),
+    height: Math.max(12 * grid, snap(height)),
+  }
+}
+
 function nearest(value: number, candidates: number[]) {
   let result = value,
     distance = threshold + 1

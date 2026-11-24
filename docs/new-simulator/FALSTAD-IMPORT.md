@@ -58,6 +58,16 @@ headers use the native 5 µs default.
 - `173`, `175`, `176`, `181`, `187`: triodes, tunnel diodes, default-model
   varactors, lamps within the worker's supported starting temperature range,
   and spark gaps. Varactors start at zero bias.
+- `165` / XML `Timer` imports the native 555 timer, including its small and
+  transformed layouts, optional reset and ground pins, pin numbering and saved
+  output voltage.
+- `178` / XML `rl` imports ordinary relays with one to four poles, coil
+  current and contact position, pickup and release thresholds, travel time,
+  contact pulldowns, and all three coil layouts. XML built-in and custom
+  `rlm` model values become editable settings on each relay.
+- `177`, `203`, `206`: SCRs, DIACs and TRIACs with saved trigger, holding and
+  resistance settings. SCR and TRIAC gate posts follow the original layout.
+  Saved SCR bias and TRIAC conduction state reset with a diagnostic.
 - `207` and XML `ln`: labeled nets. XML `rw` wires preserve routed bends.
 
 Posts at identical original coordinates become one explicit junction. Wires join
@@ -84,11 +94,13 @@ declarations are rejected. Hint and adjustable XML records warn as in text.
 Ordinary voltage and supported component-current scopes import from legacy text,
 multi-plot text and XML. Wires restores docked pane grouping, trace labels,
 measurement polarity, time divisions, manual scale, and AC coupling selection.
+Undocked scopes in XML (`<Scope>`) and legacy text (`403`) become Wires sheet
+scopes with their positions and sizes preserved relative to the circuit.
 Explicit XML trigger settings map to Wires triggers. Automatic scaling and AC
 display use Wires' existing behavior. XY, I–V, FFT, wire current, and unsupported
 measurement or display options produce scope diagnostics. Opening a bundled example
 with unavailable scope settings also shows a notice. Wires currently imports
-up to 32 traces. Embedded scopes remain a later milestone.
+up to 32 traces.
 
 ## Measured coverage
 
@@ -100,9 +112,10 @@ it also steps past the longest configured propagation delay.
 `node tools/generate_falstad_examples.mjs --check --report` verifies the saved
 library and prints each disabled entry's first blocker.
 
-The menu currently enables 270 of 367 entries, including Blank Circuit and all
-ten **Transmission Lines** examples, across 269 distinct files. Of those files,
-171 open with imported scope panes.
+The menu currently enables 292 of 367 entries, including Blank Circuit and all
+ten **Transmission Lines** examples, across 291 distinct files. Of those files,
+185 open with imported scope panes. The nine native 555 examples and nine
+ordinary relay examples are enabled.
 The separate `node tools/audit_falstad_import.mjs`
 audit covers all 373 bundled files,
 including files outside the menu. Three inductor-kick examples encounter the

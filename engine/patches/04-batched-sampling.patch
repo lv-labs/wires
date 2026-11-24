@@ -1,0 +1,39 @@
+--- a/src/com/lushprojects/circuitjs1/client/SimulationManager.java
++++ b/src/com/lushprojects/circuitjs1/client/SimulationManager.java
+@@ -1280,3 +1280,3 @@
+     void runCircuit(boolean didAnalyze) {
+-	runCircuit(didAnalyze, 0);
++	runCircuit(didAnalyze, 0, false, null);
+     }
+@@ -1288,6 +1288,16 @@
+ 	    throw new IllegalArgumentException("Step count must be between 1 and 10000");
+-	runCircuit(false, count);
+-    }
+-
+-    private void runCircuit(boolean didAnalyze, int stepLimit) {
++	runCircuit(false, count, false, null);
++    }
++
++    interface StepObserver {
++	boolean afterStep(double time, double timeStep);
++    }
++
++    void stepSampled(int count, boolean delayWireCurrents, StepObserver observer) {
++	if (count < 1 || count > 10000)
++	    throw new IllegalArgumentException("Step count must be between 1 and 10000");
++	runCircuit(false, count, delayWireCurrents, observer);
++    }
++
++    private void runCircuit(boolean didAnalyze, int stepLimit, boolean delayWireCurrents, StepObserver observer) {
+ 	if (matrices == null || elmList.size() == 0) {
+@@ -1315,3 +1325,3 @@
+ 	
+-	boolean delayWireProcessing = app.scopeManager != null && app.scopeManager.canDelayWireProcessing();
++	boolean delayWireProcessing = delayWireCurrents || (app.scopeManager != null && app.scopeManager.canDelayWireProcessing());
+ 	
+@@ -1447,3 +1457,4 @@
+ 	    if (bounded) {
+-		if (++completedSteps >= stepLimit)
++		boolean keepGoing = observer == null || observer.afterStep(t, timeStep);
++		if (++completedSteps >= stepLimit || !keepGoing)
+ 		    break;

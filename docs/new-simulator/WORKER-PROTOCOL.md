@@ -27,10 +27,14 @@ and duplicate requests before mutating the engine.
 | `installCircuit` | Load a canonical electrical projection into a fresh worker and adopt its target identity. |
 | `step` | Advance a bounded step count and optionally sample channels at each completed step. |
 | `updateCircuit` | Apply a supported electrical edit and advance the circuit revision while preserving the run epoch. |
-| `setSwitch`, `setContact`, `setVariableVoltage`, `setSourceFrequency` | Apply a negotiated live update and advance the revision while preserving the run epoch. |
+| `setSwitch`, `setContact`, `setVariableVoltage`, `setSourceFrequency`, `setPotPosition` | Apply a negotiated live update and advance the revision while preserving the run epoch. |
 | `snapshot`, `readCapture` | Read the last completed frame or a component capture. |
 | `reset` | Restore initial state and advance the run epoch at the same circuit revision. |
 | `dispose` | End the session. |
+
+`setPotPosition` restamps the existing solver matrix when both wiper positions
+are strictly between 0 and 1. A move to or from an exact endpoint validates
+the new topology and reanalyzes the existing elements.
 
 Replies echo protocol, session and request IDs and include the accepted `state`.
 Success includes `result`. Failure includes a code, message and disposition.
@@ -52,6 +56,14 @@ pin IDs and support wire-current presentation. Scope acquisition requests up to
 32 signed voltage/current channels. Step results contain aligned samples keyed
 by channel ID. The renderer can change its display rate without changing the
 simulation's sampling cadence.
+
+When the worker advertises `liveStep`, a running slider edit can include
+`liveStep: {count, channels}` in its payload. The worker applies the edit and
+returns a regular acquisition batch in `result.frame` under the new revision.
+This keeps scope acquisition moving during consecutive slider updates.
+For variable-voltage previews, the source interpolates to the requested value
+across that batch's solver steps. The scope captures the intermediate circuit
+response, and the last step uses the exact requested voltage.
 
 See `tools/test_simulation_coordinator.mjs`, `tools/test_running_edits.mjs`,
 `tools/test_live_reanalysis.mjs`, and `tools/test_scope_sampling.mjs` for

@@ -121,6 +121,9 @@ for(const [legacy,xml] of [
   ['181 0 0 96 0 0 300 .5 6 .04 .04','<Lamp x="0 0 96 0" np=".5" nv="6" wa=".04" co=".04"/>'],
   ['187 0 0 96 0 0 1000 1e9 1000 .001','<SparkGap x="0 0 96 0"/>'],
   ['173 0 0 96 0 2 93 680','<Triode x="0 0 96 0"/>'],
+  ['177 0 0 0 128 1 0 0 .012 .006 75','<SCR x="0 0 0 128" tr=".012" ho=".006" gr="75"/>'],
+  ['203 0 0 96 0 0 400 1e8 29 .012','<Diac x="0 0 96 0" ron="400" bd="29" hc=".012"/>'],
+  ['206 0 0 96 16 0 .011 .008 100 true','<Triac x="0 0 96 16" ti=".011" hi=".008" st="true"/>'],
 ]){
   const a=parse(`$ 0 .000005 10 50 5\n${legacy}`),b=parse(`<cir>${xml}</cir>`);
   assert.deepEqual(a.electrical.components,b.electrical.components);
@@ -403,6 +406,189 @@ assert.equal(samples[sourceI.id].at(-1),nativeSource.step(10).elements[0].curren
 // Real upstream inverting amplifier: compare actual engine results to imported graph, rather
 // than asserting only on a synthetic document or the importer's own output.
 const directory=new URL('../engine/upstream/src/com/lushprojects/circuitjs1/public/circuits/',import.meta.url);
+const bundledCircuit=name=>parse(readFileSync(new URL(name,directory),'utf8'));
+const timerFiles=['555square','555saw','555lowduty','555monostable','555pulsemod','555sequencer','555schmitt','555missing','555dutycycle'];
+for(const name of timerFiles){
+  const circuit=bundledCircuit(name+'.txt');
+  assert.ok(circuit.electrical.components.some(c=>c.kind==='timer555'),name);
+  session.loadDocument(circuit);
+  assert.ok(session.step(100).time>0,name);
+  const {channels,unresolved}=geometry.scopeChannels(circuit);
+  assert.ok(channels.length,name);
+  assert.deepEqual(unresolved,[],name);
+}
+const square555=bundledCircuit('555square.txt');
+const squareTimer=square555.electrical.components.find(c=>c.kind==='timer555');
+session.loadDocument(square555);
+const squareRises=[],squareFalls=[];
+let squareHigh=false;
+for(let n=0;n<360;n++){
+  const f=session.step(10),high=f.pinVoltages[squareTimer.id].out>5;
+  if(high!==squareHigh)(high?squareRises:squareFalls).push(f.time);
+  squareHigh=high;
+}
+assert.ok(Math.abs(squareRises[2]-squareRises[1]-.00418)<.00006,'555 oscillator period');
+assert.ok(Math.abs((squareFalls[2]-squareRises[2])/(squareRises[3]-squareRises[2])-.5)<.02,'555 oscillator duty cycle');
+
+const mono555=bundledCircuit('555monostable.txt');
+const monoTimer=mono555.electrical.components.find(c=>c.kind==='timer555');
+const trigger555=mono555.electrical.components.find(c=>c.kind==='logicInput');
+session.loadDocument(mono555);
+assert.ok(session.step(100).pinVoltages[monoTimer.id].out<.1);
+session.setContact(trigger555.id,'state',0);
+const triggered=session.step(10);
+assert.ok(triggered.pinVoltages[monoTimer.id].out>4.9);
+session.setContact(trigger555.id,'state',1);
+frame=session.step(10);
+while(frame.pinVoltages[monoTimer.id].out>2&&frame.time<.015)frame=session.step(10);
+assert.ok(Math.abs(frame.time-triggered.time-.01099)<.0002,'555 monostable pulse width');
+assert.ok(frame.pinVoltages[monoTimer.id].out<.1);
+
+const switchedReset=parse(readFileSync(new URL('555monostable.txt',directory),'utf8')
+  .replace('w 336 112 336 176 0','L 336 176 384 176 0 1 false 5 0'));
+const reset555=switchedReset.electrical.components.filter(c=>c.kind==='logicInput').at(-1);
+session.loadDocument(switchedReset);
+session.step(100);
+session.setContact(trigger555.id,'state',0);
+assert.ok(session.step(10).pinVoltages[monoTimer.id].out>4.9);
+session.setContact(trigger555.id,'state',1);
+session.setContact(reset555.id,'state',0);
+assert.ok(session.step(10).pinVoltages[monoTimer.id].out<.1,'Active-low reset overrides the latched pulse');
+
+const timerXml=parse('<cir><Timer x="64 96 128 96" f="6157" v5="4.75"/></cir>');
+const timerText=parse('$ 0 .000005 10 50 5\n165 64 96 128 96 6157 4.75');
+assert.equal(adapter.compile(timerXml).canonical,adapter.compile(timerText).canonical);
+const xmlTimer=timerXml.electrical.components[0];
+assert.deepEqual(xmlTimer.parameters,{resetPin:true,groundPin:true,pinNumbers:true,initialOutputVoltage:4.75});
+assert.equal(timerXml.layout.components[xmlTimer.id].rotation,270);
+assert.equal(Object.keys(core.catalog.componentPins(parse('<cir><Timer x="64 96 128 96"/></cir>').electrical.components[0])).length,6);
+assert.equal(Object.keys(core.catalog.componentPins(parse('165 64 96 128 96 2 0').electrical.components[0])).length,7);
+
+const placed555=core.editing.create(core.editing.empty());
+placed555.addComponent('timer555',0,0);
+const placedTimer=placed555.document.electrical.components[0];
+assert.equal(Object.keys(core.catalog.componentPins(placedTimer)).length,8);
+const editor555=core.editing.create(mono555,()=>{},{wireSections:true});
+editor555.execute({type:'setParameters',componentId:monoTimer.id,parameters:{groundPin:false}});
+const edited555=editor555.document;
+core.document.validate(edited555);
+session.loadDocument(mono555);
+session.step(100);
+session.setContact(trigger555.id,'state',0);
+session.step(10);
+session.setContact(trigger555.id,'state',1);
+const editedProjection=JSON.parse(adapter.compile(edited555).canonical);
+session.updateProjection(editedProjection,edited555.id);
+assert.ok(session.step(10).pinVoltages[monoTimer.id].out>4.9,'Removing explicit ground preserves the running timer output');
+assert.equal(session.reset().time,0);
+assert.ok(session.step(10).pinVoltages[monoTimer.id].out<.1);
+const seeded555=parse(readFileSync(new URL('555monostable.txt',directory),'utf8')
+  .replace('165 208 144 320 144 4 0','165 208 144 320 144 0 5'));
+session.loadDocument(seeded555);
+assert.ok(session.step(10).pinVoltages[monoTimer.id].out>4.9,'The timer starts in its saved high output state');
+
+const relayFiles=['relay','relayand','relayor','relayxor','relaymux','relayff','relaytff','relayosc','relayctr'];
+for(const name of relayFiles){
+  const circuit=bundledCircuit(name+'.txt');
+  session.loadDocument(circuit);
+  const readings=session.step(100).componentMeasurements;
+  for(const relay of circuit.electrical.components.filter(c=>c.kind==='relay')){
+    assert.ok(Number.isFinite(readings[relay.id].coilCurrent),name);
+    assert.equal(Object.keys(core.catalog.componentPins(relay)).length,3*relay.parameters.poleCount+2,name);
+  }
+  assert.deepEqual(geometry.scopeChannels(circuit).unresolved,[],name);
+}
+
+const relayOsc=bundledCircuit('relayosc.txt');
+const oscillator=relayOsc.electrical.components.find(c=>c.kind==='relay');
+session.loadDocument(relayOsc);
+const onEdges=[];
+let previousPosition=oscillator.parameters.initialPosition,intermediateStart;
+for(let i=0;i<530;i++){
+  const f=session.step(100), {position,coilCurrent}=f.componentMeasurements[oscillator.id];
+  if(position===previousPosition)continue;
+  if(position===2)intermediateStart=f.time;
+  if(position===1){
+    assert.ok(Math.abs(f.time-intermediateStart-.005)<.00051,'Relay waits for its travel time');
+    assert.ok(Math.abs(coilCurrent)>=oscillator.parameters.onCurrent,'Pickup current reached');
+    onEdges.push(f.time);
+  }
+  previousPosition=position;
+}
+assert.equal(onEdges.length,3);
+assert.ok(Math.abs(onEdges[2]-onEdges[1]-.083)<.001,'Relay oscillator period');
+
+const relayFlipFlop=bundledCircuit('relayff.txt');
+const flipRelays=relayFlipFlop.electrical.components.filter(c=>c.kind==='relay');
+const flipPushButtons=relayFlipFlop.electrical.components.filter(c=>c.kind==='pushSwitch');
+const relayPositions=f=>flipRelays.map(c=>f.componentMeasurements[c.id].position);
+session.loadDocument(relayFlipFlop);
+assert.deepEqual(relayPositions(session.step(300)),[0,1]);
+session.setContact(flipPushButtons[1].id,'normallyClosed',true);
+session.step(75);
+session.setContact(flipPushButtons[1].id,'normallyClosed',false);
+assert.deepEqual(relayPositions(session.step(1000)),[1,0],'The relay flip-flop latches after the push button is released');
+
+const relayEditor=core.editing.create(relayFlipFlop);
+relayEditor.execute({type:'setParameters',componentId:flipRelays[0].id,parameters:{poleCount:2}});
+const relayEdited=relayEditor.document;
+const relayEditedCompiled=adapter.compile(relayEdited);
+session.updateProjection(JSON.parse(relayEditedCompiled.canonical),relayEdited.id);
+frame=session.step(20);
+assert.deepEqual(relayPositions(frame),[1,0],'Pole edits retain relay position');
+assert.ok(Math.abs(frame.componentMeasurements[flipRelays[0].id].coilCurrent)>.24,'Pole edits retain energized coil current');
+
+const xmlRelay=parse(`<cir>
+  <rlm nm="custom coil" in=".1" ron=".08" rof="200000" on=".025" of=".016" coR="50" sw=".008" cs="2" po="4" sb="0" pd="1"/>
+  <rl x="176 96 176 240" mo="custom coil" f="8" i="-.018" ip="2"/>
+</cir>`);
+const equivalentRelay=parse('$ 0 .000005 10 50 5\n178 176 96 176 240 25 4 .1 -.018 .08 200000 .025 50 .016 .008 2');
+assert.equal(adapter.compile(xmlRelay).canonical,adapter.compile(equivalentRelay).canonical);
+const xmlRelayComponent=xmlRelay.electrical.components[0];
+assert.equal(xmlRelayComponent.parameters.coilStyle,2);
+assert.equal(xmlRelayComponent.parameters.showBox,false);
+assert.deepEqual(xmlRelay.layout.components[xmlRelayComponent.id],{x:550,y:550,rotation:270,mirror:true});
+assert.equal(parse('<cir><rl x="0 0 96 0" mo="default-3-poles"/></cir>').electrical.components[0].parameters.poleCount,3);
+assert.ok(falstad.importText('<cir><rl x="0 0 96 0" mo="missing"/></cir>').diagnostics.some(d=>d.message.includes('Unknown relay model')));
+const shortRelay=parse('178 0 0 96 0 0 1 .2 0 .05 1000000 .02 20').electrical.components[0];
+assert.equal(shortRelay.parameters.switchingTime,0);
+assert.equal(shortRelay.parameters.offCurrent,shortRelay.parameters.onCurrent);
+const placedRelay=core.editing.create(core.editing.empty());
+placedRelay.addComponent('relay',0,0);
+assert.equal(placedRelay.document.electrical.components[0].parameters.poleCount,1);
+
+const scrCircuit=bundledCircuit('scr.txt');
+session.loadDocument(JSON.parse(JSON.stringify(scrCircuit)));
+session.setSwitch('c4',true);
+assert.ok(Math.abs(session.step(10).componentCurrents.c2)<1e-5);
+session.setSwitch('c5',true);
+assert.ok(Math.abs(session.step(20).componentCurrents.c2)>.03);
+session.setSwitch('c5',false);
+assert.ok(Math.abs(session.step(20).componentCurrents.c2)>.03);
+session.setSwitch('c4',false);
+assert.ok(Math.abs(session.step(20).componentCurrents.c2)<1e-6);
+
+const dimmer=bundledCircuit('triacdimmer.txt');
+const dimmerProjection=JSON.parse(adapter.compile(dimmer).canonical);
+const triac=dimmerProjection.devices.find(device=>device.kind==='triac');
+const diac=dimmerProjection.devices.find(device=>device.kind==='diac');
+assert.equal(triac.pins.gate,diac.pins.b);
+assert.ok(dimmerProjection.nets.find(net=>net.key===triac.pins.mt1)?.ground);
+session.loadDocument(dimmer);
+const positiveHalfCycle=session.step(1000);
+assert.ok(positiveHalfCycle.componentCurrents.c10>1);
+assert.ok(Math.abs(positiveHalfCycle.pinVoltages[triac.id].mt2)<1);
+session.step(1000);
+const negativeHalfCycle=session.step(1000);
+assert.ok(negativeHalfCycle.componentCurrents.c10<-.5);
+assert.ok(Math.abs(negativeHalfCycle.pinVoltages[triac.id].mt2)<1);
+
+const savedTriacState=falstad.importText('<cir><Triac x="0 0 96 16" st="true"/></cir>');
+assert.ok(savedTriacState.document);
+assert.ok(savedTriacState.diagnostics.some(diagnostic=>diagnostic.code==='RESET_STATE'));
+const invalidTriacState=falstad.importText('<cir>\n<Triac x="0 0 96 16" st="invalid"/>\n</cir>');
+assert.equal(invalidTriacState.document,null);
+assert.ok(invalidTriacState.diagnostics.some(diagnostic=>diagnostic.line===2&&/Invalid TRIAC state/.test(diagnostic.message)));
 for(const [x,y] of [[128,0],[-128,0],[0,128],[0,-128]]){
   const line=parse(`171 0 0 ${x} ${y} 0 .001 75 48 0`);
   const across=x?'y':'x';
@@ -603,6 +789,52 @@ assert.equal(manualTrace.coupling,'ac');
 assert.equal(manualTrace.scale,.5);
 assert.ok(Math.abs(manualTrace.offset-1.01)<1e-12);
 assert.deepEqual(Object.values(manualScope.layout.scopes.panes)[0].trigger,{mode:'auto',edge:'falling',level:1.5,source:manualTrace.id});
+const sheetScopeXml=`<cir>
+  <R x="0 0 0 -16" maxv="5"/>
+  <Scope x="-16 144 -128 64" f="0">
+    <o en="2" sp="16" f="x2" p="-1">
+      <p v="0" sc="5"/>
+      <p v="3" sc="0.1"/>
+    </o>
+  </Scope>
+  <r x="0 0 96 0" r="1000"/>
+  <g x="96 0 96 16"/>
+</cir>`;
+const sheetScopeDoc=parse(sheetScopeXml);
+const {open,dock,panes,assignments}=sheetScopeDoc.layout.scopes;
+const [sheetPaneId]=Object.keys(panes);
+const {mode,x,y,width,height,sheetScale}=panes[sheetPaneId];
+assert.deepEqual({mode,x,y,width,height,sheetScale},{mode:'sheet',x:-400,y:200,width:350,height:250,sheetScale:.32});
+assert.equal(open,false);
+assert.equal(dock,null);
+assert.equal(sheetScopeDoc.probes.length,1);
+const [sheetTrace]=sheetScopeDoc.probes;
+assert.ok(sheetScopeDoc.electrical.components.some(c=>c.id===sheetTrace.positive.componentId&&c.kind==='resistor'));
+assert.equal(assignments[sheetTrace.id],sheetPaneId);
+const sheetEditor=core.editing.create(sheetScopeDoc,()=>{},{wireSections:true});
+sheetEditor.replace(sheetScopeDoc);
+const sheetChannels=geometry.scopeChannels(sheetEditor.document);
+assert.deepEqual(sheetChannels.unresolved,[]);
+session.loadDocument(sheetEditor.document);
+const sheetSamples=session.step(10,scopeSampler.setChannels(sheetChannels.channels)).sampleBatch.values;
+assert.equal(sheetSamples[sheetTrace.id].at(-1),5);
+
+const mixedScopes=parse(sheetScopeXml.replace('</cir>','<o en="2"><p v="0"/></o></cir>')).layout.scopes;
+assert.equal(mixedScopes.open,true);
+assert.equal(mixedScopes.dock.type,'scope');
+assert.equal(mixedScopes.panes[mixedScopes.dock.id].mode,'docked');
+assert.equal(mixedScopes.panes[sheetPaneId].mode,'sheet');
+const badSheetScope=falstad.importText(sheetScopeXml.replace('-16 144','-128 144'));
+assert.ok(badSheetScope.document);
+assert.deepEqual(badSheetScope.diagnostics.map(({line,code})=>({line,code})),[{line:3,code:'UNSUPPORTED_SCOPE'}]);
+
+const legacySheetScope=parse(`$ 1 .000005 10 50 5
+R 0 0 0 -16 0 0 40 5 0 0 0.5
+403 -16 144 -128 64 0 2_16_0_2_5_0.1_-1
+r 0 0 96 0 0 1000
+g 96 0 96 16 0`);
+assert.deepEqual(Object.values(legacySheetScope.layout.scopes.panes),Object.values(panes));
+assert.equal(legacySheetScope.probes[0].positive.componentId,'c4');
 for(const text of [
   '<cir><r x="0 0 96 0"></cir>', '<cir><r x="0 0 96 0"/></cir><cir/>',
   '<!DOCTYPE cir SYSTEM "file:///etc/passwd"><cir/>', '<cir><r x="0 0 96 0" r="1" r="2"/></cir>',

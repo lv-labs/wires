@@ -173,6 +173,21 @@ try {
     )
   }
   assert.equal(panel("logicInput").apply({ momentary: "on" }).momentary, true)
+  const pot = panel("potentiometer")
+  assert.match(pot.html, />Show values<\/label>/)
+  assert.equal(pot.apply({ showValues: "on" }).showValues, true)
+  assert.equal(panel("potentiometer", { showValues: true }).apply().showValues, true)
+  assert.equal(panel("potentiometer", { showValues: true }).apply({ showValues: undefined }).showValues, false)
+  assert.match(panel("labeledNode").html, /value="none" selected="">No box<\/option>/)
+  const labeledNode = panel("labeledNode", { boxStyle: "dashed" })
+  assert.match(labeledNode.html, /name="boxStyle"/)
+  assert.match(labeledNode.html, /value="dashed" selected="">Dashed box<\/option>/)
+  assert.match(labeledNode.html, />Solid box<\/option>/)
+  assert.equal(labeledNode.apply({ boxStyle: "none" }).boxStyle, "none")
+  assert.throws(
+    () => validate(labeledNode.component, { name: "NET", boxStyle: "invalid" }),
+    /Invalid Box style/
+  )
   assert.equal(
     panel("transformer").apply({ reverseSecondary: "on" }).reverseSecondary,
     true

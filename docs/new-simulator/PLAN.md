@@ -1,28 +1,67 @@
 # Falstad parity plan
 
-The goal is to open every pinned Falstad example and valid user-saved Falstad
-circuit in Wires, preserve its electrical behavior, and restore its scopes and
-saved controls. Keep the original Circuits submenu hierarchy and use editable
-Wires documents throughout. The pinned engine and examples are the first
-compatibility baseline. Extend coverage with real exports from maintained public
-releases and older user saves.
+Both parity goals use the pinned Falstad version as the baseline.
+
+- **Full component parity.** Users can place, wire, edit and simulate every
+  Falstad component and variant, with equivalent pins, defaults, properties,
+  models and electrical behavior. Verify components even when no bundled
+  example uses them.
+- **Full example parity.** Every pinned Falstad example opens as an editable
+  Wires document under its original Circuits submenu, reproduces the reference
+  circuit behavior, and restores its scopes and saved controls.
+
+Use the same import path for user-saved Falstad circuits and extend coverage
+with real exports from maintained public releases and older user saves.
 
 ## Checkpoint
 
-The pinned menu has 367 entries. 270 open and pass the library's worker startup
-check, across 269 distinct files. Of those files, 171 open with scope panes.
-97 menu entries remain unavailable. The enabled entries also need verification
+The pinned menu has 367 entries. 291 open and pass the library's worker startup
+check, across 290 distinct files. Of those files, 184 open with scope panes.
+76 menu entries remain unavailable. The enabled entries also need verification
 of simulation behavior and saved settings. [Import coverage](FALSTAD-IMPORT.md)
 documents the supported formats and known limitations.
 
+The source inventory found 141 component menu classes. The property audit
+parsed 137 of them and found 50 with no matching Wires dump type. The four
+unparsed classes and the matches need manual review. Each implementation needs
+verification in the editor, importer and worker before it counts toward parity.
+The [handoff](HANDOFF.md) lists the inventory commands.
+
+Text and XML import now map SCRs, DIACs and TRIACs to existing editable
+components and native models. Both SCR examples and the TRIAC dimmer pass
+startup checks. The dimmer still reports unsupported scope display and slider
+settings.
+
+The native 555 timer supports editable placement, legacy text and XML
+imports, and saved output voltage. All nine previously blocked 555 examples
+open with their imported scopes. The square oscillator and a monostable
+driven by a repeatable trigger matched the pinned Falstad app's output edge
+times over 40 ms. Separate tests cover active-low reset and live pin edits.
+
+Ordinary relays use the native coil and contact model. All nine previously
+blocked relay examples open. The regression tests cover the oscillator's
+pickup, travel time and period, the flip-flop's latched state after button
+release, and edits to pole count with an energized coil. With matched starting
+conditions, the oscillator and flip-flop pin voltages matched the pinned
+Falstad app to within 2 × 10⁻¹⁵ V at the sampled points.
+
+## Next batch
+
+Start with **second-generation current conveyors (CCII+ and CCII−)**. Eight
+pinned examples report record `179` as their first blocker. Verify X/Y voltage
+tracking and Z current polarity on both variants before enabling the conveyor
+examples. Use the inductor simulator and current integrator to check transient
+behavior and scope targets.
+
 ## Work in order
 
-1. **Unlock the remaining circuits in measured batches.** Start each batch with
-   the example report. Relays, 555 timers, controlled sources and counters are
-   common blockers. Include missing component variants, custom models,
-   subcircuits, and solver or preflight limitations where they block valid
-   circuits. Compare representative electrical behavior with Falstad and
-   regenerate the library under its original headings.
+1. **Close component and example gaps in batches.** Use the component inventory
+   and example blocker report to choose each batch. Controlled sources and counters
+   are common blockers. Include component
+   variants, custom models, subcircuits, and solver or preflight limitations
+   where they block valid circuits. Track components and options outside the
+   example library as well. Compare representative electrical behavior with
+   Falstad and regenerate the library under its original headings.
 2. **Restore scopes and controls alongside circuit support.** Verify ordinary
    traces and their references first. Add XY and I–V plots, FFT, embedded scopes,
    wire and terminal currents, power, and remaining settings. Use a diode I–V
@@ -37,9 +76,13 @@ documents the supported formats and known limitations.
 
 ## Release checks
 
-- Require every pinned menu entry to open under its original headings, every
-  nonblank example to simulate, and supported versions of user exports to pass
-  the same graph, worker and saved-workspace checks.
+- For each component and variant, verify placement, pin mapping, editable
+  properties and defaults, text/XML import where applicable, save/reopen, and
+  worker behavior against the Falstad reference. Add focused fixtures for
+  components or options the bundled examples do not exercise.
+- Require every pinned menu entry to open under its original headings and every
+  nonblank example to simulate with its saved scopes and controls. Check user
+  exports against the same graph, worker and saved-workspace checks.
 - Track conversion, worker startup, numerical comparisons and settings fidelity
   independently. A short startup run cannot establish waveform accuracy. Compare
   representative circuit traces and control responses against Falstad with
@@ -47,6 +90,9 @@ documents the supported formats and known limitations.
 - Keep unsupported settings visible in diagnostics until covered. Confirm a Wires
   save/reopen retains the imported circuit, scopes and controls. Use separate
   browser checks for interaction and rendering.
+- Exercise live controls with a filled scope. Verify simulated time and the
+  displayed scope timeline keep advancing during a sustained drag and after
+  the scope window fills.
 - Preserve the pinned upstream boundary, native solver behavior, stable document
   IDs and explicit connectivity. See the [engine guide](../../engine/README.md)
   and [editor contract](EDITOR-CONTRACT.md).

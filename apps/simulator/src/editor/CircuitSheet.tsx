@@ -16,6 +16,8 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
   MenubarSeparator,
   MenubarShortcut,
   MenubarSub,
@@ -24,6 +26,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar"
 import { core } from "./core"
+import type { ScopeRendering } from "./scopeDisplay"
 import { expandSelection } from "./expandSelection"
 import { wheelCamera, zoomCamera, isPanStart } from "./viewport"
 import { symbolBodyHit } from "./symbolHit"
@@ -172,6 +175,8 @@ export const CircuitSheet = memo(function CircuitSheet({
   simulationRunning = false,
   onGridModeChange,
   scopeOpen,
+  scopeRendering,
+  onScopeRenderingChange,
   hoveredTrace = null,
   onToggleScope,
   sliderPanelOpen,
@@ -226,6 +231,8 @@ export const CircuitSheet = memo(function CircuitSheet({
   gridMode: "dots" | "lines" | "off"
   onGridModeChange: (mode: "dots" | "lines" | "off") => void
   scopeOpen: boolean
+  scopeRendering: ScopeRendering
+  onScopeRenderingChange: (rendering: ScopeRendering) => void
   hoveredTrace?: string | null
   onToggleScope: () => void
   sliderPanelOpen: boolean
@@ -609,11 +616,35 @@ export const CircuitSheet = memo(function CircuitSheet({
     })
     svg.current?.focus()
   }
-  function fit() {
-    const bounds: { x: number; y: number; right: number; bottom: number }[] =
-      document.electrical.components.map((component) =>
-        core.geometry.bounds(document, component)
+  function componentBounds(component: Component) {
+    if (component.kind === "labeledNode") {
+      const body = svg.current?.querySelector<SVGGElement>(
+        `[data-symbol-body="${CSS.escape(component.id)}"]`
       )
+      const content = body?.closest<SVGGElement>("[data-circuit-content]")
+      const matrix = content?.getScreenCTM()
+      if (body && matrix) {
+        const rect = body.getBoundingClientRect()
+        const inverse = matrix.inverse()
+        const topLeft = new DOMPoint(rect.left, rect.top).matrixTransform(
+          inverse
+        )
+        const bottomRight = new DOMPoint(rect.right, rect.bottom).matrixTransform(
+          inverse
+        )
+        const padding = core.geometry.grid / 2
+        return {
+          x: topLeft.x - padding,
+          y: topLeft.y - padding,
+          right: bottomRight.x + padding,
+          bottom: bottomRight.y + padding,
+        }
+      }
+    }
+    return core.geometry.bounds(document, component)
+  }
+  function fit() {
+    const bounds = document.electrical.components.map(componentBounds)
     const points = [
       ...document.electrical.junctions.map(
         ({ id }) => document.layout.junctions[id]
@@ -632,6 +663,11 @@ export const CircuitSheet = memo(function CircuitSheet({
         { x: b.x, y: b.y },
         { x: b.right, y: b.bottom },
       ]),
+      ...Object.values(document.layout.scopes?.panes ?? {}).flatMap((pane) =>
+        pane.mode === "sheet"
+          ? [pane, { x: pane.x + pane.width, y: pane.y + pane.height }]
+          : []
+      ),
       ...document.probes.flatMap((probe) => {
         if (probe.kind !== "voltage" || !document.layout.probes?.[probe.id])
           return []
@@ -1131,28 +1167,29 @@ export const CircuitSheet = memo(function CircuitSheet({
         return
       }
       if (g.dx || g.dy || g.orientations.length) {
-        if (loose && g.drag && g.reconnectTo) {
-          try {
+        try {
+          if (loose && g.drag && g.reconnectTo) {
             const next = g.drag.finish({ normalize: false })
             core.editing.reconnect(next, loose, g.reconnectTo)
             execute({ type: "replace", document: next })
-          } catch (cause) {
-            onNotice(String(cause))
+          } else {
+            execute({
+              type: "replace",
+              document: g.drag
+                ? g.drag.finish({ contacts: !g.wireRoute })
+                : core.editing.applyCommand(g.original, {
+                    type: "transform",
+                    selection: g.selection,
+                    dx: g.dx,
+                    dy: g.dy,
+                    disconnect: true,
+                    orientations: g.orientations,
+                  }),
+            })
           }
-        } else
-          execute({
-            type: "replace",
-            document: g.drag
-              ? g.drag.finish({ contacts: !g.wireRoute })
-              : core.editing.applyCommand(g.original, {
-                  type: "transform",
-                  selection: g.selection,
-                  dx: g.dx,
-                  dy: g.dy,
-                  disconnect: true,
-                  orientations: g.orientations,
-                }),
-          })
+        } catch (cause) {
+          onNotice(String(cause))
+        }
       }
     }
     if (g?.kind === "drag" && !g.dx && !g.dy && !g.orientations.length)
@@ -1842,6 +1879,22 @@ export const CircuitSheet = memo(function CircuitSheet({
               <MenubarItem onClick={onToggleScope}>
                 {scopeOpen ? "Hide oscilloscope" : "Show oscilloscope"}
               </MenubarItem>
+              <MenubarSub>
+                <MenubarSubTrigger>Scope rendering</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarRadioGroup
+                    value={scopeRendering}
+                    onValueChange={onScopeRenderingChange}
+                  >
+                    <MenubarRadioItem value="stepped">
+                      Stepped columns
+                    </MenubarRadioItem>
+                    <MenubarRadioItem value="smooth">
+                      Smooth lines
+                    </MenubarRadioItem>
+                  </MenubarRadioGroup>
+                </MenubarSubContent>
+              </MenubarSub>
               <MenubarCheckboxItem
                 checked={sliderPanelOpen}
                 disabled={sliderPanelRequired}
@@ -2293,7 +2346,8 @@ export const CircuitSheet = memo(function CircuitSheet({
               document,
               active.origin,
               end,
-              frame
+              frame,
+              componentBounds
             )
             for (const { kind, id } of active.prior)
               picked.add(core.geometry.token(kind, id))

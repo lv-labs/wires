@@ -45,6 +45,7 @@ import {
 
 const labels: Record<string, string> = {
   label: "Slider label",
+  showValues: "Show values",
   resistance: "Resistance · Ω",
   capacitance: "Capacitance · F",
   initialVoltage: "Initial voltage on reset · V",
@@ -112,6 +113,12 @@ const waveformLabels: Record<string, string> = {
   dutyCycle: "Duty cycle · %",
 }
 
+const labeledNodeBoxStyles = {
+  solid: "Solid box",
+  dashed: "Dashed box",
+  none: "No box",
+}
+
 function choices(component: Component, key: string): string[] | undefined {
   const options = propertyChoices(component, key)
   if (options) return options
@@ -121,6 +128,12 @@ function choices(component: Component, key: string): string[] | undefined {
     return ["Logic (L/H)", "Numeric (0/1)", "Ternary (0/1/2)"]
   if (key === "state" && component.kind === "logicInput")
     return ["Low / 0", "High / 1", "Ternary 2"]
+  if (key === "boxStyle" && component.kind === "labeledNode")
+    return Object.values(labeledNodeBoxStyles)
+  if (component.kind === "relay") {
+    if (key === "coilStyle") return ["Both sides", "Left", "Right"]
+    if (key === "initialPosition") return ["Off", "On", "Between contacts"]
+  }
   if (key === "position") {
     if (component.kind === "mbbSwitch") return ["A", "A + B", "B", "A + B"]
     if (component.kind === "spdtSwitch") {
@@ -133,6 +146,8 @@ function choices(component: Component, key: string): string[] | undefined {
 function optionValue(component: Component, key: string, index: number) {
   if (key === "mode" && ["logicInput", "logicOutput"].includes(component.kind))
     return ["logic", "numeric", "ternary"][index]
+  if (key === "boxStyle" && component.kind === "labeledNode")
+    return Object.keys(labeledNodeBoxStyles)[index]
   return String(index)
 }
 
@@ -232,7 +247,7 @@ export function ComponentProperties({
         : null
   const editableParameters =
     component.kind === "potentiometer"
-      ? { label: "", ...component.parameters }
+      ? { label: "", showValues: false, ...component.parameters }
       : core.catalog.switchKind(component.kind)
         ? {
             ...core.catalog.switchDefaults(component.kind),
@@ -784,9 +799,24 @@ export function ComponentProperties({
                 {current !== undefined && (
                   <Reading name="Current" value={format(current, "A")} />
                 )}
-                {Object.entries(measurements ?? {}).map(([key, value]) => (
-                  <Reading key={key} name={key} value={String(value)} />
-                ))}
+                {Object.entries(measurements ?? {}).map(([key, value]) => {
+                  if (component.kind === "relay") {
+                    if (key === "travel") return null
+                    if (key === "coilCurrent" && typeof value === "number")
+                      return (
+                        <Reading key={key} name="Coil current" value={format(value, "A")} />
+                      )
+                    if (key === "position" && typeof value === "number")
+                      return (
+                        <Reading
+                          key={key}
+                          name="Contacts"
+                          value={["Off", "On", "Between contacts"][value]}
+                        />
+                      )
+                  }
+                  return <Reading key={key} name={key} value={String(value)} />
+                })}
               </dl>
             </CollapsibleContent>
           </Collapsible>

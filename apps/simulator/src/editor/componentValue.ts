@@ -221,7 +221,6 @@ export function sheetValue(
       "ohmmeter",
       "wattmeter",
       "testPoint",
-      "labeledNode",
     ].includes(c.kind)
   )
     return ""
@@ -238,7 +237,6 @@ export function sheetValue(
       "ohmmeter",
       "wattmeter",
       "testPoint",
-      "labeledNode",
     ].includes(c.kind)
   )
     return ""

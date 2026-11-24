@@ -100,15 +100,17 @@ Preserve the accepted simplified interface; do not restore removed toolbars or s
   row, standalone time selector, Add pane/layout dropdown or duplicate Pause button.
 - **Pane menu:** right-click for Time scale, named trace submenus (vertical scale,
   position and axis selection), combine/separate, dock/undock, placement mode,
-  row/column dock presets and Delete scope.
+  row/column dock presets, Hide UI / Show UI, and Delete scope. Hide UI shows
+  the waveform and vertical cursor, including click-and-hold, and is saved per scope.
 - **Docking:** nested horizontal/vertical splits support mixed layouts, e.g. one
   pane left and two stacked right. Drag grips to pane edges to split, drag out to
   undock, or drag back to dock. Both divider orientations resize. The whole bottom
   panel is capped at 50% of viewport height; larger layouts scroll internally.
 - **Undocked modes:** floating panels stay in pixels, with sliders' 12px margins /
   48px toolbar clearance, and snap to edges/other floating scopes/sliders with 12px
-  spacing. Sheet scopes snap position and size to the 50-unit world grid, scale
-  with symbols and retain initial appearance on placement. Both move/resize by
+  spacing. Sheet scopes snap position and size to the 50-unit world grid and scale
+  their plots, labels and controls together during resize and zoom. Placement and
+  resizing use a minimum of 25 grid cells wide by 12 high. Both move/resize by
   their grips/corners. Wheel/trackpad, middle-drag, Space+drag and pan-tool navigation
   work over sheet scopes. Hiding the dock leaves undocked scopes visible.
 - **Selection/deletion:** select a scope, then Backspace/Delete or its menu removes

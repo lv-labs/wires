@@ -210,10 +210,23 @@
           "type": "string",
           "maxLength": 80,
           "default": "NET"
+        },
+        "boxStyle": {
+          "label": "Box style",
+          "type": "string",
+          "maxLength": 6,
+          "choices": [
+            "solid",
+            "dashed",
+            "none"
+          ],
+          "optional": true,
+          "default": "none"
         }
       },
       "parameters": {
-        "name": "NET"
+        "name": "NET",
+        "boxStyle": "none"
       },
       "sign": null
     },
@@ -1617,6 +1630,202 @@
         "kg1": 680
       },
       "sign": 1
+    },
+    "relay": {
+      "name": "Relay",
+      "prefix": "K",
+      "drawingScale": 1,
+      "pins": {
+        "common1": [
+          -100,
+          0
+        ],
+        "nc1": [
+          100,
+          -50
+        ],
+        "no1": [
+          100,
+          50
+        ],
+        "coilA": [
+          -100,
+          100
+        ],
+        "coilB": [
+          100,
+          100
+        ]
+      },
+      "type": "178",
+      "fields": {
+        "poleCount": {
+          "label": "Poles",
+          "type": "number",
+          "integer": true,
+          "min": 1,
+          "max": 4,
+          "default": 1
+        },
+        "inductance": {
+          "label": "Coil inductance · H",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.2
+        },
+        "coilResistance": {
+          "label": "Coil resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 20
+        },
+        "onResistance": {
+          "label": "On resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.05
+        },
+        "offResistance": {
+          "label": "Off resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1000000
+        },
+        "onCurrent": {
+          "label": "Pickup current · A",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.02
+        },
+        "offCurrent": {
+          "label": "Release current · A",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.015
+        },
+        "switchingTime": {
+          "label": "Switching time · s (0 for legacy behavior)",
+          "type": "number",
+          "min": 0,
+          "default": 0.005
+        },
+        "coilStyle": {
+          "label": "Coil leads",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 2,
+          "default": 0
+        },
+        "showBox": {
+          "label": "Show enclosure",
+          "type": "boolean",
+          "default": true
+        },
+        "pulldown": {
+          "label": "Contact pulldowns",
+          "type": "boolean",
+          "default": true
+        },
+        "initialCoilCurrent": {
+          "label": "Initial coil current · A",
+          "type": "number",
+          "default": 0
+        },
+        "initialPosition": {
+          "label": "Initial position",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 2,
+          "default": 0
+        }
+      },
+      "parameters": {
+        "poleCount": 1,
+        "inductance": 0.2,
+        "coilResistance": 20,
+        "onResistance": 0.05,
+        "offResistance": 1000000,
+        "onCurrent": 0.02,
+        "offCurrent": 0.015,
+        "switchingTime": 0.005,
+        "coilStyle": 0,
+        "showBox": true,
+        "pulldown": true,
+        "initialCoilCurrent": 0,
+        "initialPosition": 0
+      },
+      "sign": null
+    },
+    "timer555": {
+      "name": "555 Timer",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "discharge": [
+          -100,
+          -50
+        ],
+        "trigger": [
+          -100,
+          50
+        ],
+        "threshold": [
+          -100,
+          100
+        ],
+        "supply": [
+          0,
+          -150
+        ],
+        "control": [
+          0,
+          150
+        ],
+        "out": [
+          100,
+          0
+        ],
+        "reset": [
+          100,
+          -50
+        ],
+        "ground": [
+          50,
+          150
+        ]
+      },
+      "type": "165",
+      "fields": {
+        "resetPin": {
+          "label": "Reset pin (always shown with ground)",
+          "type": "boolean",
+          "default": true
+        },
+        "groundPin": {
+          "label": "Ground pin",
+          "type": "boolean",
+          "default": true
+        },
+        "pinNumbers": {
+          "label": "Show pin numbers",
+          "type": "boolean",
+          "default": false
+        },
+        "initialOutputVoltage": {
+          "label": "Initial output voltage · V",
+          "type": "number",
+          "default": 0
+        }
+      },
+      "parameters": {
+        "resetPin": true,
+        "groundPin": true,
+        "pinNumbers": false,
+        "initialOutputVoltage": 0
+      },
+      "sign": null
     }
   };
   const basicDefinitions = {
@@ -2147,7 +2356,8 @@
       "parameters": {
         "resistance": 1000,
         "position": 0.5,
-        "label": ""
+        "label": "",
+        "showValues": false
       }
     },
     "polarizedCapacitor": {
@@ -2197,20 +2407,19 @@
       }
     },
     "analogSpdtSwitch": {
-      "drawingScale": 3.125,
       "prefix": "S",
       "name": "Analog switch (SPDT)",
       "pins": {
         "common": [
-          -150,
+          -100,
           0
         ],
         "a": [
-          150,
+          100,
           -50
         ],
         "b": [
-          150,
+          100,
           50
         ],
         "control": [
@@ -2231,7 +2440,7 @@
       "name": "Output marker",
       "pins": {
         "in": [
-          -50,
+          -100,
           0
         ]
       },
@@ -3027,8 +3236,33 @@
       ['schmittInputs','invertInputs'].some(k=>Object.hasOwn(p,k)&&typeof p[k]!=='boolean'))throw new Error('Invalid gate input count, delay or logic parameters');
     return structuredClone(p);
   }
+  const timerPostOffsets=Object.freeze([[-1,1],[-1,3],[-1,4],[1,-1],[1,5],[3,2],[3,1],[2,5]].map(Object.freeze));
+  function relayPostOffsets(poleCount,coilStyle){
+    const offsets=[];
+    for(let i=0;i<poleCount;i++){
+      const y=-3*i;
+      offsets.push([0,y],[1,y-1],[1,y+1]);
+    }
+    const side=coilStyle===2?1:0;
+    offsets.push([side,2],coilStyle===0?[1,2]:[side,3]);
+    return offsets;
+  }
   function componentPins(component, definition=definitions[component.kind]) {
     const kind=component.kind,p=component.parameters||{};
+    if(kind==='relay'){
+      if(!Number.isInteger(p.poleCount)||p.poleCount<1||p.poleCount>4)throw new Error('Invalid relay pole count');
+      const pins=Array.from({length:p.poleCount},(_,i)=>['common','nc','no'].map(name=>name+(i+1))).flat();
+      pins.push('coilA','coilB');
+      return Object.fromEntries(relayPostOffsets(p.poleCount,p.coilStyle).map(([x,y],i)=>[pins[i],[(x-.5)*200,y*50]]));
+    }
+    if(kind==='timer555'){
+      const pins={...definition.pins};
+      if(!p.groundPin){
+        delete pins.ground;
+        if(!p.resetPin)delete pins.reset;
+      }
+      return pins;
+    }
     if(gateKind(kind)) {
       if(!Number.isInteger(p.inputCount??2)||(p.inputCount??2)<1||(p.inputCount??2)>8)throw new Error('Gate input count must be 1 to 8');
       if((p.inputCount??2)===2)return definition.pins;
@@ -3059,7 +3293,7 @@
   }
   function componentModel(component) {
     const model=simulationModels[component.kind];
-    if(gateKind(component.kind)||mosfetKind(component.kind)||['spdtSwitch','dpdtSwitch'].includes(component.kind)){const pins=Object.keys(componentPins(component));return {...model,pins,postOrder:pins};}
+    if(gateKind(component.kind)||mosfetKind(component.kind)||['spdtSwitch','dpdtSwitch','timer555','relay'].includes(component.kind)){const pins=Object.keys(componentPins(component));return {...model,pins,postOrder:pins};}
     return model;
   }
   const mosfetKind=kind=>['nmos','pmos'].includes(kind);
@@ -3113,10 +3347,14 @@
     if(!p||typeof p!=='object'||Array.isArray(p)||Object.keys(p).length!==fields.length||!fields.every(k=>Object.hasOwn(p,k)))throw new Error('Unexpected or missing '+component.kind+' parameters');
     for(const [key,f] of Object.entries(spec.fields)){
       const v=p[key];
+      if(f.choices&&!f.choices.includes(v))throw new Error('Invalid '+f.label);
       if(f.type==='string'){if(typeof v!=='string'||v.length>f.maxLength||v.includes('\0'))throw new Error('Invalid '+f.label);}
       else if(f.type==='boolean'){if(typeof v!=='boolean')throw new Error('Invalid '+f.label);}
-      else if(!Number.isFinite(v)||(f.integer&&!Number.isInteger(v))||(f.min!==undefined&&v<f.min)||(f.max!==undefined&&v>f.max)||(f.exclusiveMin!==undefined&&v<=f.exclusiveMin)||(f.choices&&!f.choices.includes(v)))throw new Error('Invalid '+f.label);
+      else if(!Number.isFinite(v)||(f.integer&&!Number.isInteger(v))||(f.min!==undefined&&v<f.min)||(f.max!==undefined&&v>f.max)||(f.exclusiveMin!==undefined&&v<=f.exclusiveMin))throw new Error('Invalid '+f.label);
     }
+    if(component.kind==='relay'&&(['inductance','onResistance','offResistance','coilResistance','onCurrent','offCurrent'].some(key=>!Number.isFinite(1/p[key]))||
+      !Number.isFinite(timeStep/p.inductance)||(p.switchingTime>0&&!Number.isFinite(timeStep/p.switchingTime))))
+      throw new Error('Invalid relay electrical parameters');
     if(component.kind==='variableVoltage'&&(p.minVoltage===p.maxVoltage||!Number.isFinite(p.maxVoltage-p.minVoltage)||p.voltage<Math.min(p.minVoltage,p.maxVoltage)||p.voltage>Math.max(p.minVoltage,p.maxVoltage)))throw new Error('Voltage must lie between distinct source endpoints');
     if (component.kind==='sweepSource') {
       const {minFrequency:min,maxFrequency:max,sweepTime:duration,logarithmic}=p;
@@ -3400,7 +3638,7 @@
     return [kind,{type:metadata.type,sign:metadata.sign,pins,postOrder}];
   }));
   // Placement grid: five 10-unit symbol design steps per interval.
-  const api=Object.freeze({grid:50,switchKind,switchDefaults,switchPositionCount,momentary,validateSwitchParameters,switchPairs,switchPostPoints,mosfetKind,mosfetOptions,activeBody,validateMosfetParameters,gateKind,gateOffsets,validateGateParameters,componentPins,componentModel,transistorModels,transistorModelFields,transistorKind,resolveTransistorModel,validateTransistorParameters,validateSharedTransistorModels,diodeModels,diodeModelSpecs,diodeKind,resolveDiodeModel,validateDiodeParameters,diodeEditorParameters,validateSharedDiodeModels,definitions,placementDefinitions,outputSpecs,graphic,validateOutput,validWaveform,waveformNames,simulationModels});
+  const api=Object.freeze({grid:50,relayPostOffsets,timerPostOffsets,switchKind,switchDefaults,switchPositionCount,momentary,validateSwitchParameters,switchPairs,switchPostPoints,mosfetKind,mosfetOptions,activeBody,validateMosfetParameters,gateKind,gateOffsets,validateGateParameters,componentPins,componentModel,transistorModels,transistorModelFields,transistorKind,resolveTransistorModel,validateTransistorParameters,validateSharedTransistorModels,diodeModels,diodeModelSpecs,diodeKind,resolveDiodeModel,validateDiodeParameters,diodeEditorParameters,validateSharedDiodeModels,definitions,placementDefinitions,outputSpecs,graphic,validateOutput,validWaveform,waveformNames,simulationModels});
 
   registry.catalog=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

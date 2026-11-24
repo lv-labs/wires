@@ -88,14 +88,14 @@
     return {flags:scopeFlags,speed,position,divisions,label,plots};
   }
 
-  function xmlScope(node,warn) {
+  function xmlScope(node,warn,onSheet=false) {
     const {attrs,children}=node;
     const element=integer(attrs.en,'element index',-1);
     if(element===-1)return null;
     const scopeFlags=flags(attrs.f??'3');
     if(scopeFlags&(XY|FFT))return {flags:scopeFlags};
     const speed=integer(attrs.sp??'64','speed',1);
-    const position=integer(attrs.p??'0','position');
+    const position=integer(attrs.p??'0','position',onSheet?-1:0);
     const divisions=integer(attrs.md??'8','vertical divisions',1);
     if(node.text?.trim()||Object.keys(attrs).some(key=>!scopeAttributes.has(key)))warn('Some XML scope settings could not be restored');
     const plots=[];
@@ -125,6 +125,29 @@
       if(mode)trigger={mode:mode===1?'normal':'auto',edge:edge?'falling':'rising',level};
     }catch(error){warn(error.message);}
     return {flags:scopeFlags,speed,position,divisions,label:attrs.x,plots,trigger};
+  }
+
+  function sheetScope(xml,tokens,records,scale,warn) {
+    const coordinates=xml?xml.attrs.x?.trim().split(/\s+/):tokens.slice(0,4);
+    if(coordinates?.length!==4)throw new Error('Expected four coordinates for sheet scope');
+    const [x1,y1,x2,y2]=coordinates.map(raw=>integer(raw,'coordinate',-Number.MAX_SAFE_INTEGER));
+    const width=Math.abs(x2-x1)*scale,height=Math.abs(y2-y1)*scale;
+    if(!width||!height)throw new Error('Sheet scope must have positive width and height');
+    const scopeFlags=integer(xml?xml.attrs.f??'0':tokens[4],'element flags');
+    if(scopeFlags)warn('Some Falstad sheet scope options could not be restored');
+    let scope;
+    if(xml) {
+      const [child]=xml.children;
+      if(child?.name!=='o'||xml.children.length!==1||xml.text?.trim())throw new Error('Expected one <o> record in <Scope>');
+      if(Object.keys(xml.attrs).some(key=>key!=='x'&&key!=='f'))warn('Some XML sheet scope settings could not be restored');
+      scope=xmlScope(child,warn,true);
+    }else {
+      if(tokens.length!==6)throw new Error('Expected a packed scope record');
+      scope=legacyScope(tokens[5].split('_').filter(Boolean),records,0);
+    }
+    if(!scope)return null;
+    const placement={mode:'sheet',x:Math.min(x1,x2)*scale,y:Math.min(y1,y2)*scale,width,height,sheetScale:1/scale};
+    return {...scope,placement};
   }
 
   function measurement(record,value) {
@@ -170,14 +193,16 @@
       first:dock(nodes.slice(0,middle),axis),second:dock(nodes.slice(middle),axis)};
   }
 
-  function restore(doc,records,scopes,warning) {
+  function restore(doc,records,scopes,scale,warning) {
     if(!scopes.length)return;
     const pending=[];
     const paneSettings=new Map();
-    for(const [index,{line,tokens,xml}] of scopes.entries()) {
+    let dockIndex=0;
+    for(const {line,tokens,xml,onSheet} of scopes) {
       const warn=message=>warning(line,'UNSUPPORTED_SCOPE',message);
+      const index=onSheet?0:dockIndex++;
       try {
-        const scope=xml?xmlScope(xml,warn):legacyScope(tokens,records,index);
+        const scope=onSheet?sheetScope(xml,tokens,records,scale,warn):xml?xmlScope(xml,warn):legacyScope(tokens,records,index);
         if(!scope)continue;
         if(scope.flags&(XY|FFT)){
           warn('XY, I–V and FFT scope modes are not supported');continue;
@@ -227,18 +252,22 @@
       doc.probes.push(probe);
       assignments[probe.id]=paneId;
       if(panes[paneId])continue;
-      const {speed,position,order,trigger}=paneSettings.get(paneId);
+      const {speed,position,order,trigger,placement}=paneSettings.get(paneId);
       activeTraces[paneId]=probe.id;
-      if(!columns.has(position))columns.set(position,[]);
-      const column=columns.get(position);
-      const division=column.length?panes[column[0].id].timeDivision:timeDivision(doc.simulation.timeStep,speed);
-      panes[paneId]={mode:'docked',timeDivision:division,order,x:24,y:64,width:640,height:280,weight:1};
+      let division=timeDivision(doc.simulation.timeStep,speed);
+      if(!placement) {
+        if(!columns.has(position))columns.set(position,[]);
+        const column=columns.get(position);
+        if(column.length)division=panes[column[0].id].timeDivision;
+        column.push({type:'scope',id:paneId});
+      }
+      panes[paneId]=placement?{...placement,timeDivision:division,order,weight:1}
+        :{mode:'docked',timeDivision:division,order,x:24,y:64,width:640,height:280,weight:1};
       if(trigger)panes[paneId].trigger={...trigger,source:probe.id};
-      column.push({type:'scope',id:paneId});
     }
-    if(!columns.size)return;
+    if(!Object.keys(panes).length)return;
     const rows=[...columns].sort(([a],[b])=>a-b).map(([,items])=>dock(items,'vertical'));
-    doc.layout.scopes={version:1,open:true,assignments,activeTraces,panes,height:260,dock:dock(rows,'horizontal')};
+    doc.layout.scopes={version:1,open:rows.length>0,assignments,activeTraces,panes,height:260,dock:rows.length?dock(rows,'horizontal'):null};
   }
 
   const api=Object.freeze({restore});registry.falstad_scopes=api;

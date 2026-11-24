@@ -32,6 +32,14 @@ final class EngineCircuitUpdate {
         if(old instanceof GateElm){GateElm a=(GateElm)old,b=(GateElm)fresh;a.highVoltage=b.highVoltage;a.propagationDelay=b.propagationDelay;if(a.inputCount!=b.inputCount){a.inputCount=b.inputCount;a.allocNodes();a.setupVolts();}}
         if(old instanceof InverterElm){InverterElm a=(InverterElm)old,b=(InverterElm)fresh;a.slewRate=b.slewRate;a.highVoltage=b.highVoltage;}
         if(old instanceof ChipElm){ChipElm a=(ChipElm)old,b=(ChipElm)fresh;a.highVoltage=b.highVoltage;}
+        if(old instanceof RelayElm)EngineRelaySupport.configure((RelayElm)old,(RelayElm)fresh);
+        if(old instanceof TimerElm){
+            TimerElm timer=(TimerElm)old;
+            double[] previousVoltages=timer.volts;
+            timer.allocNodes();
+            if(timer.volts!=previousVoltages)
+                System.arraycopy(previousVoltages,0,timer.volts,0,Math.min(previousVoltages.length,timer.volts.length));
+        }
         if(old instanceof CounterElm){CounterElm a=(CounterElm)old,b=(CounterElm)fresh;a.modulus=b.modulus;a.invertreset=b.invertreset;}
         if(old instanceof TransformerElm){TransformerElm a=(TransformerElm)old,b=(TransformerElm)fresh;a.inductance=b.inductance;a.ratio=b.ratio;a.couplingCoef=b.couplingCoef;a.saturationCurrent=b.saturationCurrent;}
         if(old instanceof TappedTransformerElm){TappedTransformerElm a=(TappedTransformerElm)old,b=(TappedTransformerElm)fresh;a.inductance=b.inductance;a.ratio=b.ratio;a.couplingCoef=b.couplingCoef;}

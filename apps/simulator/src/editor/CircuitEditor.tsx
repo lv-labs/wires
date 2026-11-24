@@ -11,6 +11,7 @@ import { TraceProperties } from "./TraceProperties"
 import { ScopeWorkspace } from "./ScopeWorkspace"
 import type { TracePatch } from "./ScopeContextMenu"
 import { scopeWindow } from "./scopeDisplay"
+import type { ScopeRendering } from "./scopeDisplay"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -45,6 +46,7 @@ const examples = new Map(
   ).map((document) => [document.title, document])
 )
 const exampleNames = [...examples.keys()].sort((a, b) => a.localeCompare(b))
+const scopeRenderingKey = "circuit-editor.scope-rendering.v1"
 let falstadExamples: Record<string, CircuitDocument> | undefined
 
 type PendingAdjustment = SliderAdjustment & { document: CircuitDocument }
@@ -118,6 +120,22 @@ export function CircuitEditor({
   const [simulationSettingsOpen, setSimulationSettingsOpen] = useState(false)
   const [gridMode, setGridMode] = useState<"dots" | "lines" | "off">("lines")
   const [scopeViewport] = useState(createScopeViewport)
+  const [scopeRendering, setScopeRendering] = useState<ScopeRendering>(() => {
+    try {
+      return localStorage.getItem(scopeRenderingKey) === "smooth"
+        ? "smooth"
+        : "stepped"
+    } catch {
+      return "stepped"
+    }
+  })
+  useEffect(() => {
+    try {
+      localStorage.setItem(scopeRenderingKey, scopeRendering)
+    } catch {
+      // Keep the preference for this session if storage is unavailable.
+    }
+  }, [scopeRendering])
   const scopeOpen = editor.document.layout.scopes?.open ?? false
   function setScopeOpen(change: boolean | ((open: boolean) => boolean)) {
     editor.session.transaction("Scope panel", (draft) => {
@@ -251,7 +269,6 @@ export function CircuitEditor({
   const pendingSlider = useRef<PendingAdjustment | null>(null)
   const sliderPreviewFrame = useRef<number | null>(null)
   const sliderPreviewInFlight = useRef(false)
-  const lastSliderPreviewAt = useRef(-Infinity)
   const workspace = useRef<HTMLDivElement>(null)
   const [, setNotice] = useState("Ready")
   const fileInput = useRef<HTMLInputElement>(null)
@@ -380,6 +397,7 @@ export function CircuitEditor({
   }
   function clearSliderAdjustment() {
     pendingSlider.current = null
+    editor.run.current?.requestPreview(null)
     setSliderAdjustment(null)
     if (sliderPreviewFrame.current !== null) {
       cancelAnimationFrame(sliderPreviewFrame.current)
@@ -439,49 +457,40 @@ export function CircuitEditor({
     scheduleSliderPreview()
   }
   function scheduleSliderPreview() {
-    if (sliderPreviewFrame.current !== null) return
-    sliderPreviewFrame.current = requestAnimationFrame((now) => {
-      sliderPreviewFrame.current = null
-      const pending = pendingSlider.current
-      const coordinator = editor.run.current
-      if (!pending || !coordinator) return
-      // Keep the sheet responsive at display cadence; only the latest control
-      // value needs to reach the solver. Never build a queue of mouse events.
-      setSliderAdjustment(pending)
-      if (sliderPreviewInFlight.current) return
-      const state = coordinator.getState()
-      const field = sliderField(pending)
-      // A preview advances the revision and invalidates the previous live frame.
-      // Let the new frequency produce a sample before applying the next preview.
-      const waitingForFrequencySample =
-        field === "waveform.frequency" &&
-        state.status === "running" &&
-        editor.simulationSpeed > 0 &&
-        !state.frame
-      if (
-        !["running", "paused", "error"].includes(state.status) ||
-        waitingForFrequencySample ||
-        now - lastSliderPreviewAt.current < 1000 / 30
-      ) {
-        scheduleSliderPreview()
-        return
+    if (sliderPreviewFrame.current === null) {
+      sliderPreviewFrame.current = requestAnimationFrame(() => {
+        sliderPreviewFrame.current = null
+        setSliderAdjustment(pendingSlider.current)
+      })
+    }
+    const pending = pendingSlider.current
+    const coordinator = editor.run.current
+    if (!pending || !coordinator || sliderPreviewInFlight.current) return
+    // The solver owns input coalescing at the batch boundary. The sheet's
+    // preview can paint independently, without holding the latest value up.
+    coordinator.requestPreview(() => {
+      const latest = pendingSlider.current
+      if (!latest || latest.document !== pending.document) return
+      const components = latest.document.electrical.components
+      const index = components.findIndex(({ id }) => id === latest.id)
+      const source = components[index]
+      if (source?.kind !== latest.kind) return
+      const parameters = structuredClone(source.parameters)
+      setProperty(parameters, sliderField(latest), latest.value)
+      const preview = {
+        ...latest.document,
+        electrical: {
+          ...latest.document.electrical,
+          components: components.with(index, { ...source, parameters }),
+        },
       }
-      // An idle coordinator has no outstanding step. Updating during a step
-      // invalidates its old revision and discards otherwise valid scope samples.
-      const preview = editor.session.document
-      const source = preview.electrical.components.find(
-        ({ id }) => id === pending.id
-      )
-      if (source?.kind !== pending.kind) return
-      setProperty(source.parameters, field, pending.value)
-      lastSliderPreviewAt.current = now
       sliderPreviewInFlight.current = true
       void coordinator
-        .setDocument(preview)
+        .setDocument(preview, { preview: true })
         .catch((cause) => setNotice(String(cause)))
         .finally(() => {
           sliderPreviewInFlight.current = false
-          if (pendingSlider.current && pendingSlider.current !== pending)
+          if (pendingSlider.current && pendingSlider.current !== latest)
             scheduleSliderPreview()
         })
     })
@@ -1125,6 +1134,8 @@ export function CircuitEditor({
           simulationRunning={!!editor.simulation.runRequested}
           onGridModeChange={setGridMode}
           scopeOpen={scopeOpen}
+          scopeRendering={scopeRendering}
+          onScopeRenderingChange={setScopeRendering}
           hoveredTrace={hoveredTrace}
           onToggleScope={() => setScopeOpen((open) => !open)}
           sliderPanelOpen={sliderPanelOpen}
@@ -1235,6 +1246,7 @@ export function CircuitEditor({
         times={editor.scopeData.times}
         cursor={scopeCursor}
         open={scopeOpen}
+        rendering={scopeRendering}
         sheet={workspace}
         viewport={scopeViewport}
         savedLayout={editor.document.layout.scopes}

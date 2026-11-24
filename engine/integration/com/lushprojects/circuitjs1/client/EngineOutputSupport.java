@@ -65,6 +65,12 @@ final class EngineOutputSupport {
     static JavaScriptObject measurements(CircuitElm elm){
         JavaScriptObject result=object();
         if(elm instanceof VarRailElm)put(result,"voltage",((VarRailElm)elm).frequency);
+        else if(elm instanceof RelayElm){
+            RelayElm relay=(RelayElm)elm;
+            put(result,"coilCurrent",relay.coilCurrent);
+            put(result,"position",relay.i_position);
+            put(result,"travel",relay.d_position);
+        }
         else if(elm instanceof LampElm){LampElm e=(LampElm)elm;put(result,"temperature",e.temp);put(result,"resistance",e.resistance);put(result,"power",e.getPower());}
         else if(elm instanceof ProbeElm){ProbeElm e=(ProbeElm)elm;put(result,"value",meter(e.meter,e.getVoltageDiff(),e.rmsV,e.lastMaxV,e.lastMinV,e.binaryLevel));}
         else if(elm instanceof TestPointElm){TestPointElm e=(TestPointElm)elm;put(result,"value",meter(e.meter,e.volts[0],e.rmsV,e.lastMaxV,e.lastMinV,e.binaryLevel));}

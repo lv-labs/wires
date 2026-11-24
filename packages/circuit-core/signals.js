@@ -77,7 +77,7 @@
       }
       sequence=frame.frameSequence;revision=frame.circuitRevision;lastTime=ts.at(-1)+timeOffset;lastStep=step;return true;
     }
-    function window(span){
+    function window(span, {typed = false} = {}){
       const end=length?Math.max(span,times[(start+length-1)%capacity]):span,begin=Math.max(0,end-span);
       let first=0,high=length;
       while(first<high){
@@ -85,12 +85,19 @@
         if(times[(start+mid)%capacity]>=begin)high=mid;
         else first=mid+1;
       }
-      const count=length-first,offset=(start+first)%capacity,ts=new Array(count);
+      const count=length-first,offset=(start+first)%capacity;
+      const allocate=()=>typed?new Float64Array(count):new Array(count);
+      const ts=allocate();
       const split=Math.min(count,capacity-offset);
-      for(let i=0;i<split;i++)ts[i]=times[offset+i];
-      for(let i=split;i<count;i++)ts[i]=times[i-split];
+      if(typed){
+        ts.set(times.subarray(offset,offset+split));
+        ts.set(times.subarray(0,count-split),split);
+      }else{
+        for(let i=0;i<split;i++)ts[i]=times[offset+i];
+        for(let i=split;i<count;i++)ts[i]=times[i-split];
+      }
       return {start:begin,end,stored:length,capacity,times:ts,channels:channels.map((c,j)=>{
-        const history=values[j],ys=new Array(count);
+        const history=values[j],ys=allocate();
         let min=Infinity,max=-Infinity;
         for(let i=0;i<count;i++){
           const value=history[i<split?offset+i:i-split];
@@ -105,7 +112,7 @@
   }
   // Preserve first/last and min/max within each screen column, never average away peaks.
   function envelope(times,values,start,end,width){
-    if(!times.length||times.length<=width*2)return times.map((t,i)=>[t,values[i]]);
+    if(times.length<=width*2)return Array.from(times,(t,i)=>[t,values[i]]);
     const output=[];
     let first=0,min=0,max=0,bucket=Math.floor((times[0]-start)/(end-start)*width);
     function append(index){output.push([times[index],values[index]]);}

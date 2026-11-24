@@ -5,9 +5,10 @@ import { useEffect, useId, useState } from "react";
 
 // Shared by the one- and two-terminal voltage source symbols.
 const waveforms: Record<string, string> = {
-  dc: `M -25 0
-    C -20 -30, -5 -30, 0 0
-    S 17.5 30, 25 0`,
+  dc: `M -24 -9 H 24
+    M -24 9 H -14
+    M -5 9 H 5
+    M 14 9 H 24`,
   sine: `M -25 0
     C -20 -30, -5 -30, 0 0
     S 17.5 30, 25 0`,
@@ -45,12 +46,6 @@ export function WaveformGlyph({
     waveform && typeof waveform === "object" && "kind" in waveform
       ? String(waveform.kind)
       : "dc";
-  if (kind === "dc")
-    return (
-      <>
-      <path d = {waveforms[kind]} />        
-      </>
-    );
   return (
     <Upright pose={pose}>
       <path d={waveforms[kind]} />

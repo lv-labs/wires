@@ -1,8 +1,8 @@
 (function(){
 var $wnd=self,$doc=undefined,$gwt={},$stats=null,$sessionId=null;
 var $moduleName='circuitjsworker',$moduleBase=new URL('.',self.location.href).href;
-var $gwt_version='2.8.2',$strongName='649F160F79188A217425BD95978E647C';
-var $intern_0 = {3:1, 9:1, 15:1}, $intern_1 = 4194303, $intern_2 = 1048575, $intern_3 = 4194304, $intern_4 = 17592186044416, $intern_5 = -17592186044416, $intern_6 = {3:1, 10:1}, $intern_7 = {8:1, 3:1}, $intern_8 = 0.48, $intern_9 = {4:1, 6:1}, $intern_10 = 6.283185307179586, $intern_11 = {49:1, 4:1, 6:1}, $intern_12 = {3:1}, $intern_13 = {4:1, 6:1, 24:1}, $intern_14 = 3.141592653589793, $intern_15 = 0.6366197723675814, $intern_16 = 1.5707963267948966, $intern_17 = 0.001, $intern_18 = {4:1, 6:1, 38:1, 20:1}, $intern_19 = 100000000, $intern_20 = {18:1, 4:1, 6:1}, $intern_21 = 0.01, $intern_22 = 38.662284941040014, $intern_23 = 0.025865, $intern_24 = {4:1, 26:1, 6:1}, $intern_25 = 1000000000000, $intern_26 = 1.7143528192808883E-7, $intern_27 = 1.0E-8, $intern_28 = 100000, $intern_29 = 1000000, $intern_30 = {4:1, 6:1, 37:1}, $intern_31 = 1000000000, $intern_32 = {4:1, 6:1, 77:1}, $intern_33 = 1.0E-4, $intern_34 = {4:1, 6:1, 51:1}, $intern_35 = 3.7E-4, $intern_36 = 0.0047, $intern_37 = -20.192307692307693, $intern_38 = {4:1, 6:1, 24:1, 87:1}, $intern_39 = {45:1}, $intern_40 = 15525485;
+var $gwt_version='2.8.2',$strongName='B7CD071FC71B3749C8FE97EA4BD0B895';
+var $intern_0 = {3:1, 9:1, 15:1}, $intern_1 = 4194303, $intern_2 = 1048575, $intern_3 = 4194304, $intern_4 = 17592186044416, $intern_5 = -17592186044416, $intern_6 = {3:1, 10:1}, $intern_7 = {8:1, 3:1}, $intern_8 = 0.48, $intern_9 = {4:1, 6:1}, $intern_10 = 6.283185307179586, $intern_11 = {50:1, 4:1, 6:1}, $intern_12 = {3:1}, $intern_13 = {4:1, 6:1, 24:1}, $intern_14 = 3.141592653589793, $intern_15 = 0.6366197723675814, $intern_16 = 1.5707963267948966, $intern_17 = 0.001, $intern_18 = {4:1, 6:1, 39:1, 20:1}, $intern_19 = 100000000, $intern_20 = {18:1, 4:1, 6:1}, $intern_21 = 0.01, $intern_22 = 38.662284941040014, $intern_23 = 0.025865, $intern_24 = {4:1, 26:1, 6:1}, $intern_25 = 1000000000000, $intern_26 = 1.7143528192808883E-7, $intern_27 = 1.0E-8, $intern_28 = 100000, $intern_29 = 10000, $intern_30 = 1000000, $intern_31 = {4:1, 6:1, 38:1}, $intern_32 = 1000000000, $intern_33 = {4:1, 6:1, 77:1}, $intern_34 = 1.0E-4, $intern_35 = {4:1, 6:1, 52:1}, $intern_36 = 3.7E-4, $intern_37 = 0.0047, $intern_38 = -20.192307692307693, $intern_39 = {4:1, 6:1, 24:1, 87:1}, $intern_40 = {46:1}, $intern_41 = 15525485;
 var _, prototypesByTypeId_0, initFnList_0, permutationId = -1;
 function setGwtProperty(propertyName, propertyValue){
   typeof window === 'object' && typeof window['$gwt'] === 'object' && (window['$gwt'][propertyName] = propertyValue);
@@ -359,10 +359,10 @@ function RuntimeException_0(message){
 
 defineClass(25, 9, $intern_0);
 var Ljava_lang_RuntimeException_2_classLit = createForClass('java.lang', 'RuntimeException', 25);
-defineClass(108, 25, $intern_0);
-var Ljava_lang_JsException_2_classLit = createForClass('java.lang', 'JsException', 108);
-defineClass(150, 108, $intern_0);
-var Lcom_google_gwt_core_client_impl_JavaScriptExceptionBase_2_classLit = createForClass('com.google.gwt.core.client.impl', 'JavaScriptExceptionBase', 150);
+defineClass(109, 25, $intern_0);
+var Ljava_lang_JsException_2_classLit = createForClass('java.lang', 'JsException', 109);
+defineClass(153, 109, $intern_0);
+var Lcom_google_gwt_core_client_impl_JavaScriptExceptionBase_2_classLit = createForClass('com.google.gwt.core.client.impl', 'JavaScriptExceptionBase', 153);
 function $clinit_JavaScriptException(){
   $clinit_JavaScriptException = emptyMethod;
   NOT_SET = new Object_0;
@@ -397,7 +397,7 @@ function getExceptionName0(e){
   return e == null?null:e.name;
 }
 
-defineClass(93, 150, {93:1, 3:1, 9:1, 15:1}, JavaScriptException);
+defineClass(93, 153, {93:1, 3:1, 9:1, 15:1}, JavaScriptException);
 _.getMessage = function getMessage_0(){
   $ensureInit(this);
   return this.message_0;
@@ -417,8 +417,8 @@ function now_1(){
   return (new Date).getTime();
 }
 
-defineClass(174, 1, {});
-var Lcom_google_gwt_core_client_Scheduler_2_classLit = createForClass('com.google.gwt.core.client', 'Scheduler', 174);
+defineClass(175, 1, {});
+var Lcom_google_gwt_core_client_Scheduler_2_classLit = createForClass('com.google.gwt.core.client', 'Scheduler', 175);
 function $clinit_Impl(){
   $clinit_Impl = emptyMethod;
   !!($clinit_StackTraceCreator() , collector);
@@ -557,9 +557,9 @@ function runScheduledTasks(tasks, rescheduled){
   return rescheduled;
 }
 
-defineClass(160, 174, {}, SchedulerImpl);
+defineClass(162, 175, {}, SchedulerImpl);
 var INSTANCE;
-var Lcom_google_gwt_core_client_impl_SchedulerImpl_2_classLit = createForClass('com.google.gwt.core.client.impl', 'SchedulerImpl', 160);
+var Lcom_google_gwt_core_client_impl_SchedulerImpl_2_classLit = createForClass('com.google.gwt.core.client.impl', 'SchedulerImpl', 162);
 function $clinit_StackTraceCreator(){
   $clinit_StackTraceCreator = emptyMethod;
   var c, enforceLegacy;
@@ -588,12 +588,12 @@ function supportsErrorStack(){
 }
 
 var collector;
-defineClass(186, 1, {});
-var Lcom_google_gwt_core_client_impl_StackTraceCreator$Collector_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/Collector', 186);
+defineClass(189, 1, {});
+var Lcom_google_gwt_core_client_impl_StackTraceCreator$Collector_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/Collector', 189);
 function StackTraceCreator$CollectorLegacy(){
 }
 
-defineClass(151, 186, {}, StackTraceCreator$CollectorLegacy);
+defineClass(154, 189, {}, StackTraceCreator$CollectorLegacy);
 _.collect = function collect(error){
   var seen = {}, name_1;
   var fnStack = [];
@@ -617,17 +617,17 @@ _.collect = function collect(error){
   }
 }
 ;
-var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorLegacy_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorLegacy', 151);
-defineClass(187, 186, {});
+var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorLegacy_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorLegacy', 154);
+defineClass(190, 189, {});
 _.collect = function collect_0(error){
 }
 ;
-var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorModern_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorModern', 187);
+var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorModern_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorModern', 190);
 function StackTraceCreator$CollectorModernNoSourceMap(){
 }
 
-defineClass(152, 187, {}, StackTraceCreator$CollectorModernNoSourceMap);
-var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorModernNoSourceMap_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorModernNoSourceMap', 152);
+defineClass(155, 190, {}, StackTraceCreator$CollectorModernNoSourceMap);
+var Lcom_google_gwt_core_client_impl_StackTraceCreator$CollectorModernNoSourceMap_2_classLit = createForClass('com.google.gwt.core.client.impl', 'StackTraceCreator/CollectorModernNoSourceMap', 155);
 function canSet(array, value_0){
   var elementTypeCategory;
   switch (getElementTypeCategory(array)) {
@@ -1094,7 +1094,7 @@ function $allocNodes(this$static){
   var n;
   n = this$static.getPostCount() + this$static.getInternalNodeCount();
   if (this$static.nodes == null || this$static.nodes.length != n) {
-    this$static.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 33, n, 0, 1);
+    this$static.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 34, n, 0, 1);
     this$static.volts = initUnidimensionalArray(D_classLit, $intern_7, 5, n, 15, 1);
   }
 }
@@ -1267,7 +1267,7 @@ function $setPoints(this$static){
   this$static.dn = $wnd.Math.sqrt(this$static.dx * this$static.dx + this$static.dy * this$static.dy);
   this$static.dpx1 = this$static.dy / this$static.dn;
   this$static.dpy1 = -this$static.dx / this$static.dn;
-  this$static.dsign = this$static.dy == 0?sign(this$static.dx):sign(this$static.dy);
+  this$static.dsign = this$static.dy == 0?sign_0(this$static.dx):sign_0(this$static.dy);
   this$static.point1 = new Point_0(this$static.x_0, this$static.y_0);
   this$static.point2 = new Point_0(this$static.x2, this$static.y2);
 }
@@ -1322,7 +1322,7 @@ function min_1(a, b){
   return a < b?a:b;
 }
 
-function sign(x_0){
+function sign_0(x_0){
   return x_0 < 0?-1:x_0 == 0?0:1;
 }
 
@@ -1492,7 +1492,7 @@ function AMElm(xa, ya, xb, yb, f, st){
   this.freqTimeZero = 0;
 }
 
-defineClass(95, 4, {95:1, 4:1, 6:1}, AMElm);
+defineClass(96, 4, {96:1, 4:1, 6:1}, AMElm);
 _.doStep = function doStep_0(){
   var w;
   $updateVoltageSource(this.voltSource_0, (w = $intern_10 * (sim.t - this.freqTimeZero) , ($wnd.Math.sin(w * this.signalfreq) + 1) / 2 * $wnd.Math.sin(w * this.carrierfreq) * this.maxVoltage));
@@ -1539,7 +1539,7 @@ _.carrierfreq = 0;
 _.freqTimeZero = 0;
 _.maxVoltage = 0;
 _.signalfreq = 0;
-var Lcom_lushprojects_circuitjs1_client_AMElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AMElm', 95);
+var Lcom_lushprojects_circuitjs1_client_AMElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AMElm', 96);
 function AmmeterElm(xa, ya, xb, yb, st){
   CircuitElm.call(this, xa, ya, xb, yb, 3);
   this.zerocount = 0;
@@ -1676,7 +1676,7 @@ function AnalogSwitchElm(xa, ya, xb, yb, f, st){
   }
 }
 
-defineClass(49, 4, $intern_11, AnalogSwitchElm);
+defineClass(50, 4, $intern_11, AnalogSwitchElm);
 _.calculateCurrent = function calculateCurrent_0(){
   if (this.resistance == 0)
     return;
@@ -1743,12 +1743,12 @@ _.r_off = 0;
 _.r_on = 0;
 _.resistance = 0;
 _.threshold = 0;
-var Lcom_lushprojects_circuitjs1_client_AnalogSwitchElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AnalogSwitchElm', 49);
+var Lcom_lushprojects_circuitjs1_client_AnalogSwitchElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AnalogSwitchElm', 50);
 function AnalogSwitch2Elm(xa, ya, xb, yb, f, st){
   AnalogSwitchElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(137, 49, $intern_11, AnalogSwitch2Elm);
+defineClass(137, 50, $intern_11, AnalogSwitch2Elm);
 _.calculateCurrent = function calculateCurrent_1(){
   this.open_0?(this.current_1 = (this.volts[0] - this.volts[2]) / this.r_on):(this.current_1 = (this.volts[0] - this.volts[1]) / this.r_on);
 }
@@ -2212,7 +2212,7 @@ function RailElm(xa, ya, xb, yb, f, st){
   VoltageElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(38, 20, $intern_18, RailElm);
+defineClass(39, 20, $intern_18, RailElm);
 _.doStep = function doStep_5(){
   this.waveform != 0 && $updateVoltageSource(this.voltSource_0, this.getVoltage());
 }
@@ -2256,13 +2256,13 @@ _.validate = function validate_3(){
   return this.internalResistance > 0 || $validateRailNode_0(this);
 }
 ;
-var Lcom_lushprojects_circuitjs1_client_RailElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'RailElm', 38);
+var Lcom_lushprojects_circuitjs1_client_RailElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'RailElm', 39);
 function AntennaElm(xa, ya, xb, yb, f, st){
   RailElm.call(this, xa, ya, xb, yb, f, st);
   this.waveform = 1;
 }
 
-defineClass(165, 38, $intern_18, AntennaElm);
+defineClass(167, 39, $intern_18, AntennaElm);
 _.getDumpType = function getDumpType_7(){
   return 65;
 }
@@ -2278,7 +2278,7 @@ _.stepFinished = function stepFinished_2(){
 }
 ;
 _.fmphase = 0;
-var Lcom_lushprojects_circuitjs1_client_AntennaElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AntennaElm', 165);
+var Lcom_lushprojects_circuitjs1_client_AntennaElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AntennaElm', 167);
 function $reset_0(this$static){
   this$static.dataPtr = 0;
   this$static.dataFull = false;
@@ -2303,7 +2303,7 @@ function AudioOutputElm(xa, ya, xb, yb, st){
   this.nextDataSample = sim.t + this.sampleStep;
 }
 
-defineClass(28, 4, {28:1, 4:1, 6:1}, AudioOutputElm);
+defineClass(29, 4, {29:1, 4:1, 6:1}, AudioOutputElm);
 _.getDumpType = function getDumpType_8(){
   return 211;
 }
@@ -2350,7 +2350,7 @@ _.duration = 0;
 _.nextDataSample = 0;
 _.sampleStep = 0;
 _.samplingRate = 0;
-var Lcom_lushprojects_circuitjs1_client_AudioOutputElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AudioOutputElm', 28);
+var Lcom_lushprojects_circuitjs1_client_AudioOutputElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'AudioOutputElm', 29);
 function $calculateCurrent(this$static){
   var voltdiff;
   voltdiff = this$static.volts[0] - this$static.volts[this$static.capNode2];
@@ -2390,7 +2390,7 @@ function CapacitorElm(xa, ya, xb, yb, f, st){
   $allocNodes(this);
 }
 
-defineClass(50, 4, {50:1, 4:1, 6:1}, CapacitorElm);
+defineClass(51, 4, {51:1, 4:1, 6:1}, CapacitorElm);
 _.calculateCurrent = function calculateCurrent_2(){
   $calculateCurrent(this);
 }
@@ -2480,7 +2480,7 @@ _.curSourceValue = 0;
 _.initialVoltage = 0;
 _.seriesResistance = 0;
 _.voltdiff = 0;
-var Lcom_lushprojects_circuitjs1_client_CapacitorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CapacitorElm', 50);
+var Lcom_lushprojects_circuitjs1_client_CapacitorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CapacitorElm', 51);
 function $clinit_ChipElm(){
   $clinit_ChipElm = emptyMethod;
   sideFlipXY = stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [2, 3, 0, 1]);
@@ -2632,7 +2632,7 @@ _.getCurrentIntoNode = function getCurrentIntoNode_3(n){
 }
 ;
 _.getPost = function getPost_3(n){
-  return this.pins[n].post;
+  return this.pins[n].post_0;
 }
 ;
 _.getPostWidth = function getPostWidth_0(n){
@@ -2724,11 +2724,11 @@ function $setPoint(this$static, px, py, dx, dy, dax, day, sx, sy){
   }
   xa = px + this$static.this$01.cspc2 * dx * this$static.pos + sx;
   ya = py + this$static.this$01.cspc2 * dy * this$static.pos + sy;
-  this$static.post = new Point_0(xa + dax * this$static.this$01.cspc2, ya + day * this$static.this$01.cspc2);
+  this$static.post_0 = new Point_0(xa + dax * this$static.this$01.cspc2, ya + day * this$static.this$01.cspc2);
   busExtra = this$static.busWidth > 1?2:0;
   new Point_0(xa + dax * (this$static.this$01.cspc + busExtra), ya + day * (this$static.this$01.cspc + busExtra));
   this$static.textloc = new Point_0(xa, ya);
-  this$static.post.z_0 = this$static.busZ;
+  this$static.post_0.z_0 = this$static.busZ;
   if (this$static.clock) {
     if (this$static.clockPointsX == null) {
       this$static.clockPointsX = initUnidimensionalArray(I_classLit, $intern_12, 5, 3, 15, 1);
@@ -2818,16 +2818,16 @@ function CircuitMatrix(){
   this.voltageSourceList = new Vector;
 }
 
-defineClass(110, 1, {110:1}, CircuitMatrix);
+defineClass(107, 1, {107:1}, CircuitMatrix);
 _.nodeCount = 0;
 _.nonLinear = false;
 _.size_0 = 0;
-var Lcom_lushprojects_circuitjs1_client_CircuitMatrix_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitMatrix', 110);
+var Lcom_lushprojects_circuitjs1_client_CircuitMatrix_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitMatrix', 107);
 function CircuitNode(){
   this.links_0 = new Vector;
 }
 
-defineClass(33, 1, {33:1}, CircuitNode);
+defineClass(34, 1, {34:1}, CircuitNode);
 _.toString_0 = function toString_3(){
   return 'node ' + this.index_0;
 }
@@ -2836,13 +2836,13 @@ _.index_0 = 0;
 _.internal = false;
 _.row = 0;
 var ground;
-var Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitNode', 33);
+var Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitNode', 34);
 function CircuitNodeLink(){
 }
 
-defineClass(44, 1, {44:1}, CircuitNodeLink);
+defineClass(43, 1, {43:1}, CircuitNodeLink);
 _.num = 0;
-var Lcom_lushprojects_circuitjs1_client_CircuitNodeLink_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitNodeLink', 44);
+var Lcom_lushprojects_circuitjs1_client_CircuitNodeLink_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CircuitNodeLink', 43);
 function CounterElm(xa, ya, xb, yb, f, st){
   $clinit_ChipElm();
   ChipElm.call(this, xa, ya, xb, yb, f, st);
@@ -2941,7 +2941,7 @@ function CurrentElm(xa, ya, xb, yb, f, st){
   this.currentValue == 0 && (this.currentValue = $intern_21);
 }
 
-defineClass(46, 4, {4:1, 46:1, 6:1}, CurrentElm);
+defineClass(47, 4, {4:1, 47:1, 6:1}, CurrentElm);
 _.doStep = function doStep_8(){
   var absG, arg, g, i, maxStep, sech2, tanhArg, vMid, vStart, vWidth, vd, vt;
   if (this.broken || !(this.maxVoltage > 0))
@@ -3027,7 +3027,7 @@ _.broken = false;
 _.currentValue = 0;
 _.lastVoltDiff = 0;
 _.maxVoltage = 0;
-var Lcom_lushprojects_circuitjs1_client_CurrentElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CurrentElm', 46);
+var Lcom_lushprojects_circuitjs1_client_CurrentElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CurrentElm', 47);
 function escape_0(s){
   if (s.length == 0)
     return '\\0';
@@ -3313,7 +3313,7 @@ _.width_0 = 0;
 var Lcom_lushprojects_circuitjs1_client_CustomTransformerElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'CustomTransformerElm', 53);
 function DCMotorElm(xa, ya, xb, yb, st){
   CircuitElm.call(this, xa, ya, xb, yb, 0);
-  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, 2, 0, 1);
+  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, 2, 0, 1);
   this.angle = $intern_16;
   this.speed = 0;
   this.inductance = $doubleValue(__parseAndValidateDouble($nextToken(st)));
@@ -3330,7 +3330,7 @@ function DCMotorElm(xa, ya, xb, yb, st){
   $setup_1(this.indInertia, this.J, 0, 2);
 }
 
-defineClass(43, 4, {4:1, 43:1, 6:1}, DCMotorElm);
+defineClass(45, 4, {4:1, 45:1, 6:1}, DCMotorElm);
 _.calculateCurrent = function calculateCurrent_4(){
   this.coilCurrent = $calculateCurrent_1(this.ind, this.volts[0] - this.volts[2]);
   this.inertiaCurrent = $calculateCurrent_1(this.indInertia, this.volts[4] - this.volts[5]);
@@ -3411,7 +3411,7 @@ _.inertiaCurrent = 0;
 _.resistance = 0;
 _.speed = 0;
 _.tau = 0;
-var Lcom_lushprojects_circuitjs1_client_DCMotorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'DCMotorElm', 43);
+var Lcom_lushprojects_circuitjs1_client_DCMotorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'DCMotorElm', 45);
 function DFlipFlopElm(xa, ya, xb, yb, f, st){
   $clinit_ChipElm();
   ChipElm.call(this, xa, ya, xb, yb, f, st);
@@ -3506,7 +3506,7 @@ function SwitchElm(xa, ya, xb, yb, f, st){
   var str;
   CircuitElm.call(this, xa, ya, xb, yb, f);
   str = $nextToken(st);
-  $compareTo(str, 'true') == 0?(this.position = instanceOf(this, 40)?0:1):$compareTo(str, 'false') == 0?(this.position = instanceOf(this, 40)?1:0):(this.position = (new Integer_0(str)).value_0);
+  $compareTo(str, 'true') == 0?(this.position = instanceOf(this, 41)?0:1):$compareTo(str, 'false') == 0?(this.position = instanceOf(this, 41)?1:0):(this.position = (new Integer_0(str)).value_0);
   this.momentary = $booleanValue(($clinit_Boolean() , $equalsIgnoreCase($nextToken(st))));
   this.label_0 = null;
   (this.flags & 4) != 0 && (this.label_0 = unescape_0($nextToken(st)));
@@ -3623,7 +3623,7 @@ _.setPoints = function setPoints_15(){
   var i, offset;
   $setPoints_6(this);
   $calcLeads(this, 32);
-  this.voltageSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, this.poleCount, 0, 1);
+  this.voltageSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, this.poleCount, 0, 1);
   this.throwPosts = $newPointArray(2 * this.poleCount);
   this.throwLeads = $newPointArray(4 * this.poleCount);
   this.poleLeads = $newPointArray(this.poleCount);
@@ -3683,7 +3683,7 @@ function DataRecorderElm(xa, ya, xb, yb, st){
   $setDataCount(this, __parseAndValidateInt($nextToken(st), 10));
 }
 
-defineClass(42, 4, {4:1, 42:1, 6:1}, DataRecorderElm);
+defineClass(44, 4, {4:1, 44:1, 6:1}, DataRecorderElm);
 _.getDumpType = function getDumpType_17(){
   return 210;
 }
@@ -3722,7 +3722,7 @@ _.dataCount = 0;
 _.dataFull = false;
 _.dataPtr = 0;
 _.lastTimeStepCount = 0;
-var Lcom_lushprojects_circuitjs1_client_DataRecorderElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'DataRecorderElm', 42);
+var Lcom_lushprojects_circuitjs1_client_DataRecorderElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'DataRecorderElm', 44);
 function $setupPins(this$static){
   this$static.sizeX = 3;
   this$static.sizeY = this$static.bitOrder == 2?2:this$static.bitCount;
@@ -3921,7 +3921,7 @@ function $stamp_0(this$static, n0, n1){
 
 function Diode(s){
   this.sim = s;
-  this.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 33, 2, 0, 1);
+  this.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 34, 2, 0, 1);
 }
 
 defineClass(27, 1, {27:1}, Diode);
@@ -4191,7 +4191,7 @@ function configure(old, fresh){
   configure_2(old, fresh);
   configure_0(old, fresh);
   configure_1(old, fresh);
-  if (instanceOf(old, 20) && !instanceOf(old, 32)) {
+  if (instanceOf(old, 20) && !instanceOf(old, 33)) {
     a = castTo(old, 20);
     b = castTo(fresh, 20);
     a.frequency != b.frequency && (a.freqTimeZero = b.frequency == 0?0:sim.t - a.frequency * (sim.t - a.freqTimeZero) / b.frequency);
@@ -4201,9 +4201,9 @@ function configure(old, fresh){
     b = castTo(fresh, 84);
     a.resistance = b.resistance;
   }
-  if (instanceOf(old, 50)) {
-    a = castTo(old, 50);
-    b = castTo(fresh, 50);
+  if (instanceOf(old, 51)) {
+    a = castTo(old, 51);
+    b = castTo(fresh, 51);
     a.capacitance = b.capacitance;
     a.initialVoltage = b.initialVoltage;
   }
@@ -4223,20 +4223,20 @@ function configure(old, fresh){
     a.dutyCycle = b.dutyCycle;
     a.riseTime = b.riseTime;
   }
-  if (instanceOf(old, 32)) {
-    a = castTo(old, 32);
-    b = castTo(fresh, 32);
+  if (instanceOf(old, 33)) {
+    a = castTo(old, 33);
+    b = castTo(fresh, 33);
     a.sliderText = b.sliderText;
   }
-  if (instanceOf(old, 46)) {
-    a = castTo(old, 46);
-    b = castTo(fresh, 46);
+  if (instanceOf(old, 47)) {
+    a = castTo(old, 47);
+    b = castTo(fresh, 47);
     a.currentValue = b.currentValue;
     a.maxVoltage = b.maxVoltage;
   }
-  if (instanceOf(old, 52)) {
-    a = castTo(old, 52);
-    b = castTo(fresh, 52);
+  if (instanceOf(old, 40)) {
+    a = castTo(old, 40);
+    b = castTo(fresh, 40);
     a.position = b.position;
     a.maxResistance = b.maxResistance;
     a.sliderText = b.sliderText;
@@ -4248,17 +4248,17 @@ function configure(old, fresh){
     a.resistance = b.resistance;
     a.momentary = b.momentary;
     a.label_0 = b.label_0;
-    if (instanceOf(a, 39)) {
-      castTo(a, 39).throwCount = castTo(b, 39).throwCount;
-      castTo(a, 39).link_0 = castTo(b, 39).link_0;
+    if (instanceOf(a, 28)) {
+      castTo(a, 28).throwCount = castTo(b, 28).throwCount;
+      castTo(a, 28).link_0 = castTo(b, 28).link_0;
     }
     instanceOf(a, 78) && (castTo(a, 78).poleCount = castTo(b, 78).poleCount);
     instanceOf(a, 55) && (castTo(a, 55).link_0 = castTo(b, 55).link_0);
     $allocNodes(a);
   }
-  if (instanceOf(old, 40)) {
-    a = castTo(old, 40);
-    b = castTo(fresh, 40);
+  if (instanceOf(old, 41)) {
+    a = castTo(old, 41);
+    b = castTo(fresh, 41);
     a.hiV = b.hiV;
     a.loV = b.loV;
   }
@@ -4275,22 +4275,22 @@ function configure(old, fresh){
     a.gain = b.gain;
     a.gbw = b.gbw;
   }
-  if (instanceOf(old, 49)) {
-    a = castTo(old, 49);
-    b = castTo(fresh, 49);
+  if (instanceOf(old, 50)) {
+    a = castTo(old, 50);
+    b = castTo(fresh, 50);
     a.r_on = b.r_on;
     a.r_off = b.r_off;
     a.threshold = b.threshold;
   }
-  if (instanceOf(old, 47)) {
-    a = castTo(old, 47);
-    b = castTo(fresh, 47);
+  if (instanceOf(old, 48)) {
+    a = castTo(old, 48);
+    b = castTo(fresh, 48);
     a.beta_0 = b.beta_0;
     a.modelName = b.modelName;
   }
-  if (instanceOf(old, 51)) {
-    a = castTo(old, 51);
-    b = castTo(fresh, 51);
+  if (instanceOf(old, 52)) {
+    a = castTo(old, 52);
+    b = castTo(fresh, 52);
     a.vt = b.vt;
     a.beta_0 = b.beta_0;
     globalFlags = globalFlags;
@@ -4354,9 +4354,9 @@ function configure(old, fresh){
     a.warmTime = b.warmTime;
     a.coolTime = b.coolTime;
   }
-  if (instanceOf(old, 43)) {
-    a = castTo(old, 43);
-    b = castTo(fresh, 43);
+  if (instanceOf(old, 45)) {
+    a = castTo(old, 45);
+    b = castTo(fresh, 45);
     a.resistance = b.resistance;
     a.inductance = b.inductance;
     a.K = b.K;
@@ -4404,15 +4404,15 @@ function configure(old, fresh){
     b = castTo(fresh, 64);
     a.displayMode = b.displayMode;
   }
-  if (instanceOf(old, 37)) {
-    a = castTo(old, 37);
-    b = castTo(fresh, 37);
+  if (instanceOf(old, 38)) {
+    a = castTo(old, 38);
+    b = castTo(fresh, 38);
     a.threshold = b.threshold;
     a.lookupText = b.lookupText;
   }
-  if (instanceOf(old, 31)) {
-    a = castTo(old, 31);
-    b = castTo(fresh, 31);
+  if (instanceOf(old, 32)) {
+    a = castTo(old, 32);
+    b = castTo(fresh, 32);
     a.triggerVoltage = b.triggerVoltage;
     a.delay = b.delay;
     a.type_0 = b.type_0;
@@ -4433,8 +4433,8 @@ function configure(old, fresh){
     a.saturationCurrent = b.saturationCurrent;
     $setup_2(a.ind, a.inductance, a.current_1, a.flags, a.saturationCurrent);
   }
-  if (instanceOf(old, 43)) {
-    a = castTo(old, 43);
+  if (instanceOf(old, 45)) {
+    a = castTo(old, 45);
     $setup_1(a.ind, a.inductance, a.coilCurrent, 2);
     $setup_1(a.indInertia, a.J, a.inertiaCurrent, 2);
   }
@@ -4445,13 +4445,13 @@ function configure(old, fresh){
     a.modelName = b.modelName;
     $setup_0(a);
   }
-  if (instanceOf(old, 47)) {
-    a = castTo(old, 47);
+  if (instanceOf(old, 48)) {
+    a = castTo(old, 48);
     $setup_3(a);
     a.model.junctionCapBE == 0 && a.model.transitTimeF == 0 && (a.geqBE = a.ceqBE = a.capCurBE = 0);
     a.model.junctionCapBC == 0 && a.model.transitTimeR == 0 && (a.geqBC = a.ceqBC = a.capCurBC = 0);
   }
-  instanceOf(old, 37) && $parseEntries(castTo(old, 37));
+  instanceOf(old, 38) && $parseEntries(castTo(old, 38));
   if (instanceOf(old, 54)) {
     a = castTo(old, 54);
     b = castTo(fresh, 54);
@@ -4461,9 +4461,9 @@ function configure(old, fresh){
     }
     a.imped = b.imped;
   }
-  if (instanceOf(old, 42)) {
-    a = castTo(old, 42);
-    b = castTo(fresh, 42);
+  if (instanceOf(old, 44)) {
+    a = castTo(old, 44);
+    b = castTo(fresh, 44);
     if (a.dataCount != b.dataCount) {
       a.dataCount = b.dataCount;
       a.data_0 = b.data_0;
@@ -4471,9 +4471,9 @@ function configure(old, fresh){
       a.dataFull = false;
     }
   }
-  if (instanceOf(old, 28)) {
-    a = castTo(old, 28);
-    b = castTo(fresh, 28);
+  if (instanceOf(old, 29)) {
+    a = castTo(old, 29);
+    b = castTo(fresh, 29);
     if (a.duration != b.duration || a.samplingRate != b.samplingRate) {
       a.duration = b.duration;
       a.samplingRate = b.samplingRate;
@@ -4499,7 +4499,7 @@ function construct(f, x_0, y_0, x2, y2, flags){
   name_0 = f[6];
   createModelMap();
   if (custom) {
-    positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7, 9]));
+    positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7, 9]));
     sc = number_0(f, 7);
     rs = number_0(f, 8);
     n = number_0(f, 9);
@@ -4522,7 +4522,7 @@ function construct(f, x_0, y_0, x2, y2, flags){
       require(color_0 >= 0 && color_0 <= 1, 'Invalid LED color');
       args += ' ' + f[i];
     }
-    positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [end + 3]));
+    positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [end + 3]));
     args += ' ' + f[end + 3];
   }
   tokens = new StringTokenizer(args);
@@ -4542,6 +4542,21 @@ function $checkStopped(this$static){
     throw toJs(new IllegalStateException(this$static.app.stopMessage));
 }
 
+function $hasStopTrigger(this$static){
+  var elm, elm$iterator;
+  for (elm$iterator = new ArrayList$1(this$static.app.elmList.arrayList); elm$iterator.i < elm$iterator.this$01.array.length;) {
+    elm = castTo($next_0(elm$iterator), 4);
+    if (instanceOf(elm, 32))
+      return true;
+  }
+  return false;
+}
+
+function $lambda$0(this$static, sample_1, hasTrigger_2, time_2, timeStep_3){
+  sample_1(time_2, timeStep_3);
+  return !hasTrigger_2 || !stopRequested(this$static.app.elmList);
+}
+
 function $load(this$static, text_0, timeStep){
   var element, element$iterator, element$iterator0, elements;
   elements = $parse(text_0, timeStep);
@@ -4555,7 +4570,7 @@ function $load(this$static, text_0, timeStep){
   }
   for (element$iterator = new ArrayList$1(elements.arrayList); element$iterator.i < element$iterator.this$01.array.length;) {
     element = castTo($next_0(element$iterator), 4);
-    instanceOf(element, 41) && (castTo(element, 41).lasttime = sim.t);
+    instanceOf(element, 42) && (castTo(element, 42).lasttime = sim.t);
     initialize(element);
   }
   this$static.app.sim.adjustTimeStep = false;
@@ -4869,15 +4884,30 @@ function $publish(this$static){
     that.setVariableVoltage_0(id_0, voltage);
     return that.snapshot_0();
   }
+  ), setPotPosition:$entry(function(id_0, position){
+    if (!Number.isInteger(id_0) || typeof position !== 'number')
+      throw new Error('Invalid potentiometer position update');
+    return that.setPotPosition_0(id_0, position);
+  }
+  ), setSourceFrequency:$entry(function(id_0, frequency){
+    if (!Number.isInteger(id_0) || typeof frequency !== 'number')
+      throw new Error('Invalid source frequency update');
+    return that.setSourceFrequency_0(id_0, frequency);
+  }
   ), load:$entry(function(text_0, dt){
     that.load_0(text_0, dt);
     return that.snapshot_0();
   }
   ), step:$entry(function(count){
-    if (!Number.isInteger(count) || count < 1 || count > 10000)
+    if (!Number.isInteger(count) || count < 1 || count > $intern_29)
       throw new Error('Step count must be an integer between 1 and 10000');
     that.step_0(count);
     return that.snapshot_0();
+  }
+  ), stepSampled:$entry(function(count, targets){
+    if (!Number.isInteger(count) || count < 1 || count > $intern_29)
+      throw new Error('Step count must be an integer between 1 and 10000');
+    return that.stepSampled_0(count, targets);
   }
   ), reset:$entry(function(){
     that.reset_0();
@@ -4906,12 +4936,18 @@ function $publish(this$static){
   $wnd.oncircuitengineready && $wnd.oncircuitengineready($wnd.CircuitEngine);
 }
 
+function $sampleElement(this$static, index_0){
+  if (index_0 < 0 || index_0 >= this$static.app.elmList.arrayList.array.length)
+    throw toJs(new IllegalArgumentException('Invalid sample element'));
+  return castTo($get_2(this$static.app.elmList, index_0), 4);
+}
+
 function $setContact(this$static, id_0, position){
   var elm, max_0;
   if (id_0 < 0 || id_0 >= this$static.app.elmList.arrayList.array.length || !instanceOf($get_2(this$static.app.elmList, id_0), 21))
     throw toJs(new IllegalArgumentException('Expected switch/input element ID'));
   elm = castTo($get_2(this$static.app.elmList, id_0), 21);
-  max_0 = instanceOf(elm, 55)?3:instanceOf(elm, 39)?2:instanceOf(elm, 40) && (castTo(elm, 40).flags & 1) != 0?2:1;
+  max_0 = instanceOf(elm, 55)?3:instanceOf(elm, 28)?$hasCenterOff(castTo(elm, 28))?2:castTo(elm, 28).throwCount - 1:instanceOf(elm, 41) && (castTo(elm, 41).flags & 1) != 0?2:1;
   if (position < 0 || position > max_0)
     throw toJs(new IllegalArgumentException('Invalid contact position'));
   $checkStopped(this$static);
@@ -4931,7 +4967,7 @@ function finite(value_0){
 }
 
 function initializeElement(element){
-  instanceOf(element, 41) && (castTo(element, 41).lasttime = sim.t);
+  instanceOf(element, 42) && (castTo(element, 42).lasttime = sim.t);
   initialize(element);
 }
 
@@ -4945,6 +4981,16 @@ function retainedCount(a){
 }
 
 defineClass(133, 1, {}, EngineEntryPoint);
+_.advanceSampled = function advanceSampled(count, delayWireCurrents, sample){
+  var hasTrigger;
+  if (this.loadedText == null)
+    throw toJs(new IllegalStateException('Load a circuit first'));
+  $checkStopped(this);
+  hasTrigger = $hasStopTrigger(this);
+  $stepSampled(this.app.sim, count, delayWireCurrents, new EngineEntryPoint$lambda$0$Type(this, sample, hasTrigger));
+  $checkStopped(this);
+}
+;
 _.load_0 = function load(text_0, timeStep){
   $load(this, text_0, timeStep);
 }
@@ -4961,8 +5007,55 @@ _.reset_0 = function reset_12(){
   $load(this, this.loadedText, this.loadedTimeStep);
 }
 ;
+_.sampleElement = function sampleElement(index_0){
+  return $sampleElement(this, index_0);
+}
+;
 _.setContact_0 = function setContact(id_0, position){
   $setContact(this, id_0, position);
+}
+;
+_.setPotPosition_0 = function setPotPosition(id_0, position){
+  var changedTopology, element, pot;
+  element = $sampleElement(this, id_0);
+  if (!instanceOf(element, 40) || !(position >= 0 && position <= 1))
+    throw toJs(new IllegalArgumentException('Expected a potentiometer and a wiper position between 0 and 1'));
+  pot = castTo(element, 40);
+  $checkStopped(this);
+  if (pot.position != position) {
+    changedTopology = pot.position == 0 || pot.position == 1 || position == 0 || position == 1;
+    pot.position = position;
+    if (changedTopology) {
+      $analyzeCircuit(this.app.sim);
+      $preStampAndStampCircuit(this.app.sim);
+    }
+     else {
+      $stampCircuit(this.app.sim);
+    }
+    $checkStopped(this);
+  }
+  return this.app.sim.t;
+}
+;
+_.setSourceFrequency_0 = function setSourceFrequency(id_0, frequency){
+  var element, source, zero;
+  if (id_0 < 0 || id_0 >= this.app.elmList.arrayList.array.length)
+    throw toJs(new IllegalArgumentException('Expected periodic voltage source ID'));
+  element = castTo($get_2(this.app.elmList, id_0), 4);
+  if (element.___clazz != Lcom_lushprojects_circuitjs1_client_VoltageElm_2_classLit && element.___clazz != Lcom_lushprojects_circuitjs1_client_RailElm_2_classLit)
+    throw toJs(new IllegalArgumentException('Expected periodic voltage source ID'));
+  source = castTo(element, 20);
+  if (source.waveform < 1 || source.waveform > 5 || frequency <= 0 || !(!isNaN($intern_10 * frequency) && !(!isNaN($intern_10 * frequency) && !isFinite($intern_10 * frequency))))
+    throw toJs(new IllegalArgumentException('Invalid periodic source frequency'));
+  $checkStopped(this);
+  if (source.frequency != frequency) {
+    zero = this.app.sim.t - source.frequency * (this.app.sim.t - source.freqTimeZero) / frequency;
+    if (!(!isNaN(zero) && !(!isNaN(zero) && !isFinite(zero))))
+      throw toJs(new IllegalArgumentException('Cannot preserve phase at this frequency'));
+    source.freqTimeZero = zero;
+    source.frequency = frequency;
+  }
+  return this.app.sim.t;
 }
 ;
 _.setSwitch_0 = function setSwitch(id_0, closed_0){
@@ -4973,9 +5066,9 @@ _.setSwitch_0 = function setSwitch(id_0, closed_0){
 ;
 _.setVariableVoltage_0 = function setVariableVoltage(id_0, voltage){
   var elm;
-  if (id_0 < 0 || id_0 >= this.app.elmList.arrayList.array.length || !instanceOf($get_2(this.app.elmList, id_0), 32))
+  if (id_0 < 0 || id_0 >= this.app.elmList.arrayList.array.length || !instanceOf($get_2(this.app.elmList, id_0), 33))
     throw toJs(new IllegalArgumentException('Expected variable source ID'));
-  elm = castTo($get_2(this.app.elmList, id_0), 32);
+  elm = castTo($get_2(this.app.elmList, id_0), 33);
   if (!(!isNaN(voltage) && !(!isNaN(voltage) && !isFinite(voltage))) || voltage < elm.bias || voltage > elm.maxVoltage)
     throw toJs(new IllegalArgumentException('Voltage outside source range'));
   $checkStopped(this);
@@ -4995,16 +5088,11 @@ _.snapshot_0 = function snapshot(){
 }
 ;
 _.step_0 = function step_0(count){
-  var elm, elm$iterator, i, trigger;
+  var i;
   if (this.loadedText == null)
     throw toJs(new IllegalStateException('Load a circuit first'));
   $checkStopped(this);
-  trigger = false;
-  for (elm$iterator = new ArrayList$1(this.app.elmList.arrayList); elm$iterator.i < elm$iterator.this$01.array.length;) {
-    elm = castTo($next_0(elm$iterator), 4);
-    instanceOf(elm, 31) && (trigger = true);
-  }
-  if (trigger) {
+  if ($hasStopTrigger(this)) {
     for (i = 0; i < count; i++) {
       $stepCircuit(this.app.sim, 1);
       if (stopRequested(this.app.elmList))
@@ -5015,6 +5103,66 @@ _.step_0 = function step_0(count){
     $stepCircuit(this.app.sim, count);
   }
   $checkStopped(this);
+}
+;
+_.stepSampled_0 = function stepSampled(count, targets){
+  var that = this, times = [], values = [], delayWireCurrents = true;
+  if (!Array.isArray(targets) || targets.length < 1 || targets.length > 32)
+    throw new Error('Expected one to 32 sample targets');
+  function element(index_0){
+    if (!Number.isInteger(index_0))
+      throw new Error('Invalid sample element');
+    return that.sampleElement(index_0);
+  }
+
+  function voltageReader(terminal){
+    if (terminal === null)
+      return function(){
+        return 0;
+      }
+    ;
+    var elm = element(terminal.index), post = terminal.post;
+    if (!Number.isInteger(post) || post < 0)
+      throw new Error('Invalid sample post');
+    return function(){
+      return elm.volts[post];
+    }
+    ;
+  }
+
+  var read = targets.map(function(target){
+    values.push([]);
+    if (target.current !== undefined) {
+      var elm = element(target.current), sign = target.sign;
+      if (sign !== 1 && sign !== -1)
+        throw new Error('Invalid sample current sign');
+      elm.isWireEquivalent() && (delayWireCurrents = false);
+      return function(){
+        return sign * elm.getCurrent();
+      }
+      ;
+    }
+    var positive = voltageReader(target.positive), negative = voltageReader(target.negative);
+    return function(){
+      return positive() - negative();
+    }
+    ;
+  }
+  );
+  function sample(t, dt){
+    if (!isFinite(t) || !isFinite(dt) || dt <= 0)
+      throw new Error('Invalid scope sample time');
+    times.push(Math.max(0, t - dt));
+    for (var j = 0; j < read.length; j++) {
+      var value_0 = read[j]();
+      if (!isFinite(value_0))
+        throw new Error('Invalid scope sample voltage');
+      values[j].push(value_0);
+    }
+  }
+
+  this.advanceSampled(count, delayWireCurrents, sample);
+  return {raw:this.snapshot_0(), times:times, values:values};
 }
 ;
 _.updateCircuit_0 = function updateCircuit(text_0, timeStep, retained){
@@ -5067,22 +5215,35 @@ _.updateCircuit_0 = function updateCircuit(text_0, timeStep, retained){
 ;
 _.loadedTimeStep = 0;
 var Lcom_lushprojects_circuitjs1_client_EngineEntryPoint_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'EngineEntryPoint', 133);
+function $afterStep(this$static, arg0, arg1){
+  return $lambda$0(this$static.$$outer_0, this$static.sample_1, this$static.hasTrigger_2, arg0, arg1);
+}
+
+function EngineEntryPoint$lambda$0$Type($$outer_0, sample_1, hasTrigger_2){
+  this.$$outer_0 = $$outer_0;
+  this.sample_1 = sample_1;
+  this.hasTrigger_2 = hasTrigger_2;
+}
+
+defineClass(149, 1, {}, EngineEntryPoint$lambda$0$Type);
+_.hasTrigger_2 = false;
+var Lcom_lushprojects_circuitjs1_client_EngineEntryPoint$lambda$0$Type_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'EngineEntryPoint/lambda$0$Type', 149);
 function array_0(obj, key, values){
   obj[key] = values?Array.prototype.slice.call(values):[];
 }
 
 function capture(elm, now_0, dt){
   var count, data_0, e, i, ptr, result, start_0, step, values;
-  if (instanceOf(elm, 42)) {
-    e = castTo(elm, 42);
+  if (instanceOf(elm, 44)) {
+    e = castTo(elm, 44);
     data_0 = e.data_0;
     ptr = e.dataFull?e.dataPtr:0;
     count = e.dataFull?e.dataCount:e.dataPtr;
     step = dt;
     start_0 = count == 0?now_0:now_0 - count * dt;
   }
-   else if (instanceOf(elm, 28)) {
-    e = castTo(elm, 28);
+   else if (instanceOf(elm, 29)) {
+    e = castTo(elm, 29);
     data_0 = e.data_0;
     ptr = e.dataFull?e.dataPtr:0;
     count = e.dataFull?e.dataCount:e.dataPtr;
@@ -5134,7 +5295,7 @@ function construct_0(f, dt){
   }
   if ($equals_0(type_0, '181')) {
     require(number_0(f, 6) >= 300 && number_0(f, 6) <= 5000, 'Invalid initial lamp temperature');
-    positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7, 8, 9, 10]));
+    positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7, 8, 9, 10]));
     return new LampElm(x_0, y_0, x2, y2, st);
   }
   if ($equals_0(type_0, '207')) {
@@ -5198,7 +5359,7 @@ function construct_0(f, dt){
   if ($equals_0(type_0, '211')) {
     duration = number_0(f, 6);
     rate = integer(f, 7, 8000, 48000);
-    require((rate == 8000 || rate == 11025 || rate == 16000 || rate == 22050 || rate == 44100 || rate == 48000) && duration >= $intern_17 && duration <= 10 && $wnd.Math.floor(rate * duration) >= 1 && rate * duration <= $intern_29 && dt <= 1 / rate && $equals_0(f[8], '1'), 'Invalid audio capture duration/rate/timestep');
+    require((rate == 8000 || rate == 11025 || rate == 16000 || rate == 22050 || rate == 44100 || rate == 48000) && duration >= $intern_17 && duration <= 10 && $wnd.Math.floor(rate * duration) >= 1 && rate * duration <= $intern_30 && dt <= 1 / rate && $equals_0(f[8], '1'), 'Invalid audio capture duration/rate/timestep');
     return new AudioOutputElm(x_0, y_0, x2, y2, st);
   }
   if ($equals_0(type_0, '408')) {
@@ -5208,12 +5369,12 @@ function construct_0(f, dt){
     return new StopTriggerElm(x_0, y_0, x2, y2, st);
   }
   if ($equals_0(type_0, '415')) {
-    positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 10, 11, 12]));
+    positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 10, 11, 12]));
     require(number_0(f, 8) >= 0 && number_0(f, 9) >= 0, 'Invalid motor constant');
     number_0(f, 13);
     return new DCMotorElm(x_0, y_0, x2, y2, st);
   }
-  positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8, 9, 10, 12]));
+  positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8, 9, 10, 12]));
   require(number_0(f, 11) >= 0, 'Invalid motor friction');
   det = number_0(f, 8) * number_0(f, 9) - number_0(f, 10) * number_0(f, 10);
   require(!isNaN(det) && !(!isNaN(det) && !isFinite(det)) && det > 0 && !isNaN(1 / det) && !(!isNaN(1 / det) && !isFinite(1 / det)), 'Invalid motor inductance matrix');
@@ -5230,8 +5391,8 @@ function finite_0(v){
 
 function initialize(elm){
   var e;
-  if (instanceOf(elm, 28)) {
-    e = castTo(elm, 28);
+  if (instanceOf(elm, 29)) {
+    e = castTo(elm, 29);
     e.dataStart = sim.t;
     e.nextDataSample = e.dataStart + e.sampleStep;
     e.dataSampleCount = 0;
@@ -5249,8 +5410,8 @@ function integer(f, i, min_0, max_0){
 function measurements(elm){
   var e, i, result, v;
   result = {};
-  if (instanceOf(elm, 32))
-    put(result, 'voltage', castTo(elm, 32).frequency);
+  if (instanceOf(elm, 33))
+    put(result, 'voltage', castTo(elm, 33).frequency);
   else if (instanceOf(elm, 59)) {
     e = castTo(elm, 59);
     put(result, 'temperature', e.temp);
@@ -5286,24 +5447,24 @@ function measurements(elm){
     put(result, 'value', v);
     result['text'] = toString_9(v, e.displayMode == 1?16:e.displayMode == 2?8:10).toUpperCase();
   }
-   else if (instanceOf(elm, 37)) {
-    result['text'] = $getDisplayText(castTo(elm, 37));
+   else if (instanceOf(elm, 38)) {
+    result['text'] = $getDisplayText(castTo(elm, 38));
   }
-   else if (instanceOf(elm, 102))
-    array_0(result, 'currents', castTo(elm, 102).currents);
-  else if (instanceOf(elm, 42)) {
-    e = castTo(elm, 42);
+   else if (instanceOf(elm, 103))
+    array_0(result, 'currents', castTo(elm, 103).currents);
+  else if (instanceOf(elm, 44)) {
+    e = castTo(elm, 44);
     put(result, 'samples', e.dataFull?e.dataCount:e.dataPtr);
   }
-   else if (instanceOf(elm, 28)) {
-    e = castTo(elm, 28);
+   else if (instanceOf(elm, 29)) {
+    e = castTo(elm, 29);
     put(result, 'samples', e.dataFull?e.dataCount:e.dataPtr);
   }
-   else if (instanceOf(elm, 31)) {
-    result['stopped'] = castTo(elm, 31).stopped;
+   else if (instanceOf(elm, 32)) {
+    result['stopped'] = castTo(elm, 32).stopped;
   }
-   else if (instanceOf(elm, 43)) {
-    e = castTo(elm, 43);
+   else if (instanceOf(elm, 45)) {
+    e = castTo(elm, 45);
     put(result, 'speed', e.speed);
     put(result, 'angle', e.angle);
     put(result, 'current', e.coilCurrent);
@@ -5349,7 +5510,7 @@ function number_0(f, i){
   return v;
 }
 
-function positive(f, indices){
+function positive_0(f, indices){
   var i, i$index, i$max;
   for (i$index = 0 , i$max = indices.length; i$index < i$max; ++i$index) {
     i = indices[i$index];
@@ -5370,7 +5531,7 @@ function stopRequested(elements){
   var elm, elm$iterator;
   for (elm$iterator = new ArrayList$1(elements.arrayList); elm$iterator.i < elm$iterator.this$01.array.length;) {
     elm = castTo($next_0(elm$iterator), 4);
-    if (instanceOf(elm, 31) && castTo(elm, 31).stopped)
+    if (instanceOf(elm, 32) && castTo(elm, 32).stopped)
       return true;
   }
   return false;
@@ -5380,7 +5541,7 @@ function $getDisplayText(this$static){
   var entry, i, value_0;
   value_0 = $readInputValue(this$static);
   for (i = 0; i != this$static.entries_0.arrayList.array.length; i++) {
-    entry = castTo($get_2(this$static.entries_0, i), 100);
+    entry = castTo($get_2(this$static.entries_0, i), 101);
     if (value_0 >= entry.lo && value_0 <= entry.hi)
       return $getText(entry, value_0);
   }
@@ -5440,7 +5601,7 @@ function $readInputValue(this$static){
   return value_0;
 }
 
-defineClass(37, 4, $intern_30);
+defineClass(38, 4, $intern_31);
 _.getConnection = function getConnection_7(n1, n2){
   return false;
 }
@@ -5472,7 +5633,7 @@ _.setPoints = function setPoints_19(){
 ;
 _.busWidth = 0;
 _.threshold = 0;
-var Lcom_lushprojects_circuitjs1_client_InstructionDisplayElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'InstructionDisplayElm', 37);
+var Lcom_lushprojects_circuitjs1_client_InstructionDisplayElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'InstructionDisplayElm', 38);
 function EngineOutputSupport$EngineInstructionDisplay(x_0, y_0, x2, y2, threshold, lookup){
   this.x_0 = this.x2 = x_0;
   this.y_0 = this.y2 = y_0;
@@ -5493,7 +5654,7 @@ function EngineOutputSupport$EngineInstructionDisplay(x_0, y_0, x2, y2, threshol
   $allocNodes(this);
 }
 
-defineClass(161, 37, $intern_30, EngineOutputSupport$EngineInstructionDisplay);
+defineClass(163, 38, $intern_31, EngineOutputSupport$EngineInstructionDisplay);
 _.getPost = function getPost_7(n){
   return new Point_0(this.x_0, this.y_0 + 32 * (3 - n));
 }
@@ -5502,7 +5663,7 @@ _.getPostWidth = function getPostWidth_2(n){
   return 1;
 }
 ;
-var Lcom_lushprojects_circuitjs1_client_EngineOutputSupport$EngineInstructionDisplay_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'EngineOutputSupport/EngineInstructionDisplay', 161);
+var Lcom_lushprojects_circuitjs1_client_EngineOutputSupport$EngineInstructionDisplay_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'EngineOutputSupport/EngineInstructionDisplay', 163);
 function configure_0(old, fresh){
   var a, b;
   if (instanceOf(old, 69)) {
@@ -5575,18 +5736,18 @@ function construct_1(fields, x_0, y_0, x2, y2, flags, dt){
       return new TunnelDiodeElm(x_0, y_0, x2, y2, flags);
     case '187':
       {
-        on = positive_0(fields, 6);
-        off = positive_0(fields, 7);
-        positive_0(fields, 8);
+        on = positive_1(fields, 6);
+        off = positive_1(fields, 7);
+        positive_1(fields, 8);
         require_0(off >= on && number_1(fields, 9) >= 0, 'Invalid spark gap resistance or holding current');
         return new SparkGapElm(x_0, y_0, x2, y2, flags, tokens);
       }
 
     case 'm':
       {
-        on = positive_0(fields, 6);
-        off = positive_0(fields, 7);
-        width_0 = positive_0(fields, 9);
+        on = positive_1(fields, 6);
+        off = positive_1(fields, 7);
+        width_0 = positive_1(fields, 9);
         initial = number_1(fields, 8);
         mobility = number_1(fields, 10);
         require_0(off >= on && initial >= 0 && initial <= width_0 && mobility >= 0 && !isNaN(dt * mobility * on / width_0) && !(!isNaN(dt * mobility * on / width_0) && !isFinite(dt * mobility * on / width_0)) && $equals_0(fields[11], '0'), 'Invalid memristor resistance, width, or mobility');
@@ -5594,8 +5755,8 @@ function construct_1(fields, x_0, y_0, x2, y2, flags, dt){
       }
 
     case '404':
-      positive_0(fields, 6);
-      positive_0(fields, 7);
+      positive_1(fields, 6);
+      positive_1(fields, 7);
       require_0($equals_0(fields[8], '0') && $equals_0(fields[9], 'false'), 'Invalid initial fuse state');
       return new FuseElm(x_0, y_0, x2, y2, flags, tokens);
     case '374':
@@ -5606,8 +5767,8 @@ function construct_1(fields, x_0, y_0, x2, y2, flags, dt){
       }
 
     default:{
-        r25 = positive_0(fields, 6);
-        r50 = positive_0(fields, 7);
+        r25 = positive_1(fields, 6);
+        r50 = positive_1(fields, 7);
         min_0 = number_1(fields, 8);
         max_0 = number_1(fields, 9);
         position = number_1(fields, 10);
@@ -5627,7 +5788,7 @@ function number_1(fields, index_0){
   return value_0;
 }
 
-function positive_0(fields, index_0){
+function positive_1(fields, index_0){
   var value_0;
   value_0 = number_1(fields, index_0);
   require_0(value_0 > 0 && !isNaN(1 / value_0) && !(!isNaN(1 / value_0) && !isFinite(1 / value_0)), 'Expected positive passive parameter');
@@ -5666,9 +5827,9 @@ function configure_1(old, fresh){
    else if (instanceOf(old, 76)) {
     castTo(old, 76).baseCapacitance = castTo(fresh, 76).baseCapacitance;
   }
-   else if (instanceOf(old, 96)) {
-    a = castTo(old, 96);
-    b = castTo(fresh, 96);
+   else if (instanceOf(old, 97)) {
+    a = castTo(old, 97);
+    b = castTo(fresh, 97);
     a.mu = b.mu;
     a.kg1 = b.kg1;
   }
@@ -5693,26 +5854,26 @@ function construct_2(fields, x_0, y_0, x2, y2, flags, dt){
   tokens = new StringTokenizer(args);
   if (scr) {
     require($equals_0(fields[6], '0') && $equals_0(fields[7], '0'), 'Invalid initial SCR state');
-    positive(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [8, 9, 10]));
+    positive_0(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [8, 9, 10]));
     return new SCRElm(x_0, y_0, x2, y2, flags, tokens);
   }
   if (diac) {
-    positive(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8]));
+    positive_0(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8]));
     require(number_0(fields, 7) >= number_0(fields, 6) && number_0(fields, 9) >= 0, 'Invalid DIAC resistance or holding current');
     return new DiacElm(x_0, y_0, x2, y2, flags, tokens);
   }
   if (triac) {
-    positive(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8]));
+    positive_0(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7, 8]));
     require($equals_0(fields[9], 'false'), 'Invalid initial TRIAC state');
     return new TriacElm(x_0, y_0, x2, y2, flags, tokens);
   }
   if (varactor) {
     require($equals_0(fields[6], '0'), 'Invalid initial varactor bias');
-    positive(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7]));
+    positive_0(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [7]));
     require(finite_0(dt / number_0(fields, 7)), 'Invalid varactor companion resistance');
     return new VaractorElm(x_0, y_0, x2, y2, flags, tokens);
   }
-  positive(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7]));
+  positive_0(fields, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [6, 7]));
   return new TriodeElm(x_0, y_0, x2, y2, flags, tokens);
 }
 
@@ -5727,16 +5888,16 @@ function configure_2(old, fresh){
     a.sweepTime = b.sweepTime;
     a.savedTimeStep = NaN;
   }
-   else if (instanceOf(old, 95)) {
-    a = castTo(old, 95);
-    b = castTo(fresh, 95);
+   else if (instanceOf(old, 96)) {
+    a = castTo(old, 96);
+    b = castTo(fresh, 96);
     a.carrierfreq = b.carrierfreq;
     a.signalfreq = b.signalfreq;
     a.maxVoltage = b.maxVoltage;
   }
-   else if (instanceOf(old, 41)) {
-    a = castTo(old, 41);
-    b = castTo(fresh, 41);
+   else if (instanceOf(old, 42)) {
+    a = castTo(old, 42);
+    b = castTo(fresh, 42);
     a.carrierfreq = b.carrierfreq;
     a.signalfreq = b.signalfreq;
     a.maxVoltage = b.maxVoltage;
@@ -5874,7 +6035,7 @@ function construct_5(f, x_0, y_0, x2, y2, flags){
     return null;
   require(f.length == 11 || f.length == 31, 'Invalid transistor model format');
   require(flags >= 0 && flags <= 3 && x2 - x_0 == 64 && y_0 == 32 && y2 == 32 && ($equals_0(f[6], '1') || $equals_0(f[6], '-1')) && $equals_0(f[7], '0') && $equals_0(f[8], '0'), 'Invalid transistor format');
-  positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [9]));
+  positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [9]));
   createModelMap_0();
   name_0 = f[10];
   if ($equals_0(name_0, 'custom')) {
@@ -5883,7 +6044,7 @@ function construct_5(f, x_0, y_0, x2, y2, flags){
       value_0 = number_0(f, i0);
       require(value_0 >= 0 && (value_0 == 0 || !isNaN(1 / value_0) && !(!isNaN(1 / value_0) && !isFinite(1 / value_0))), 'Invalid transistor model value');
     }
-    positive(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [11, 12, 17, 18, 20, 22, 24, 25, 27, 28]));
+    positive_0(f, stampJavaTypeInfo(getClassLiteralForArray(I_classLit, 1), $intern_12, 5, 15, [11, 12, 17, 18, 20, 22, 24, 25, 27, 28]));
     values = '';
     for (i = 11; i < 31; i++)
       values += ':' + f[i];
@@ -6062,9 +6223,9 @@ function $eval(this$static, es){
     default:if (this$static.type_0 >= 73)
         return es.lastValues[this$static.type_0 - 73];
       if (this$static.type_0 >= 63)
-        return (es.values[this$static.type_0 - 63] - es.lastValues[this$static.type_0 - 63]) / theSim.timeStep_0;
+        return (es.values_0[this$static.type_0 - 63] - es.lastValues[this$static.type_0 - 63]) / theSim.timeStep_0;
       if (this$static.type_0 >= 53)
-        return es.values[this$static.type_0 - 53];
+        return es.values_0[this$static.type_0 - 53];
       console.log('unknown\n');
   }
   return 0;
@@ -6441,20 +6602,20 @@ function ExprParser(s){
   $getToken(this);
 }
 
-defineClass(170, 1, {}, ExprParser);
+defineClass(172, 1, {}, ExprParser);
 _.pos = 0;
 _.tlen = 0;
-var Lcom_lushprojects_circuitjs1_client_ExprParser_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'ExprParser', 170);
+var Lcom_lushprojects_circuitjs1_client_ExprParser_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'ExprParser', 172);
 function ExprState(){
-  this.values = initUnidimensionalArray(D_classLit, $intern_7, 5, 9, 15, 1);
+  this.values_0 = initUnidimensionalArray(D_classLit, $intern_7, 5, 9, 15, 1);
   this.lastValues = initUnidimensionalArray(D_classLit, $intern_7, 5, 9, 15, 1);
-  this.values[4] = 2.718281828459045;
+  this.values_0[4] = 2.718281828459045;
 }
 
-defineClass(169, 1, {}, ExprState);
+defineClass(171, 1, {}, ExprState);
 _.lastOutput = 0;
 _.t = 0;
-var Lcom_lushprojects_circuitjs1_client_ExprState_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'ExprState', 169);
+var Lcom_lushprojects_circuitjs1_client_ExprState_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'ExprState', 171);
 function FMElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.lasttime = 0;
@@ -6467,7 +6628,7 @@ function FMElm(xa, ya, xb, yb, f, st){
   this.freqTimeZero = 0;
 }
 
-defineClass(41, 4, {4:1, 6:1, 41:1}, FMElm);
+defineClass(42, 4, {4:1, 6:1, 42:1}, FMElm);
 _.doStep = function doStep_13(){
   var deltaT, signalamplitude, w;
   $updateVoltageSource(this.voltSource_0, (deltaT = sim.t - this.lasttime , this.lasttime = sim.t , signalamplitude = $wnd.Math.sin($intern_10 * (sim.t - this.freqTimeZero) * this.signalfreq) , this.funcx += deltaT * (this.carrierfreq + signalamplitude * this.deviation) , w = $intern_10 * this.funcx , $wnd.Math.sin(w) * this.maxVoltage));
@@ -6517,13 +6678,13 @@ _.funcx = 0;
 _.lasttime = 0;
 _.maxVoltage = 0;
 _.signalfreq = 0;
-var Lcom_lushprojects_circuitjs1_client_FMElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'FMElm', 41);
+var Lcom_lushprojects_circuitjs1_client_FMElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'FMElm', 42);
 function $checkElm(this$static, n1, ce){
   var c, j, j0, k;
   if (ce == this$static.firstElm)
     return false;
   if (this$static.type_0 == 1) {
-    if (instanceOf(ce, 46))
+    if (instanceOf(ce, 47))
       return false;
   }
   if (this$static.type_0 == 2) {
@@ -6571,7 +6732,7 @@ function $findPath(this$static, n1){
     return false;
   this$static.visited[n1.index_0] = true;
   for (i = 0; i != n1.links_0.arrayList.array.length; i++) {
-    cnl = castTo($get_2(n1.links_0, i), 44);
+    cnl = castTo($get_2(n1.links_0, i), 43);
     ce = cnl.elm;
     if ($checkElm(this$static, n1, ce))
       return true;
@@ -6592,9 +6753,9 @@ function FindPathInfo(type_, elm_, dest_, sim_){
   this.visited = initUnidimensionalArray(Z_classLit, $intern_12, 5, this.sim.nodeList.arrayList.array.length, 16, 1);
 }
 
-defineClass(29, 1, {}, FindPathInfo);
+defineClass(30, 1, {}, FindPathInfo);
 _.type_0 = 0;
-var Lcom_lushprojects_circuitjs1_client_FindPathInfo_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'FindPathInfo', 29);
+var Lcom_lushprojects_circuitjs1_client_FindPathInfo_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'FindPathInfo', 30);
 function $setupPins_0(this$static){
   var bitsY;
   this$static.sizeX = 2;
@@ -6664,11 +6825,11 @@ function FuseElm(xa, ya, xb, yb, f, st){
 
 defineClass(70, 4, {4:1, 6:1, 70:1}, FuseElm);
 _.calculateCurrent = function calculateCurrent_9(){
-  this.current_1 = (this.volts[0] - this.volts[1]) / (this.blown?$intern_31:this.resistance);
+  this.current_1 = (this.volts[0] - this.volts[1]) / (this.blown?$intern_32:this.resistance);
 }
 ;
 _.doStep = function doStep_14(){
-  $stampResistor(this.nodes[0], this.nodes[1], this.blown?$intern_31:this.resistance);
+  $stampResistor(this.nodes[0], this.nodes[1], this.blown?$intern_32:this.resistance);
 }
 ;
 _.getDumpType = function getDumpType_23(){
@@ -6864,7 +7025,7 @@ function $startIteration_0(this$static, voltdiff){
 
 function Inductor(s){
   this.sim = s;
-  this.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 33, 2, 0, 1);
+  this.nodes = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitNode_2_classLit, $intern_6, 34, 2, 0, 1);
 }
 
 defineClass(112, 1, {}, Inductor);
@@ -6967,7 +7128,7 @@ function $getText(this$static, value_0){
       expr = $parseExpression(ep);
       if (ep.err == null) {
         es = new ExprState;
-        es.values[0] = value_0;
+        es.values_0[0] = value_0;
         result = $eval(expr, es);
         intResult = round_int(result);
         result == intResult?(sb.string += intResult , sb):(sb.string += result , sb);
@@ -6996,10 +7157,10 @@ function InstructionDisplayElm$LookupEntry(lo, hi, template){
   this.template = template;
 }
 
-defineClass(100, 1, {100:1}, InstructionDisplayElm$LookupEntry);
+defineClass(101, 1, {101:1}, InstructionDisplayElm$LookupEntry);
 _.hi = 0;
 _.lo = 0;
-var Lcom_lushprojects_circuitjs1_client_InstructionDisplayElm$LookupEntry_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'InstructionDisplayElm/LookupEntry', 100);
+var Lcom_lushprojects_circuitjs1_client_InstructionDisplayElm$LookupEntry_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'InstructionDisplayElm/LookupEntry', 101);
 function InverterElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.slewRate = 0.5;
@@ -7019,7 +7180,7 @@ defineClass(88, 4, {4:1, 6:1, 88:1}, InverterElm);
 _.doStep = function doStep_16(){
   var maxStep, out;
   out = this.volts[0] > this.highVoltage * 0.5?0:this.highVoltage;
-  maxStep = this.slewRate * sim.timeStep_0 * $intern_31;
+  maxStep = this.slewRate * sim.timeStep_0 * $intern_32;
   out = $wnd.Math.max($wnd.Math.min(this.lastOutputVoltage + maxStep, out), this.lastOutputVoltage - maxStep);
   $updateVoltageSource(this.voltSource_0, out);
 }
@@ -7118,7 +7279,7 @@ function InvertingSchmittElm(xa, ya, xb, yb, f, st){
   }
 }
 
-defineClass(77, 4, $intern_32, InvertingSchmittElm);
+defineClass(77, 4, $intern_33, InvertingSchmittElm);
 _.doStep = function doStep_17(){
   var maxStep, out, v0;
   v0 = this.volts[1];
@@ -7140,7 +7301,7 @@ _.doStep = function doStep_17(){
       out = this.logicOffLevel;
     }
   }
-  maxStep = this.slewRate * sim.timeStep_0 * $intern_31;
+  maxStep = this.slewRate * sim.timeStep_0 * $intern_32;
   out = $wnd.Math.max($wnd.Math.min(v0 + maxStep, out), v0 - maxStep);
   $updateVoltageSource(this.voltSource_0, out);
 }
@@ -7318,7 +7479,7 @@ function $nonConvergence(this$static, last, now_0){
     return false;
   if (sim.subIterations > 10 && diff < $wnd.Math.abs(now_0) * $intern_17)
     return false;
-  if (sim.subIterations > 100 && diff < $intern_21 + (sim.subIterations - 100) * $intern_33)
+  if (sim.subIterations > 100 && diff < $intern_21 + (sim.subIterations - 100) * $intern_34)
     return false;
   return true;
 }
@@ -7442,7 +7603,7 @@ function MosfetElm(xa, ya, xb, yb, f, st){
   $allocNodes(this);
 }
 
-defineClass(51, 4, $intern_34, MosfetElm);
+defineClass(52, 4, $intern_35, MosfetElm);
 _.doStep = function doStep_18(){
   $calculate(this, false);
 }
@@ -7539,14 +7700,14 @@ _.lastv2 = 0;
 _.pnp = 0;
 _.vt = 0;
 var globalFlags = 0;
-var Lcom_lushprojects_circuitjs1_client_MosfetElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'MosfetElm', 51);
+var Lcom_lushprojects_circuitjs1_client_MosfetElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'MosfetElm', 52);
 function JfetElm(xa, ya, xb, yb, f, st){
   MosfetElm.call(this, xa, ya, xb, yb, f, st);
   this.diode = new Diode(sim);
   $setup(this.diode, getModelWithName('default'));
 }
 
-defineClass(138, 51, $intern_34, JfetElm);
+defineClass(138, 52, $intern_35, JfetElm);
 _.calculateCurrent = function calculateCurrent_11(){
   this.gateCurrent = this.pnp * $calculateCurrent_0(this.diode, this.pnp * (this.volts[0] - this.volts[1]));
 }
@@ -7637,7 +7798,7 @@ function $setPoints_10(this$static){
 function LDRElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.minLux = 0.1;
-  this.maxLux = 10000;
+  this.maxLux = $intern_29;
   this.position = $doubleValue(__parseAndValidateDouble($nextToken(st)));
   this.lux = this.maxLux * this.position + this.minLux;
   this.resistance = $calcResistance(this, this.lux);
@@ -7707,7 +7868,7 @@ function LEDArrayElm(xa, ya, xb, yb, st){
   $setPoints_3(this);
 }
 
-defineClass(102, 18, {18:1, 4:1, 6:1, 102:1}, LEDArrayElm);
+defineClass(103, 18, {18:1, 4:1, 6:1, 103:1}, LEDArrayElm);
 _.calculateCurrent = function calculateCurrent_13(){
   var cur, i, ix, iy;
   i = 0;
@@ -7781,7 +7942,7 @@ _.stepFinished = function stepFinished_8(){
     $wnd.Math.abs(this.currents[i]) > $intern_25 && $stop(sim, 'max current exceeded');
 }
 ;
-var Lcom_lushprojects_circuitjs1_client_LEDArrayElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LEDArrayElm', 102);
+var Lcom_lushprojects_circuitjs1_client_LEDArrayElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LEDArrayElm', 103);
 function LEDElm(xa, ya, xb, yb, f, st){
   DiodeElm.call(this, xa, ya, xb, yb, f, st);
   if ((f & 3) == 0) {
@@ -7825,7 +7986,7 @@ function $getConnectedPost(this$static, n){
   var key, le, myPost;
   key = this$static.busWidth > 1?this$static.text_0 + ':' + n:this$static.text_0;
   myPost = $getPost(this$static, n);
-  le = castTo($getStringValue(labelList, key), 101);
+  le = castTo($getStringValue(labelList, key), 102);
   if (le)
     return le.point;
   le = new LabeledNodeElm$LabelEntry;
@@ -7921,7 +8082,7 @@ _.setNode = function setNode_0(p, n){
   var key;
   this.nodes[p] = n;
   key = this.busWidth > 1?this.text_0 + ':' + p:this.text_0;
-  castTo($getStringValue(labelList, key), 101);
+  castTo($getStringValue(labelList, key), 102);
 }
 ;
 _.setPoints = function setPoints_29(){
@@ -7939,8 +8100,8 @@ var Lcom_lushprojects_circuitjs1_client_LabeledNodeElm_2_classLit = createForCla
 function LabeledNodeElm$LabelEntry(){
 }
 
-defineClass(101, 1, {101:1}, LabeledNodeElm$LabelEntry);
-var Lcom_lushprojects_circuitjs1_client_LabeledNodeElm$LabelEntry_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LabeledNodeElm/LabelEntry', 101);
+defineClass(102, 1, {102:1}, LabeledNodeElm$LabelEntry);
+var Lcom_lushprojects_circuitjs1_client_LabeledNodeElm$LabelEntry_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LabeledNodeElm/LabelEntry', 102);
 function $startIteration_1(this$static){
   var cap, capc, capw, cr, nom_r, tp;
   nom_r = this$static.nom_v * this$static.nom_v / this$static.nom_pow;
@@ -8161,7 +8322,7 @@ _.reset_0 = function reset_20(){
 ;
 _.setVoltageSource = function setVoltageSource_6(j, vs){
   if ((this.flags & 96) >> 5 > 0) {
-    (this.vSources == null || this.vSources.length != this.bits) && (this.vSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, this.bits, 0, 1));
+    (this.vSources == null || this.vSources.length != this.bits) && (this.vSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, this.bits, 0, 1));
     this.vSources[j] = vs;
     $setNodes(vs, ground, this.nodes[this.intNodes + j]);
   }
@@ -8225,7 +8386,7 @@ function LogicInputElm(xa, ya, xb, yb, f, st){
   }
 }
 
-defineClass(40, 21, {4:1, 6:1, 40:1, 21:1}, LogicInputElm);
+defineClass(41, 21, {4:1, 6:1, 41:1, 21:1}, LogicInputElm);
 _.calculateCurrent = function calculateCurrent_15(){
 }
 ;
@@ -8287,7 +8448,7 @@ _.validate = function validate_11(){
 ;
 _.hiV = 0;
 _.loV = 0;
-var Lcom_lushprojects_circuitjs1_client_LogicInputElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LogicInputElm', 40);
+var Lcom_lushprojects_circuitjs1_client_LogicInputElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'LogicInputElm', 41);
 function LogicOutputElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   try {
@@ -8326,7 +8487,7 @@ _.setPoints = function setPoints_32(){
 }
 ;
 _.stamp = function stamp_29(){
-  (this.flags & 4) != 0 && $stampResistor(this.nodes[0], ground, $intern_29);
+  (this.flags & 4) != 0 && $stampResistor(this.nodes[0], ground, $intern_30);
 }
 ;
 _.threshold = 0;
@@ -8334,7 +8495,7 @@ var Lcom_lushprojects_circuitjs1_client_LogicOutputElm_2_classLit = createForCla
 function MBBSwitchElm(xa, ya, xb, yb, f, st){
   SwitchElm.call(this, xa, ya, xb, yb, f, st);
   this.link_0 = (new Integer_0($nextToken(st))).value_0;
-  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, 2, 0, 1);
+  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, 2, 0, 1);
   this.currents = initUnidimensionalArray(D_classLit, $intern_7, 5, 2, 15, 1);
 }
 
@@ -8531,13 +8692,13 @@ function NoiseElm(xa, ya, xb, yb, f, st){
   this.waveform = 6;
 }
 
-defineClass(166, 38, $intern_18, NoiseElm);
-var Lcom_lushprojects_circuitjs1_client_NoiseElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'NoiseElm', 166);
+defineClass(168, 39, $intern_18, NoiseElm);
+var Lcom_lushprojects_circuitjs1_client_NoiseElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'NoiseElm', 168);
 function OrGateElm(xa, ya, xb, yb, f, st){
   GateElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(105, 24, $intern_13, OrGateElm);
+defineClass(106, 24, $intern_13, OrGateElm);
 _.calcFunction = function calcFunction_0(){
   var f, i;
   f = false;
@@ -8581,12 +8742,12 @@ _.setPoints = function setPoints_35(){
   }
 }
 ;
-var Lcom_lushprojects_circuitjs1_client_OrGateElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'OrGateElm', 105);
+var Lcom_lushprojects_circuitjs1_client_OrGateElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'OrGateElm', 106);
 function NorGateElm(xa, ya, xb, yb, f, st){
   OrGateElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(140, 105, $intern_13, NorGateElm);
+defineClass(140, 106, $intern_13, NorGateElm);
 _.getDumpType = function getDumpType_44(){
   return 153;
 }
@@ -8600,7 +8761,7 @@ function OhmMeterElm(xa, ya, xb, yb, st){
   CurrentElm.call(this, xa, ya, xb, yb, 0, st);
 }
 
-defineClass(111, 46, {4:1, 46:1, 6:1, 111:1}, OhmMeterElm);
+defineClass(111, 47, {4:1, 47:1, 6:1, 111:1}, OhmMeterElm);
 _.getDumpType = function getDumpType_45(){
   return 216;
 }
@@ -8621,7 +8782,7 @@ function OpAmpElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.maxOut = 15;
   this.minOut = -15;
-  this.gbw = $intern_29;
+  this.gbw = $intern_30;
   try {
     this.maxOut = $doubleValue(__parseAndValidateDouble($nextToken(st)));
     this.minOut = $doubleValue(__parseAndValidateDouble($nextToken(st)));
@@ -8650,12 +8811,12 @@ _.doStep = function doStep_25(){
   maxAdj = this.maxOut - midpoint;
   minAdj = this.minOut - midpoint;
   if (vd >= maxAdj / this.gain && (this.lastvd >= 0 || $getrand(app, 4) == 1)) {
-    dx = $intern_33;
-    x_0 = this.maxOut - $intern_33 * maxAdj / this.gain;
+    dx = $intern_34;
+    x_0 = this.maxOut - $intern_34 * maxAdj / this.gain;
   }
    else if (vd <= minAdj / this.gain && (this.lastvd <= 0 || $getrand(app, 4) == 1)) {
-    dx = $intern_33;
-    x_0 = this.minOut - $intern_33 * minAdj / this.gain;
+    dx = $intern_34;
+    x_0 = this.minOut - $intern_34 * minAdj / this.gain;
   }
    else {
     dx = this.gain;
@@ -8831,7 +8992,7 @@ function PolarCapacitorElm(xa, ya, xb, yb, f, st){
   this.maxNegativeVoltage = $doubleValue(__parseAndValidateDouble($nextToken(st)));
 }
 
-defineClass(85, 50, {50:1, 4:1, 6:1, 85:1}, PolarCapacitorElm);
+defineClass(85, 51, {51:1, 4:1, 6:1, 85:1}, PolarCapacitorElm);
 _.getDumpType = function getDumpType_48(){
   return 209;
 }
@@ -8932,7 +9093,7 @@ function PotElm(xa, ya, xb, yb, f, st){
     this.sliderText += ' ' + $nextToken(st);
 }
 
-defineClass(52, 4, {4:1, 6:1, 52:1}, PotElm);
+defineClass(40, 4, {4:1, 6:1, 40:1}, PotElm);
 _.calculateCurrent = function calculateCurrent_18(){
   this.current1 = this.resistance1 == 0?0:(this.volts[0] - this.volts[2]) / this.resistance1;
   this.current2 = this.resistance2 == 0?0:(this.volts[1] - this.volts[2]) / this.resistance2;
@@ -8945,8 +9106,8 @@ _.execute = function execute_7(){
   if (this.link_0 != 0) {
     for (ce$iterator = new ArrayList$1(app.elmList.arrayList); ce$iterator.i < ce$iterator.this$01.array.length;) {
       ce = castTo($next_0(ce$iterator), 4);
-      if (instanceOf(ce, 52) && ce != this) {
-        pe = castTo(ce, 52);
+      if (instanceOf(ce, 40) && ce != this) {
+        pe = castTo(ce, 40);
         pe.link_0 == this.link_0 && $setPoints_11(pe);
       }
     }
@@ -9030,7 +9191,7 @@ _.maxResistance = 0;
 _.position = 0;
 _.resistance1 = 0;
 _.resistance2 = 0;
-var Lcom_lushprojects_circuitjs1_client_PotElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'PotElm', 52);
+var Lcom_lushprojects_circuitjs1_client_PotElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'PotElm', 40);
 function ProbeElm(xa, ya, xb, yb, st){
   CircuitElm.call(this, xa, ya, xb, yb, 3);
   this.rmsV = 0;
@@ -9162,11 +9323,11 @@ function Rectangle(){
   this.height = 0;
 }
 
-defineClass(97, 1, {97:1}, Rectangle);
+defineClass(95, 1, {95:1}, Rectangle);
 _.equals_0 = function equals_1(obj){
   var r;
-  if (instanceOf(obj, 97)) {
-    r = castTo(obj, 97);
+  if (instanceOf(obj, 95)) {
+    r = castTo(obj, 95);
     return this.x_0 == r.x_0 && this.y_0 == r.y_0 && this.width_0 == r.width_0 && this.height == r.height;
   }
   return this === obj;
@@ -9180,7 +9341,7 @@ _.height = 0;
 _.width_0 = 0;
 _.x_0 = 0;
 _.y_0 = 0;
-var Lcom_lushprojects_circuitjs1_client_Rectangle_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'Rectangle', 97);
+var Lcom_lushprojects_circuitjs1_client_Rectangle_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'Rectangle', 95);
 function ResistorElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.resistance = $doubleValue(__parseAndValidateDouble($nextToken(st)));
@@ -9250,7 +9411,7 @@ _.doStep = function doStep_26(){
   $doStep_0(this.diode, this.volts[3] - this.volts[1]);
   icmult = 1 / this.triggerI;
   iamult = 1 / this.holdingI - icmult;
-  this.aresistance = -icmult * this.ic + this.ia * iamult > 1?0.0105:$intern_29;
+  this.aresistance = -icmult * this.ic + this.ia * iamult > 1?0.0105:$intern_30;
   $stampResistor(this.nodes[0], this.nodes[3], this.aresistance);
 }
 ;
@@ -9293,12 +9454,12 @@ _.setPoints = function setPoints_43(){
   $setPoints(this);
   this.dir_0 = 0;
   if (abs_0(this.dx) > abs_0(this.dy)) {
-    this.dir_0 = -sign(this.dx) * sign(this.dy);
+    this.dir_0 = -sign_0(this.dx) * sign_0(this.dy);
     (this.flags & 1) != 0 && (this.dn = abs_0(this.dx));
     this.point2.y_0 = this.point1.y_0;
   }
    else {
-    this.dir_0 = sign(this.dy) * sign(this.dx);
+    this.dir_0 = sign_0(this.dy) * sign_0(this.dx);
     (this.flags & 1) != 0 && (this.dn = abs_0(this.dy));
     this.point2.x_0 = this.point1.x_0;
   }
@@ -9344,7 +9505,7 @@ function SchmittElm(xa, ya, xb, yb, f, st){
   InvertingSchmittElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(167, 77, $intern_32, SchmittElm);
+defineClass(169, 77, $intern_33, SchmittElm);
 _.doStep = function doStep_27(){
   var maxStep, out;
   if (this.state) {
@@ -9365,7 +9526,7 @@ _.doStep = function doStep_27(){
       out = this.logicOnLevel;
     }
   }
-  maxStep = this.slewRate * sim.timeStep_0 * $intern_31;
+  maxStep = this.slewRate * sim.timeStep_0 * $intern_32;
   out = $wnd.Math.max($wnd.Math.min(this.lastOutputVoltage + maxStep, out), this.lastOutputVoltage - maxStep);
   $updateVoltageSource(this.voltSource_0, out);
 }
@@ -9398,7 +9559,7 @@ _.startIteration = function startIteration_11(){
 }
 ;
 _.lastOutputVoltage = 0;
-var Lcom_lushprojects_circuitjs1_client_SchmittElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SchmittElm', 167);
+var Lcom_lushprojects_circuitjs1_client_SchmittElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SchmittElm', 169);
 function $analyzeCircuit(this$static){
   this$static.app.stopMessage = null;
   this$static.elmList = this$static.app.elmList;
@@ -9421,7 +9582,7 @@ function $applySolvedRightSide(this$static, m){
     j < m.nodeCount && (m.nodeVoltages[j] = res);
   }
   for (j = 0; j != m.voltageSourceList.arrayList.array.length; j++) {
-    vs = castTo($get_2(m.voltageSourceList, j), 34);
+    vs = castTo($get_2(m.voltageSourceList, j), 37);
     res = m.rightSide[vs.row - 1];
     isNaN(res) || vs.elm.setCurrent(vs, res);
   }
@@ -9433,7 +9594,7 @@ function $calcWireCurrents(this$static){
   for (i = 0; i != this$static.wireInfoList.arrayList.array.length; i++) {
     ws = castTo($get_2(this$static.wireInfoList, i), 36);
     cur = 0;
-    if (ws.post == 0) {
+    if (ws.post_0 == 0) {
       p = ws.wire.getPost(ws.bit);
       for (j = 0; j != ws.neighbors.arrayList.array.length; j++) {
         ce = castTo($get_2(ws.neighbors, j), 4);
@@ -9454,7 +9615,7 @@ function $calcWireCurrents(this$static){
         }
       }
     }
-    ws.post != 0 && (cur = -cur);
+    ws.post_0 != 0 && (cur = -cur);
     ws.wire.setWireCurrent(ws.bit, cur);
     ws.current_0 = cur;
   }
@@ -9492,7 +9653,7 @@ function $calcWireInfo(this$static){
     isReady0 = true;
     isReady1 = !instanceOf(wire, 81);
     for (j = 0; j != cn1.links_0.arrayList.array.length; j++) {
-      cnl = castTo($get_2(cn1.links_0, j), 44);
+      cnl = castTo($get_2(cn1.links_0, j), 43);
       ce = cnl.elm;
       if (ce == wire)
         continue;
@@ -9505,7 +9666,7 @@ function $calcWireInfo(this$static){
         continue;
       ptKey = pt.x_0 + ',' + pt.y_0 + ',' + pt.z_0;
       neighborBit = cnl.num % ce.getBusWidth();
-      notReady = ce.isRemovableWire() && (bits = castTo($get(this$static.wireInfoResolved, ce), 83) , !(!!bits && $contains_0(bits, valueOf(neighborBit))));
+      notReady = ce.isRemovableWire() && (bits = castTo($get(this$static.wireInfoResolved, ce), 82) , !(!!bits && $contains_0(bits, valueOf(neighborBit))));
       if (ws.endpoint0 != null && $equals_0(ws.endpoint0, ptKey)) {
         $add(neighbors0.arrayList, ce);
         notReady && (isReady0 = false);
@@ -9530,14 +9691,14 @@ function $calcWireInfo(this$static){
     }
     if (isReady0) {
       ws.neighbors = neighbors0;
-      ws.post = 0;
+      ws.post_0 = 0;
       $setWireInfoResolved(this$static, wire, ws.bit);
       moved = 0;
     }
      else if (isReady1 && (ws.endpoint1 != null || !instanceOf(wire, 81))) {
       ws.neighbors = neighbors1;
       ws.labelNeighbors = labelNeighbors;
-      ws.post = 1;
+      ws.post_0 = 1;
       $setWireInfoResolved(this$static, wire, ws.bit);
       moved = 0;
     }
@@ -9577,7 +9738,7 @@ function $calculateClosures(this$static){
       n = castTo($remove_0(stack_0, stack_0.arrayList.array.length - 1), 17).value_0;
       cn = $getCircuitNode(this$static, n);
       for (j = 0; j != cn.links_0.arrayList.array.length; j++) {
-        cnl = castTo($get_2(cn.links_0, j), 44);
+        cnl = castTo($get_2(cn.links_0, j), 43);
         ce = cnl.elm;
         post1 = cnl.num;
         for (k = 0; k != ce.getPostCount() + ce.getInternalNodeCount(); k++) {
@@ -9598,7 +9759,7 @@ function $calculateClosures(this$static){
     ++closureCount;
   }
   closureCount == 0 && (closureCount = 1);
-  this$static.matrices = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitMatrix_2_classLit, $intern_6, 110, closureCount, 0, 1);
+  this$static.matrices = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_CircuitMatrix_2_classLit, $intern_6, 107, closureCount, 0, 1);
   for (i = 0; i != closureCount; i++)
     this$static.matrices[i] = new CircuitMatrix;
   for (i = 1; i != totalNodes; i++) {
@@ -9674,7 +9835,7 @@ function $connectUnconnectedNodes(this$static){
   var i, n;
   for (i = 0; i != this$static.unconnectedNodes.arrayList.array.length; i++) {
     n = castTo($get_2(this$static.unconnectedNodes, i), 17).value_0;
-    $stampResistor(ground, castTo($get_2(this$static.nodeList, n), 33), $intern_19);
+    $stampResistor(ground, castTo($get_2(this$static.nodeList, n), 34), $intern_19);
   }
 }
 
@@ -9797,7 +9958,7 @@ function $findUnconnectedNodes(this$static){
       n = castTo($get_2(queue, qHead++), 17).value_0;
       cn = $getCircuitNode(this$static, n);
       for (j = 0; j != cn.links_0.arrayList.array.length; j++) {
-        cnl = castTo($get_2(cn.links_0, j), 44);
+        cnl = castTo($get_2(cn.links_0, j), 43);
         ce = cnl.elm;
         post1 = cnl.num;
         for (k = 0; k != ce.getPostCount(); k++) {
@@ -9837,18 +9998,18 @@ function $findUnconnectedNodes(this$static){
 function $getCircuitNode(this$static, n){
   if (n >= this$static.nodeList.arrayList.array.length)
     return null;
-  return castTo($elementAt(this$static.nodeList, n), 33);
+  return castTo($get_2(this$static.nodeList, n), 34);
 }
 
 function $getElm(this$static, n){
   if (n >= this$static.elmList.arrayList.array.length)
     return null;
-  return castTo($elementAt(this$static.elmList, n), 4);
+  return castTo($get_2(this$static.elmList, n), 4);
 }
 
 function $isWireInfoResolved(this$static, ce, bit){
   var bits;
-  bits = castTo($get(this$static.wireInfoResolved, ce), 83);
+  bits = castTo($get(this$static.wireInfoResolved, ce), 82);
   return !!bits && $contains_0(bits, valueOf(bit));
 }
 
@@ -9899,7 +10060,7 @@ function $makeNodeList(this$static){
     }
     vscount += ivs;
   }
-  this$static.voltageSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, vscount, 0, 1);
+  this$static.voltageSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, vscount, 0, 1);
 }
 
 function $preStampAndStampCircuit(this$static){
@@ -9993,8 +10154,8 @@ function $resetTime(this$static){
   this$static.timeStepCount = 0;
 }
 
-function $runCircuit(this$static, didAnalyze, stepLimit){
-  var bounded, completedSteps, debugprint, frameTimeLimit, goodIterations, i, iter, j, lit, m, mi, mi0, mi1, printit, steprate, subiter, subiterCount, timeStepCountAtFrameStart, tm, x_0;
+function $runCircuit(this$static, didAnalyze, stepLimit, delayWireCurrents, observer){
+  var bounded, completedSteps, debugprint, frameTimeLimit, goodIterations, i, iter, j, keepGoing, lit, m, mi, mi0, mi1, printit, steprate, subiter, subiterCount, timeStepCountAtFrameStart, tm, x_0;
   if (this$static.matrices == null || this$static.elmList.arrayList.array.length == 0) {
     this$static.matrices = null;
     return;
@@ -10114,14 +10275,15 @@ function $runCircuit(this$static, didAnalyze, stepLimit){
       if (this$static.app.stopMessage != null)
         return;
     }
-    $calcWireCurrents(this$static);
+    delayWireCurrents || $calcWireCurrents(this$static);
     for (mi = 0; mi != this$static.matrices.length; mi++) {
       m = this$static.matrices[mi];
       for (i = 0; i != m.nodeCount; i++)
         m.lastNodeVoltages[i] = m.nodeVoltages[i];
     }
     if (bounded) {
-      if (++completedSteps >= stepLimit)
+      keepGoing = !observer || $afterStep(observer, this$static.t, this$static.timeStep_0);
+      if (++completedSteps >= stepLimit || !keepGoing)
         break;
       continue;
     }
@@ -10133,6 +10295,7 @@ function $runCircuit(this$static, didAnalyze, stepLimit){
       break;
   }
   this$static.lastIterTime = lit;
+  delayWireCurrents && $calcWireCurrents(this$static);
 }
 
 function $setGroundNode(this$static, subcircuit){
@@ -10152,7 +10315,7 @@ function $setGroundNode(this$static, subcircuit){
       nme.node = ground;
       break;
     }
-    instanceOf(ce, 38) && (gotRail = true);
+    instanceOf(ce, 39) && (gotRail = true);
     !volt && instanceOf(ce, 20) && (volt = ce);
   }
   if (!subcircuit && !gotGround && !!volt && !gotRail) {
@@ -10165,10 +10328,10 @@ function $setGroundNode(this$static, subcircuit){
 function $setNodeVoltages(m, nv){
   var cn, cnl, j, k, res;
   for (j = 0; j != m.nodeList.arrayList.array.length; j++) {
-    cn = castTo($get_2(m.nodeList, j), 33);
+    cn = castTo($get_2(m.nodeList, j), 34);
     res = nv[cn.row - 1];
     for (k = 0; k != cn.links_0.arrayList.array.length; k++) {
-      cnl = castTo($elementAt(cn.links_0, k), 44);
+      cnl = castTo($get_2(cn.links_0, k), 43);
       cnl.elm.setNodeVoltage(cnl.num, res);
     }
   }
@@ -10176,7 +10339,7 @@ function $setNodeVoltages(m, nv){
 
 function $setWireInfoResolved(this$static, ce, bit){
   var bits;
-  bits = castTo($get(this$static.wireInfoResolved, ce), 83);
+  bits = castTo($get(this$static.wireInfoResolved, ce), 82);
   if (!bits) {
     bits = new HashSet;
     $put(this$static.wireInfoResolved, ce, bits);
@@ -10324,9 +10487,15 @@ function $stampVoltageSource_1(vs){
 }
 
 function $stepCircuit(this$static, count){
-  if (count < 1 || count > 10000)
+  if (count < 1 || count > $intern_29)
     throw toJs(new IllegalArgumentException('Step count must be between 1 and 10000'));
-  $runCircuit(this$static, false, count);
+  $runCircuit(this$static, false, count, false, null);
+}
+
+function $stepSampled(this$static, count, delayWireCurrents, observer){
+  if (count < 1 || count > $intern_29)
+    throw toJs(new IllegalArgumentException('Step count must be between 1 and 10000'));
+  $runCircuit(this$static, false, count, delayWireCurrents, observer);
 }
 
 function $stop(this$static, s){
@@ -10393,7 +10562,7 @@ function lu_factor(a, n, ipvt, cm){
 }
 
 function lu_factor_dense(a, n, ipvt){
-  var i, j, k, largest, largestRow, mult, q, row_all_zeros, x_0;
+  var column, i, j, k, largest, largestRow, mult, q, row, row_all_zeros, x_0;
   for (i = 0; i != n; i++) {
     row_all_zeros = true;
     for (j = 0; j != n; j++) {
@@ -10405,20 +10574,23 @@ function lu_factor_dense(a, n, ipvt){
     if (row_all_zeros)
       return false;
   }
+  column = initUnidimensionalArray(D_classLit, $intern_7, 5, n, 15, 1);
   for (j = 0; j != n; j++) {
     for (i = 0; i != j; i++) {
-      q = a[i][j];
+      row = a[i];
+      q = row[j];
       for (k = 0; k != i; k++)
-        q -= a[i][k] * a[k][j];
-      a[i][j] = q;
+        q -= row[k] * column[k];
+      row[j] = column[i] = q;
     }
     largest = 0;
     largestRow = -1;
     for (i = j; i != n; i++) {
-      q = a[i][j];
+      row = a[i];
+      q = row[j];
       for (k = 0; k != j; k++)
-        q -= a[i][k] * a[k][j];
-      a[i][j] = q;
+        q -= row[k] * column[k];
+      row[j] = q;
       x_0 = $wnd.Math.abs(q);
       if (x_0 >= largest) {
         largest = x_0;
@@ -10430,11 +10602,9 @@ function lu_factor_dense(a, n, ipvt){
         console.log('largestRow == -1');
         return false;
       }
-      for (k = 0; k != n; k++) {
-        x_0 = a[largestRow][k];
-        a[largestRow][k] = a[j][k];
-        a[j][k] = x_0;
-      }
+      row = a[largestRow];
+      a[largestRow] = a[j];
+      a[j] = row;
     }
     ipvt[j] = largestRow;
     if (a[j][j] == 0) {
@@ -10491,7 +10661,7 @@ function pointKey(p){
   return p.x_0 + ',' + p.y_0 + ',' + p.z_0;
 }
 
-defineClass(158, 1, {}, SimulationManager);
+defineClass(151, 1, {}, SimulationManager);
 _.adjustTimeStep = false;
 _.circuitNonLinear = false;
 _.converged = false;
@@ -10506,7 +10676,7 @@ _.timeStepCount = 0;
 _.usingSparse = false;
 _.voltageSourceCount = 0;
 var theSim;
-var Lcom_lushprojects_circuitjs1_client_SimulationManager_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SimulationManager', 158);
+var Lcom_lushprojects_circuitjs1_client_SimulationManager_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SimulationManager', 151);
 function SimulationManager$NodeMapEntry(){
   this.node = null;
 }
@@ -10527,7 +10697,7 @@ function SimulationManager$WireSegment(w, b, ep0, ep1){
 defineClass(36, 1, {36:1}, SimulationManager$WireSegment);
 _.bit = 0;
 _.current_0 = 0;
-_.post = 0;
+_.post_0 = 0;
 var Lcom_lushprojects_circuitjs1_client_SimulationManager$WireSegment_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SimulationManager/WireSegment', 36);
 function SparkGapElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
@@ -10596,7 +10766,7 @@ function StopTriggerElm(xa, ya, xb, yb, st){
   this.delay = __parseAndValidateDouble($nextToken(st));
 }
 
-defineClass(31, 4, {4:1, 6:1, 31:1}, StopTriggerElm);
+defineClass(32, 4, {4:1, 6:1, 32:1}, StopTriggerElm);
 _.getDumpType = function getDumpType_55(){
   return 408;
 }
@@ -10637,7 +10807,7 @@ _.triggerTime = 0;
 _.triggerVoltage = 0;
 _.triggered = false;
 _.type_0 = 0;
-var Lcom_lushprojects_circuitjs1_client_StopTriggerElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'StopTriggerElm', 31);
+var Lcom_lushprojects_circuitjs1_client_StopTriggerElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'StopTriggerElm', 32);
 function $hasMoreTokens(this$static){
   if (!this$static.retDelims) {
     while (this$static.pos < this$static.len && $indexOf_0(this$static.delim, fromCodePoint($charAt(this$static.str, this$static.pos))) >= 0)
@@ -10789,6 +10959,10 @@ _.savedTimeStep = 0;
 _.sweepTime = 0;
 _.v = 0;
 var Lcom_lushprojects_circuitjs1_client_SweepElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'SweepElm', 68);
+function $hasCenterOff(this$static){
+  return (this$static.flags & 1) != 0 && this$static.throwCount == 2;
+}
+
 function Switch2Elm(xa, ya, xb, yb, f, st){
   SwitchElm.call(this, xa, ya, xb, yb, f, st);
   this.link_0 = (new Integer_0($nextToken(st))).value_0;
@@ -10803,7 +10977,7 @@ function Switch2Elm(xa, ya, xb, yb, f, st){
   }
 }
 
-defineClass(39, 21, {4:1, 6:1, 39:1, 21:1}, Switch2Elm);
+defineClass(28, 21, {4:1, 6:1, 28:1, 21:1}, Switch2Elm);
 _.calculateCurrent = function calculateCurrent_23(){
   this.position == 2 && (this.flags & 1) != 0 && this.throwCount == 2?(this.current_1 = 0):this.resistance > 0 && (this.current_1 = (this.volts[0] - this.volts[this.position + 1]) / this.resistance);
 }
@@ -10890,7 +11064,7 @@ _.validate = function validate_15(){
 ;
 _.link_0 = 0;
 _.throwCount = 0;
-var Lcom_lushprojects_circuitjs1_client_Switch2Elm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'Switch2Elm', 39);
+var Lcom_lushprojects_circuitjs1_client_Switch2Elm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'Switch2Elm', 28);
 function TFlipFlopElm(xa, ya, xb, yb, f, st){
   $clinit_ChipElm();
   ChipElm.call(this, xa, ya, xb, yb, f, st);
@@ -11306,7 +11480,7 @@ function ThreePhaseMotorElm(xa, ya, xb, yb, st){
      else 
       throw toJs($e0);
   }
-  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, 2, 0, 1);
+  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, 2, 0, 1);
   this.coilCurrents = initUnidimensionalArray(D_classLit, $intern_7, 5, 5, 15, 1);
 }
 
@@ -11574,7 +11748,7 @@ _.setCurrent = function setCurrent_8(vs, c){
 _.setPoints = function setPoints_53(){
   var ds, p3, p4, sep;
   $setPoints(this);
-  ds = this.dy == 0?sign(this.dx):-sign(this.dy);
+  ds = this.dy == 0?sign_0(this.dx):-sign_0(this.dy);
   p3 = $interpPoint_0(this.point1, this.point2, 0, -this.width_0 * ds);
   p4 = $interpPoint_0(this.point1, this.point2, 1, -this.width_0 * ds);
   sep = app.gridSize / 2 | 0;
@@ -11891,7 +12065,7 @@ function calcJunctionCap(vj, cj0, vj0, mj){
   return vj < 0.5 * vj0?cj0 / $wnd.Math.pow(1 - vj / vj0, mj):cj0 / $wnd.Math.pow(0.5, 1 + mj) * (1 - 0.5 * (1 + mj) + mj * vj / vj0);
 }
 
-defineClass(47, 4, {4:1, 6:1, 47:1}, TransistorElm);
+defineClass(48, 4, {4:1, 6:1, 48:1}, TransistorElm);
 _.doStep = function doStep_34(){
   var arg, c2, c4, cb, cbc, cbcn, cbe, cben, cc, ceqbc, ceqbe, csat, dqbdvc, dqbdve, evbc, evbcn, evbe, evben, gbc, gbcn, gbe, gben, gm, gmu, go, gpi, notConverged, oik, oikr, q1, q2, qb, sqarg, vbc, vbe, vtc, vte, vtn;
   vbc = this.pnp * (this.volts[0] - this.volts[1]);
@@ -12123,7 +12297,7 @@ _.localSubIters = 0;
 _.pnp = 0;
 _.vcrit = 0;
 var globalFlags_0 = 0;
-var Lcom_lushprojects_circuitjs1_client_TransistorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TransistorElm', 47);
+var Lcom_lushprojects_circuitjs1_client_TransistorElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TransistorElm', 48);
 function $$init(this$static){
 }
 
@@ -12264,7 +12438,7 @@ function createModelMap_0(){
 function getModelWithName_0(name_0){
   var lm;
   createModelMap_0();
-  lm = castTo($getStringValue(modelMap_0, name_0), 48);
+  lm = castTo($getStringValue(modelMap_0, name_0), 49);
   if (lm)
     return lm;
   lm = new TransistorModel;
@@ -12276,7 +12450,7 @@ function getModelWithName_0(name_0){
 function getModelWithNameOrCopy_0(name_0, oldmodel){
   var lm;
   createModelMap_0();
-  lm = castTo($getStringValue(modelMap_0, name_0), 48);
+  lm = castTo($getStringValue(modelMap_0, name_0), 49);
   if (lm)
     return lm;
   if (!oldmodel) {
@@ -12297,7 +12471,7 @@ function undumpModel(st){
   return dm;
 }
 
-defineClass(48, 1, {6:1, 48:1, 98:1}, TransistorModel, TransistorModel_0, TransistorModel_1);
+defineClass(49, 1, {6:1, 49:1, 98:1}, TransistorModel, TransistorModel_0, TransistorModel_1);
 _.BCleakCur = 0;
 _.BEleakCur = 0;
 _.betaR = 0;
@@ -12320,7 +12494,7 @@ _.satCur = 0;
 _.transitTimeF = 0;
 _.transitTimeR = 0;
 var modelMap_0;
-var Lcom_lushprojects_circuitjs1_client_TransistorModel_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TransistorModel', 48);
+var Lcom_lushprojects_circuitjs1_client_TransistorModel_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TransistorModel', 49);
 function TriacElm(xa, ya, xb, yb, f, st){
   CircuitElm.call(this, xa, ya, xb, yb, f);
   this.holdingI = 0.0082;
@@ -12395,12 +12569,12 @@ _.setPoints = function setPoints_56(){
   var dir_0, gatelen, i, leadlen, p1, p2, p3, sgn;
   $setPoints(this);
   if (abs_0(this.dx) > abs_0(this.dy)) {
-    dir_0 = -sign(this.dx) * sign(this.dy);
+    dir_0 = -sign_0(this.dx) * sign_0(this.dy);
     this.dn = abs_0(this.dx);
     this.point2.y_0 = this.point1.y_0;
   }
    else {
-    dir_0 = sign(this.dy) * sign(this.dx);
+    dir_0 = sign_0(this.dy) * sign_0(this.dx);
     this.dn = abs_0(this.dy);
     this.point2.x_0 = this.point1.x_0;
   }
@@ -12440,7 +12614,7 @@ _.stamp = function stamp_46(){
 _.startIteration = function startIteration_19(){
   $wnd.Math.abs(this.i2) < this.holdingI && (this.state = false);
   $wnd.Math.abs(this.ig) > this.triggerI && (this.state = true);
-  this.aresistance = this.state?$intern_21:$intern_29;
+  this.aresistance = this.state?$intern_21:$intern_30;
 }
 ;
 _.aresistance = 0;
@@ -12458,7 +12632,7 @@ function TriodeElm(xa, ya, xb, yb, f, st){
   this.kg1 = $doubleValue(__parseAndValidateDouble($nextToken(st)));
 }
 
-defineClass(96, 4, {4:1, 6:1, 96:1}, TriodeElm);
+defineClass(97, 4, {4:1, 6:1, 97:1}, TriodeElm);
 _.doStep = function doStep_36(){
   var Gds, gm, ids, ival, q, rs, vgk, vpk, vs;
   vs = initUnidimensionalArray(D_classLit, $intern_7, 5, 3, 15, 1);
@@ -12590,7 +12764,7 @@ _.lastv0 = 0;
 _.lastv1 = 0;
 _.lastv2 = 0;
 _.mu = 0;
-var Lcom_lushprojects_circuitjs1_client_TriodeElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TriodeElm', 96);
+var Lcom_lushprojects_circuitjs1_client_TriodeElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TriodeElm', 97);
 function $limitStep_1(vnew, vold){
   if (vnew > vold + 1)
     return vold + 1;
@@ -12603,12 +12777,12 @@ function TunnelDiodeElm(xa, ya, xb, yb, f){
   CircuitElm.call(this, xa, ya, xb, yb, f);
 }
 
-defineClass(168, 4, $intern_9, TunnelDiodeElm);
+defineClass(170, 4, $intern_9, TunnelDiodeElm);
 _.calculateCurrent = function calculateCurrent_29(){
   var i0, voltdiff;
   voltdiff = this.volts[0] - this.volts[1];
-  i0 = $intern_35 * $wnd.Math.exp(-0.37);
-  this.current_1 = $intern_36 * $wnd.Math.exp($intern_37) * ($wnd.Math.exp(voltdiff / 0.026) - 1) + $intern_36 * (voltdiff / 0.1) * $wnd.Math.exp(1 - voltdiff / 0.1) + $intern_35 * $wnd.Math.exp(voltdiff - 0.37) - i0;
+  i0 = $intern_36 * $wnd.Math.exp(-0.37);
+  this.current_1 = $intern_37 * $wnd.Math.exp($intern_38) * ($wnd.Math.exp(voltdiff / 0.026) - 1) + $intern_37 * (voltdiff / 0.1) * $wnd.Math.exp(1 - voltdiff / 0.1) + $intern_36 * $wnd.Math.exp(voltdiff - 0.37) - i0;
 }
 ;
 _.doStep = function doStep_37(){
@@ -12617,9 +12791,9 @@ _.doStep = function doStep_37(){
   $wnd.Math.abs(voltdiff - this.lastvoltdiff) > $intern_21 && (sim.converged = false);
   voltdiff = $limitStep_1(voltdiff, this.lastvoltdiff);
   this.lastvoltdiff = voltdiff;
-  i0 = $intern_35 * $wnd.Math.exp(-0.37);
-  i = $intern_36 * $wnd.Math.exp($intern_37) * ($wnd.Math.exp(voltdiff / 0.026) - 1) + $intern_36 * (voltdiff / 0.1) * $wnd.Math.exp(1 - voltdiff / 0.1) + $intern_35 * $wnd.Math.exp(voltdiff - 0.37) - i0;
-  geq = $intern_36 * $wnd.Math.exp($intern_37) * $wnd.Math.exp(voltdiff / 0.026) / 0.026 + $intern_36 * $wnd.Math.exp(1 - voltdiff / 0.1) / 0.1 - $wnd.Math.exp(1 - voltdiff / 0.1) * $intern_36 * voltdiff / 0.010000000000000002 + $wnd.Math.exp(voltdiff - 0.37) * $intern_35;
+  i0 = $intern_36 * $wnd.Math.exp(-0.37);
+  i = $intern_37 * $wnd.Math.exp($intern_38) * ($wnd.Math.exp(voltdiff / 0.026) - 1) + $intern_37 * (voltdiff / 0.1) * $wnd.Math.exp(1 - voltdiff / 0.1) + $intern_36 * $wnd.Math.exp(voltdiff - 0.37) - i0;
+  geq = $intern_37 * $wnd.Math.exp($intern_38) * $wnd.Math.exp(voltdiff / 0.026) / 0.026 + $intern_37 * $wnd.Math.exp(1 - voltdiff / 0.1) / 0.1 - $wnd.Math.exp(1 - voltdiff / 0.1) * $intern_37 * voltdiff / 0.010000000000000002 + $wnd.Math.exp(voltdiff - 0.37) * $intern_36;
   nc = i - geq * voltdiff;
   $stampConductance(this.nodes[0], this.nodes[1], geq);
   $stampCurrentSource(this.nodes[0], this.nodes[1], nc);
@@ -12653,7 +12827,7 @@ _.stamp = function stamp_48(){
 }
 ;
 _.lastvoltdiff = 0;
-var Lcom_lushprojects_circuitjs1_client_TunnelDiodeElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TunnelDiodeElm', 168);
+var Lcom_lushprojects_circuitjs1_client_TunnelDiodeElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'TunnelDiodeElm', 170);
 function VarRailElm(xa, ya, xb, yb, st){
   RailElm.call(this, xa, ya, xb, yb, 0, st);
   this.sliderText = $nextToken(st);
@@ -12663,7 +12837,7 @@ function VarRailElm(xa, ya, xb, yb, st){
   this.waveform = 7;
 }
 
-defineClass(32, 38, {4:1, 6:1, 38:1, 32:1, 20:1}, VarRailElm);
+defineClass(33, 39, {4:1, 6:1, 39:1, 33:1, 20:1}, VarRailElm);
 _.getDumpType = function getDumpType_69(){
   return 172;
 }
@@ -12672,7 +12846,7 @@ _.getVoltage = function getVoltage_1(){
   return this.frequency;
 }
 ;
-var Lcom_lushprojects_circuitjs1_client_VarRailElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'VarRailElm', 32);
+var Lcom_lushprojects_circuitjs1_client_VarRailElm_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'VarRailElm', 33);
 function VaractorElm(xa, ya, xb, yb, f, st){
   DiodeElm.call(this, xa, ya, xb, yb, f, st);
   this.capvoltdiff = $doubleValue(__parseAndValidateDouble($nextToken(st)));
@@ -12763,9 +12937,9 @@ function $setNodes(this$static, n1, n2){
 function VoltageSource(){
 }
 
-defineClass(34, 1, {34:1}, VoltageSource);
+defineClass(37, 1, {37:1}, VoltageSource);
 _.row = 0;
-var Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'VoltageSource', 34);
+var Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit = createForClass('com.lushprojects.circuitjs1.client', 'VoltageSource', 37);
 function WattmeterElm(xa, ya, xb, yb, st){
   CircuitElm.call(this, xa, ya, xb, yb, 0);
   this.increasingP = true;
@@ -12779,7 +12953,7 @@ function WattmeterElm(xa, ya, xb, yb, st){
     if (!instanceOf($e0, 9))
       throw toJs($e0);
   }
-  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 34, 2, 0, 1);
+  this.voltSources = initUnidimensionalArray(Lcom_lushprojects_circuitjs1_client_VoltageSource_2_classLit, $intern_6, 37, 2, 0, 1);
   this.currents = initUnidimensionalArray(D_classLit, $intern_7, 5, 2, 15, 1);
 }
 
@@ -12827,7 +13001,7 @@ _.setCurrent = function setCurrent_10(vs, c){
 _.setPoints = function setPoints_60(){
   var ds, p3, p4, r1, r4, sep;
   $setPoints(this);
-  ds = this.dy == 0?sign(this.dx):-sign(this.dy);
+  ds = this.dy == 0?sign_0(this.dx):-sign_0(this.dy);
   p3 = $interpPoint_0(this.point1, this.point2, 0, -this.width_0 * ds);
   p4 = $interpPoint_0(this.point1, this.point2, 1, -this.width_0 * ds);
   sep = app.gridSize;
@@ -13000,7 +13174,7 @@ function XorGateElm(xa, ya, xb, yb, f, st){
   OrGateElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(87, 105, $intern_38, XorGateElm);
+defineClass(87, 106, $intern_39, XorGateElm);
 _.calcFunction = function calcFunction_1(){
   var f, i;
   f = false;
@@ -13018,7 +13192,7 @@ function XnorGateElm(xa, ya, xb, yb, f, st){
   XorGateElm.call(this, xa, ya, xb, yb, f, st);
 }
 
-defineClass(141, 87, $intern_38, XnorGateElm);
+defineClass(141, 87, $intern_39, XnorGateElm);
 _.getDumpType = function getDumpType_74(){
   return 431;
 }
@@ -13064,8 +13238,8 @@ function DGrowArray(){
   this.data_0 = initUnidimensionalArray(D_classLit, $intern_7, 5, 0, 15, 1);
 }
 
-defineClass(114, 1, {}, DGrowArray);
-var Lcom_lushprojects_circuitjs1_client_matrix_DGrowArray_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'DGrowArray', 114);
+defineClass(115, 1, {}, DGrowArray);
+var Lcom_lushprojects_circuitjs1_client_matrix_DGrowArray_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'DGrowArray', 115);
 function $clinit_DMatrixSparseCSC(){
   $clinit_DMatrixSparseCSC = emptyMethod;
   EPS = $wnd.Math.pow(2, -52);
@@ -13145,8 +13319,8 @@ function IGrowArray(){
   this.data_0 = initUnidimensionalArray(I_classLit, $intern_12, 5, 0, 15, 1);
 }
 
-defineClass(115, 1, {}, IGrowArray);
-var Lcom_lushprojects_circuitjs1_client_matrix_IGrowArray_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'IGrowArray', 115);
+defineClass(114, 1, {}, IGrowArray);
+var Lcom_lushprojects_circuitjs1_client_matrix_IGrowArray_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'IGrowArray', 114);
 function $initialize(this$static, A){
   var i, m, n, o;
   m = A.numRows;
@@ -13394,9 +13568,9 @@ function solveU(U, x_0){
   }
 }
 
-defineClass(171, 1, {}, SparseLU);
+defineClass(150, 1, {}, SparseLU);
 _.AnumRows = 0;
-var Lcom_lushprojects_circuitjs1_client_matrix_SparseLU_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'SparseLU', 171);
+var Lcom_lushprojects_circuitjs1_client_matrix_SparseLU_2_classLit = createForClass('com.lushprojects.circuitjs1.client.matrix', 'SparseLU', 150);
 function LS(s){
   var ix, sm;
   if (s == null)
@@ -13467,7 +13641,7 @@ function $booleanValue(this$static){
 }
 
 booleanCastMap = {3:1, 98:1};
-var Ljava_lang_Boolean_2_classLit = createForClass('java.lang', 'Boolean', 184);
+var Ljava_lang_Boolean_2_classLit = createForClass('java.lang', 'Boolean', 187);
 function digit(c, radix){
   if (radix < 2 || radix > 36) {
     return -1;
@@ -13488,8 +13662,8 @@ function ClassCastException(){
   RuntimeException_0.call(this, null);
 }
 
-defineClass(149, 25, $intern_0, ClassCastException);
-var Ljava_lang_ClassCastException_2_classLit = createForClass('java.lang', 'ClassCastException', 149);
+defineClass(152, 25, $intern_0, ClassCastException);
+var Ljava_lang_ClassCastException_2_classLit = createForClass('java.lang', 'ClassCastException', 152);
 function __parseAndValidateDouble(s){
   floatRegex == null && (floatRegex = new RegExp('^\\s*[+-]?(NaN|Infinity|((\\d+\\.?\\d*)|(\\.\\d+))([eE][+-]?\\d+)?[dDfF]?)\\s*$'));
   if (!floatRegex.test(s)) {
@@ -13524,9 +13698,9 @@ function __parseAndValidateInt(s, radix){
   return toReturn;
 }
 
-defineClass(107, 1, {3:1, 107:1});
+defineClass(108, 1, {3:1, 108:1});
 var floatRegex;
-var Ljava_lang_Number_2_classLit = createForClass('java.lang', 'Number', 107);
+var Ljava_lang_Number_2_classLit = createForClass('java.lang', 'Number', 108);
 function $doubleValue(this$static){
   return checkCriticalNotNull(this$static) , this$static;
 }
@@ -13535,8 +13709,8 @@ function isInfinite(x_0){
   return !isNaN(x_0) && !isFinite(x_0);
 }
 
-doubleCastMap = {3:1, 98:1, 107:1};
-var Ljava_lang_Double_2_classLit = createForClass('java.lang', 'Double', 185);
+doubleCastMap = {3:1, 98:1, 108:1};
+var Ljava_lang_Double_2_classLit = createForClass('java.lang', 'Double', 188);
 function IllegalArgumentException(message){
   RuntimeException_0.call(this, message);
 }
@@ -13547,8 +13721,8 @@ function IllegalStateException(s){
   RuntimeException_0.call(this, s);
 }
 
-defineClass(106, 25, $intern_0, IllegalStateException);
-var Ljava_lang_IllegalStateException_2_classLit = createForClass('java.lang', 'IllegalStateException', 106);
+defineClass(100, 25, $intern_0, IllegalStateException);
+var Ljava_lang_IllegalStateException_2_classLit = createForClass('java.lang', 'IllegalStateException', 100);
 function Integer(value_0){
   this.value_0 = value_0;
 }
@@ -13595,7 +13769,7 @@ function valueOf(i){
   return new Integer(i);
 }
 
-defineClass(17, 107, {3:1, 98:1, 17:1, 107:1}, Integer, Integer_0);
+defineClass(17, 108, {3:1, 98:1, 17:1, 108:1}, Integer, Integer_0);
 _.equals_0 = function equals_2(o){
   return instanceOf(o, 17) && castTo(o, 17).value_0 == this.value_0;
 }
@@ -13638,7 +13812,7 @@ function tanh(x_0){
   }
 }
 
-defineClass(209, 1, {});
+defineClass(211, 1, {});
 function NullPointerException(){
   RuntimeException.call(this);
 }
@@ -13647,7 +13821,7 @@ function NullPointerException_0(message){
   RuntimeException_0.call(this, message);
 }
 
-defineClass(124, 108, $intern_0, NullPointerException, NullPointerException_0);
+defineClass(124, 109, $intern_0, NullPointerException, NullPointerException_0);
 _.createError = function createError_0(msg){
   return new TypeError(msg);
 }
@@ -13657,8 +13831,8 @@ function NumberFormatException(message){
   IllegalArgumentException.call(this, message);
 }
 
-defineClass(82, 7, $intern_0, NumberFormatException);
-var Ljava_lang_NumberFormatException_2_classLit = createForClass('java.lang', 'NumberFormatException', 82);
+defineClass(83, 7, $intern_0, NumberFormatException);
+var Ljava_lang_NumberFormatException_2_classLit = createForClass('java.lang', 'NumberFormatException', 83);
 function $charAt(this$static, index_0){
   checkCriticalStringElementIndex(index_0, this$static.length);
   return this$static.charCodeAt(index_0);
@@ -13826,8 +14000,8 @@ function StringIndexOutOfBoundsException(message){
   IndexOutOfBoundsException_0.call(this, message);
 }
 
-defineClass(153, 94, $intern_0, StringIndexOutOfBoundsException);
-var Ljava_lang_StringIndexOutOfBoundsException_2_classLit = createForClass('java.lang', 'StringIndexOutOfBoundsException', 153);
+defineClass(156, 94, $intern_0, StringIndexOutOfBoundsException);
+var Ljava_lang_StringIndexOutOfBoundsException_2_classLit = createForClass('java.lang', 'StringIndexOutOfBoundsException', 156);
 function arraycopy(src_0, srcOfs, dest, destOfs, len){
   var destArray, destComp, destEnd, destType, destlen, srcArray, srcComp, srcType, srclen;
   checkCriticalNotNull_0(src_0, 'src');
@@ -13863,7 +14037,7 @@ function arraycopy(src_0, srcOfs, dest, destOfs, len){
     len > 0 && copy_0(src_0, srcOfs, dest, destOfs, len, true);
 }
 
-defineClass(213, 1, {});
+defineClass(215, 1, {});
 function $addAll(this$static, c){
   var changed, e, e$iterator, old;
   checkCriticalNotNull(c);
@@ -13908,7 +14082,7 @@ function $toString_0(this$static){
   return !joiner.builder?joiner.emptyValue:joiner.suffix.length == 0?joiner.builder.string:joiner.builder.string + ('' + joiner.suffix);
 }
 
-defineClass(189, 1, {});
+defineClass(178, 1, {});
 _.contains = function contains(o){
   return $advanceToFind(this, o);
 }
@@ -13917,7 +14091,7 @@ _.toString_0 = function toString_10(){
   return $toString_0(this);
 }
 ;
-var Ljava_util_AbstractCollection_2_classLit = createForClass('java.util', 'AbstractCollection', 189);
+var Ljava_util_AbstractCollection_2_classLit = createForClass('java.util', 'AbstractCollection', 178);
 function $containsEntry(this$static, entry){
   var key, ourValue, value_0;
   key = entry.getKey();
@@ -13940,7 +14114,7 @@ function getEntryValueOrNull(entry){
   return !entry?null:entry.getValue();
 }
 
-defineClass(188, 1, {132:1});
+defineClass(191, 1, {132:1});
 _.equals_0 = function equals_3(obj){
   var entry, entry$iterator, otherMap;
   if (obj === this) {
@@ -13976,7 +14150,7 @@ _.toString_0 = function toString_11(){
   return !joiner.builder?joiner.emptyValue:joiner.suffix.length == 0?joiner.builder.string:joiner.builder.string + ('' + joiner.suffix);
 }
 ;
-var Ljava_util_AbstractMap_2_classLit = createForClass('java.util', 'AbstractMap', 188);
+var Ljava_util_AbstractMap_2_classLit = createForClass('java.util', 'AbstractMap', 191);
 function $containsKey(this$static, key){
   return instanceOfString(key)?$hasStringValue(this$static, key):!!$getEntry(this$static.hashCodeMap, key);
 }
@@ -14011,18 +14185,18 @@ function $size(this$static){
   return this$static.hashCodeMap.size_0 + this$static.stringMap.size_0;
 }
 
-defineClass(109, 188, {132:1});
-var Ljava_util_AbstractHashMap_2_classLit = createForClass('java.util', 'AbstractHashMap', 109);
-defineClass(190, 189, {103:1});
+defineClass(110, 191, {132:1});
+var Ljava_util_AbstractHashMap_2_classLit = createForClass('java.util', 'AbstractHashMap', 110);
+defineClass(192, 178, {104:1});
 _.equals_0 = function equals_4(o){
   var other;
   if (o === this) {
     return true;
   }
-  if (!instanceOf(o, 103)) {
+  if (!instanceOf(o, 104)) {
     return false;
   }
-  other = castTo(o, 103);
+  other = castTo(o, 104);
   if (other.size_1() != this.size_1()) {
     return false;
   }
@@ -14033,10 +14207,10 @@ _.hashCode_0 = function hashCode_4(){
   return hashCode_8(this);
 }
 ;
-var Ljava_util_AbstractSet_2_classLit = createForClass('java.util', 'AbstractSet', 190);
+var Ljava_util_AbstractSet_2_classLit = createForClass('java.util', 'AbstractSet', 192);
 function $contains(this$static, o){
-  if (instanceOf(o, 45)) {
-    return $containsEntry(this$static.this$01, castTo(o, 45));
+  if (instanceOf(o, 46)) {
+    return $containsEntry(this$static.this$01, castTo(o, 46));
   }
   return false;
 }
@@ -14045,7 +14219,7 @@ function AbstractHashMap$EntrySet(this$0){
   this.this$01 = this$0;
 }
 
-defineClass(57, 190, {103:1}, AbstractHashMap$EntrySet);
+defineClass(57, 192, {104:1}, AbstractHashMap$EntrySet);
 _.contains = function contains_0(o){
   return $contains(this, o);
 }
@@ -14074,7 +14248,7 @@ function $next(this$static){
   var rv;
   checkStructuralChange(this$static.this$01, this$static);
   checkCriticalElement(this$static.hasNext);
-  rv = castTo(this$static.current_0.next_0(), 45);
+  rv = castTo(this$static.current_0.next_0(), 46);
   this$static.hasNext = $computeHasNext(this$static);
   return rv;
 }
@@ -14098,7 +14272,7 @@ _.hasNext_0 = function hasNext(){
 ;
 _.hasNext = false;
 var Ljava_util_AbstractHashMap$EntrySetIterator_2_classLit = createForClass('java.util', 'AbstractHashMap/EntrySetIterator', 58);
-defineClass(191, 189, {116:1});
+defineClass(179, 178, {116:1});
 _.equals_0 = function equals_5(o){
   var elem, elem$iterator, elemOther, iterOther, other;
   if (o === this) {
@@ -14130,12 +14304,12 @@ _.iterator = function iterator_1(){
   return new AbstractList$IteratorImpl(this);
 }
 ;
-var Ljava_util_AbstractList_2_classLit = createForClass('java.util', 'AbstractList', 191);
+var Ljava_util_AbstractList_2_classLit = createForClass('java.util', 'AbstractList', 179);
 function AbstractList$IteratorImpl(this$0){
   this.this$01 = this$0;
 }
 
-defineClass(157, 1, {}, AbstractList$IteratorImpl);
+defineClass(160, 1, {}, AbstractList$IteratorImpl);
 _.hasNext_0 = function hasNext_0(){
   return this.i < this.this$01.size_1();
 }
@@ -14146,12 +14320,12 @@ _.next_0 = function next_1(){
 }
 ;
 _.i = 0;
-var Ljava_util_AbstractList$IteratorImpl_2_classLit = createForClass('java.util', 'AbstractList/IteratorImpl', 157);
+var Ljava_util_AbstractList$IteratorImpl_2_classLit = createForClass('java.util', 'AbstractList/IteratorImpl', 160);
 function AbstractMap$1(this$0){
   this.this$01 = this$0;
 }
 
-defineClass(156, 190, {103:1}, AbstractMap$1);
+defineClass(159, 192, {104:1}, AbstractMap$1);
 _.contains = function contains_1(key){
   return $containsKey(this.this$01, key);
 }
@@ -14165,7 +14339,7 @@ _.size_1 = function size_2(){
   return $size(this.this$01);
 }
 ;
-var Ljava_util_AbstractMap$1_2_classLit = createForClass('java.util', 'AbstractMap/1', 156);
+var Ljava_util_AbstractMap$1_2_classLit = createForClass('java.util', 'AbstractMap/1', 159);
 function AbstractMap$1$1(val$outerIter){
   this.val$outerIter2 = val$outerIter;
 }
@@ -14182,13 +14356,13 @@ _.next_0 = function next_2(){
 }
 ;
 var Ljava_util_AbstractMap$1$1_2_classLit = createForClass('java.util', 'AbstractMap/1/1', 125);
-defineClass(154, 1, $intern_39);
+defineClass(157, 1, $intern_40);
 _.equals_0 = function equals_6(other){
   var entry;
-  if (!instanceOf(other, 45)) {
+  if (!instanceOf(other, 46)) {
     return false;
   }
-  entry = castTo(other, 45);
+  entry = castTo(other, 46);
   return equals_8(this.key, entry.getKey()) && equals_8(this.value_0, entry.getValue());
 }
 ;
@@ -14215,21 +14389,21 @@ _.toString_0 = function toString_12(){
   return this.key + '=' + this.value_0;
 }
 ;
-var Ljava_util_AbstractMap$AbstractEntry_2_classLit = createForClass('java.util', 'AbstractMap/AbstractEntry', 154);
+var Ljava_util_AbstractMap$AbstractEntry_2_classLit = createForClass('java.util', 'AbstractMap/AbstractEntry', 157);
 function AbstractMap$SimpleEntry(key, value_0){
   this.key = key;
   this.value_0 = value_0;
 }
 
-defineClass(155, 154, $intern_39, AbstractMap$SimpleEntry);
-var Ljava_util_AbstractMap$SimpleEntry_2_classLit = createForClass('java.util', 'AbstractMap/SimpleEntry', 155);
-defineClass(192, 1, $intern_39);
+defineClass(158, 157, $intern_40, AbstractMap$SimpleEntry);
+var Ljava_util_AbstractMap$SimpleEntry_2_classLit = createForClass('java.util', 'AbstractMap/SimpleEntry', 158);
+defineClass(193, 1, $intern_40);
 _.equals_0 = function equals_7(other){
   var entry;
-  if (!instanceOf(other, 45)) {
+  if (!instanceOf(other, 46)) {
     return false;
   }
-  entry = castTo(other, 45);
+  entry = castTo(other, 46);
   return equals_8(this.val$entry2.value[0], entry.getKey()) && equals_8($getValue(this), entry.getValue());
 }
 ;
@@ -14241,7 +14415,7 @@ _.toString_0 = function toString_13(){
   return this.val$entry2.value[0] + '=' + $getValue(this);
 }
 ;
-var Ljava_util_AbstractMapEntry_2_classLit = createForClass('java.util', 'AbstractMapEntry', 192);
+var Ljava_util_AbstractMapEntry_2_classLit = createForClass('java.util', 'AbstractMapEntry', 193);
 function $add(this$static, o){
   this$static.array[this$static.array.length] = o;
   return true;
@@ -14294,7 +14468,7 @@ function ArrayList(){
   this.array = initUnidimensionalArray(Ljava_lang_Object_2_classLit, $intern_6, 1, 0, 5, 1);
 }
 
-defineClass(127, 191, {3:1, 116:1}, ArrayList);
+defineClass(127, 179, {3:1, 116:1}, ArrayList);
 _.contains = function contains_2(o){
   return $indexOf_2(this, o, 0) != -1;
 }
@@ -14322,7 +14496,7 @@ function ArrayList$1(this$0){
   this.this$01 = this$0;
 }
 
-defineClass(30, 1, {}, ArrayList$1);
+defineClass(31, 1, {}, ArrayList$1);
 _.hasNext_0 = function hasNext_2(){
   return this.i < this.this$01.array.length;
 }
@@ -14333,7 +14507,7 @@ _.next_0 = function next_3(){
 ;
 _.i = 0;
 _.last = -1;
-var Ljava_util_ArrayList$1_2_classLit = createForClass('java.util', 'ArrayList/1', 30);
+var Ljava_util_ArrayList$1_2_classLit = createForClass('java.util', 'ArrayList/1', 31);
 function fill(a, toIndex){
   checkCriticalArrayBounds(toIndex, a.length);
   fill0(a, toIndex);
@@ -14385,8 +14559,8 @@ function ConcurrentModificationException(){
   RuntimeException.call(this);
 }
 
-defineClass(172, 25, $intern_0, ConcurrentModificationException);
-var Ljava_util_ConcurrentModificationException_2_classLit = createForClass('java.util', 'ConcurrentModificationException', 172);
+defineClass(173, 25, $intern_0, ConcurrentModificationException);
+var Ljava_util_ConcurrentModificationException_2_classLit = createForClass('java.util', 'ConcurrentModificationException', 173);
 function $equals_1(value1, value2){
   return maskUndefined(value1) === maskUndefined(value2) || value1 != null && equals_Ljava_lang_Object__Z__devirtual$(value1, value2);
 }
@@ -14401,7 +14575,7 @@ function HashMap_0(ignored){
   $reset_7(this);
 }
 
-defineClass(23, 109, {3:1, 23:1, 132:1}, HashMap, HashMap_0);
+defineClass(23, 110, {3:1, 23:1, 132:1}, HashMap, HashMap_0);
 var Ljava_util_HashMap_2_classLit = createForClass('java.util', 'HashMap', 23);
 function $add_0(this$static, o){
   var old;
@@ -14422,7 +14596,7 @@ function HashSet_0(c){
   $addAll(this, c);
 }
 
-defineClass(83, 190, {3:1, 83:1, 103:1}, HashSet, HashSet_0);
+defineClass(82, 192, {3:1, 82:1, 104:1}, HashSet, HashSet_0);
 _.contains = function contains_3(o){
   return $contains_0(this, o);
 }
@@ -14436,7 +14610,7 @@ _.size_1 = function size_4(){
   return $size(this.map_0);
 }
 ;
-var Ljava_util_HashSet_2_classLit = createForClass('java.util', 'HashSet', 83);
+var Ljava_util_HashSet_2_classLit = createForClass('java.util', 'HashSet', 82);
 function $findEntryInChain(key, chain){
   var entry, entry$index, entry$max;
   for (entry$index = 0 , entry$max = chain.length; entry$index < entry$max; ++entry$index) {
@@ -14483,13 +14657,13 @@ function InternalHashCodeMap(host){
   this.host = host;
 }
 
-defineClass(162, 1, {}, InternalHashCodeMap);
+defineClass(164, 1, {}, InternalHashCodeMap);
 _.iterator = function iterator_5(){
   return new InternalHashCodeMap$1(this);
 }
 ;
 _.size_0 = 0;
-var Ljava_util_InternalHashCodeMap_2_classLit = createForClass('java.util', 'InternalHashCodeMap', 162);
+var Ljava_util_InternalHashCodeMap_2_classLit = createForClass('java.util', 'InternalHashCodeMap', 164);
 function InternalHashCodeMap$1(this$0){
   this.this$01 = this$0;
   this.chains = this.this$01.backingMap.entries();
@@ -14665,14 +14839,14 @@ function InternalStringMap(host){
   this.host = host;
 }
 
-defineClass(163, 1, {}, InternalStringMap);
+defineClass(165, 1, {}, InternalStringMap);
 _.iterator = function iterator_6(){
   return new InternalStringMap$1(this);
 }
 ;
 _.size_0 = 0;
 _.valueMod = 0;
-var Ljava_util_InternalStringMap_2_classLit = createForClass('java.util', 'InternalStringMap', 163);
+var Ljava_util_InternalStringMap_2_classLit = createForClass('java.util', 'InternalStringMap', 165);
 function InternalStringMap$1(this$0){
   this.this$01 = this$0;
   this.entries_0 = this.this$01.backingMap.entries();
@@ -14702,7 +14876,7 @@ function InternalStringMap$2(this$0, val$entry, val$lastValueMod){
   this.val$lastValueMod3 = val$lastValueMod;
 }
 
-defineClass(164, 192, $intern_39, InternalStringMap$2);
+defineClass(166, 193, $intern_40, InternalStringMap$2);
 _.getKey = function getKey_0(){
   return this.val$entry2.value[0];
 }
@@ -14716,7 +14890,7 @@ _.setValue = function setValue_0(object){
 }
 ;
 _.val$lastValueMod3 = 0;
-var Ljava_util_InternalStringMap$2_2_classLit = createForClass('java.util', 'InternalStringMap/2', 164);
+var Ljava_util_InternalStringMap$2_2_classLit = createForClass('java.util', 'InternalStringMap/2', 166);
 function NoSuchElementException(){
   RuntimeException.call(this);
 }
@@ -14754,8 +14928,8 @@ function $nextDouble(this$static){
 
 function $nextInternal(this$static, bits){
   var carry, dval, h, hi, l, lo;
-  hi = this$static.seedhi * $intern_40 + this$static.seedlo * 1502;
-  lo = this$static.seedlo * $intern_40 + 11;
+  hi = this$static.seedhi * $intern_41 + this$static.seedlo * 1502;
+  lo = this$static.seedlo * $intern_41 + 11;
   carry = $wnd.Math.floor(lo * 5.9604644775390625E-8);
   hi += carry;
   lo -= carry * 16777216;
@@ -14777,7 +14951,7 @@ function $nextInternal(this$static, bits){
 function Random(){
   $clinit_Random();
   this.seedhi = 1502;
-  this.seedlo = $intern_40;
+  this.seedlo = $intern_41;
 }
 
 defineClass(136, 1, {}, Random);
@@ -14810,10 +14984,6 @@ function $add_2(this$static, o){
 
 function $addElement(this$static, o){
   $add(this$static.arrayList, o);
-}
-
-function $elementAt(this$static, index_0){
-  return checkArrayElementIndex(index_0, this$static.arrayList.array.length) , $get_0(this$static.arrayList, index_0);
 }
 
 function $firstElement(this$static){
@@ -14851,7 +15021,7 @@ function checkArrayElementIndex(index_0, size_0){
   }
 }
 
-defineClass(16, 191, {3:1, 116:1, 16:1}, Vector, Vector_0);
+defineClass(16, 179, {3:1, 116:1, 16:1}, Vector, Vector_0);
 _.contains = function contains_4(elem){
   return $indexOf_2(this.arrayList, elem, 0) != -1;
 }
@@ -14887,7 +15057,7 @@ function copy_0(src_0, srcOfs, dest, destOfs, len, overwrite){
   }
   destArray = dest;
   for (batchStart = srcOfs , end = srcOfs + len; batchStart < end;) {
-    batchEnd = $wnd.Math.min(batchStart + 10000, end);
+    batchEnd = $wnd.Math.min(batchStart + $intern_29, end);
     len = batchEnd - batchStart;
     spliceArgs = src_0.slice(batchStart, batchEnd);
     spliceArgs.splice(0, 0, destOfs, overwrite?len:0);
@@ -14905,7 +15075,7 @@ function removeFrom(array, index_0){
   array.splice(index_0, 1);
 }
 
-defineClass(211, 1, {});
+defineClass(213, 1, {});
 function checkCriticalArgument(expression, errorMessage){
   if (!expression) {
     throw toJs(new IllegalArgumentException(errorMessage));
@@ -14978,7 +15148,7 @@ function setPropertySafe(map_0, key, value_0){
   }
 }
 
-defineClass(208, 1, {});
+defineClass(210, 1, {});
 function getHashCode(o){
   return o.$H || (o.$H = ++nextHashId);
 }

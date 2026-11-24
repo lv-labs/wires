@@ -57,6 +57,7 @@ import {
 } from "./drawings"
 import type { Drawing, DrawingKind, DrawingStyle } from "./core"
 import { ComponentMenu } from "./ComponentMenu"
+import { FalstadExampleMenu } from "./FalstadExampleMenu"
 import { hasSlider } from "./componentSliders"
 import type { SliderAdjustment } from "./componentSliders"
 
@@ -163,6 +164,7 @@ export const CircuitSheet = memo(function CircuitSheet({
   onImportFalstad,
   onNewDocument,
   onLoadExample,
+  onLoadFalstadExample,
   exampleNames,
   canUndo,
   canRedo,
@@ -216,6 +218,7 @@ export const CircuitSheet = memo(function CircuitSheet({
   onImportFalstad?: () => void
   onNewDocument: () => void
   onLoadExample: (name: string) => void
+  onLoadFalstadExample: (file: string, title: string, scopeWarning?: boolean) => void
   exampleNames: string[]
   canUndo: boolean
   canRedo: boolean
@@ -1972,6 +1975,7 @@ export const CircuitSheet = memo(function CircuitSheet({
               requestAnimationFrame(() => svg.current?.focus())
             }}
           />
+          <FalstadExampleMenu onOpen={onLoadFalstadExample} />
         </Menubar>
         {tool.startsWith("draw:") && (
           <span role="status" className="text-xs">

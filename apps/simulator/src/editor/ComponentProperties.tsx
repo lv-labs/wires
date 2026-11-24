@@ -52,6 +52,7 @@ const labels: Record<string, string> = {
   inductance: "Inductance · H",
   initialCurrent: "Initial current on reset · A",
   ratio: "Turns ratio · secondary / primary",
+  reverseSecondary: "Reverse secondary polarity",
   coupling: "Coupling · greater than 0, less than 1",
   turns1: "First primary turns · signed",
   turns2: "Second primary turns · signed",
@@ -94,6 +95,7 @@ const labels: Record<string, string> = {
   showBodyDiode: "Show body diode",
   inputCount: "Number of inputs · 1 to 8",
   propagationDelay: "Propagation delay · s",
+  initialOutputVoltage: "Initial output voltage · V",
   schmittInputs: "Schmitt inputs",
   invertInputs: "Invert inputs",
   red: "Red · 0 to 1",
@@ -222,6 +224,12 @@ export function ComponentProperties({
   if (waveform === "square" || waveform === "pulse")
     waveFields.push("dutyCycle")
   const output = core.catalog.outputSpecs[component.kind]
+  const optionalToggle =
+    component.kind === "logicInput"
+      ? "momentary"
+      : component.kind === "transformer"
+        ? "reverseSecondary"
+        : null
   const editableParameters =
     component.kind === "potentiometer"
       ? { label: "", ...component.parameters }
@@ -230,31 +238,33 @@ export function ComponentProperties({
             ...core.catalog.switchDefaults(component.kind),
             ...component.parameters,
           }
-        : component.kind === "text"
-          ? { drawBar: false, ...component.parameters }
-          : core.catalog.transistorKind(component.kind)
-            ? {
-                swapTerminals: false,
-                drawCircle: false,
-                ...component.parameters,
-              }
-            : mosfet
-              ? mosfetOptions
-              : core.catalog.gateKind(component.kind)
-                ? {
-                    inputCount: 2,
-                    propagationDelay: 0,
-                    schmittInputs: false,
-                    invertInputs: false,
-                    ...component.parameters,
-                  }
-                : (diodeParameters ??
-                  (output
-                    ? {
-                        ...core.catalog.definitions[component.kind].parameters,
-                        ...component.parameters,
-                      }
-                    : component.parameters))
+        : optionalToggle
+          ? { [optionalToggle]: false, ...component.parameters }
+          : component.kind === "text"
+            ? { drawBar: false, ...component.parameters }
+            : transistor
+              ? {
+                  swapTerminals: false,
+                  drawCircle: false,
+                  ...component.parameters,
+                }
+              : mosfet
+                ? mosfetOptions
+                : core.catalog.gateKind(component.kind)
+                  ? {
+                      inputCount: 2,
+                      propagationDelay: 0,
+                      schmittInputs: false,
+                      invertInputs: false,
+                      ...component.parameters,
+                    }
+                  : (diodeParameters ??
+                    (output
+                      ? {
+                          ...core.catalog.definitions[component.kind].parameters,
+                          ...component.parameters,
+                        }
+                      : component.parameters))
   const fields = Object.entries(editableParameters)
     .sort(
       ([a], [b]) =>
@@ -442,6 +452,12 @@ export function ComponentProperties({
         parameters.mode !== "ternary"
       )
         throw new Error("Ternary state requires ternary mode.")
+      if (
+        optionalToggle &&
+        parameters[optionalToggle] === false &&
+        !Object.hasOwn(component.parameters, optionalToggle)
+      )
+        delete parameters[optionalToggle]
       onApply(spdt ? normaliseSpdtSettings(parameters) : parameters)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))

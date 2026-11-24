@@ -36,7 +36,7 @@ export function normaliseSpdtSettings(
 }
 
 const propertyOrders: Record<string, string[]> = {
-  voltmeter: ["mode", "scale", "circleSymbol", "resistance"],
+  voltmeter: ["mode", "scale", "showVoltage", "circleSymbol", "resistance"],
   ammeter: ["mode", "scale", "circleSymbol"],
   capacitor: ["capacitance", "integration", "initialVoltage"],
   polarizedCapacitor: [

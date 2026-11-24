@@ -26,6 +26,7 @@ export function DrawingShape({ drawing: d }: { drawing: Drawing }) {
         fontSize={d.fontSize}
         fontFamily="var(--font-sans)"
         dominantBaseline="hanging"
+        textDecoration={d.overline ? "overline" : undefined}
       >
         {d.text.split("\n").map((line, i) => (
           <tspan key={i} x={p[0].x} dy={i ? d.fontSize * 1.3 : 0}>

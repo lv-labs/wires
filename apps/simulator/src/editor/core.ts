@@ -17,6 +17,7 @@ export type SampleChannel = {
   id: string
   kind?: string
   componentId?: string
+  polarity?: 1 | -1
   positive?: SampleTerminal
   negative?: SampleTerminal | null
 }
@@ -83,6 +84,7 @@ export type Drawing = DrawingStyle & {
   points: Point[]
   text: string
   rotation?: number
+  overline?: boolean
 }
 export type ProbeDisplay = {
   decimals?: number
@@ -116,6 +118,7 @@ export type CircuitDocument = {
     positive?: Target
     negative?: Target
     componentId?: string
+    polarity?: 1 | -1
     scope?: false
     sourceProbeId?: string
   })[]

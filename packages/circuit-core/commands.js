@@ -243,8 +243,10 @@
     if(!c)throw new Error('Unknown component');
     if(c.kind==='variableVoltage'&&(parameters.minVoltage!==c.parameters.minVoltage||parameters.maxVoltage!==c.parameters.maxVoltage))parameters={...parameters,voltage:parameters.minVoltage};
     const previousPins=Catalog.componentPins(c),nextPins=Catalog.componentPins({...c,parameters});
-    if((Catalog.transistorKind(c.kind)||Catalog.mosfetKind(c.kind))&&!!c.parameters.swapTerminals!==!!parameters.swapTerminals){
-      const pair=Catalog.transistorKind(c.kind)?['collector','emitter']:['source','drain'];
+    const terminalSwap=(Catalog.transistorKind(c.kind)||Catalog.mosfetKind(c.kind))&&!!c.parameters.swapTerminals!==!!parameters.swapTerminals;
+    const secondarySwap=c.kind==='transformer'&&!!c.parameters.reverseSecondary!==!!parameters.reverseSecondary;
+    if(terminalSwap||secondarySwap){
+      const pair=secondarySwap?['s1','s2']:Catalog.transistorKind(c.kind)?['collector','emitter']:['source','drain'];
       const swap=ref=>{if(ref?.kind==='pin'&&ref.componentId===componentId&&pair.includes(ref.pinId))ref.pinId=pair[1-pair.indexOf(ref.pinId)];};
       for(const w of document.electrical.wires){swap(w.from);swap(w.to);}
       for(const p of document.probes){swap(p.positive);swap(p.negative);}
@@ -620,7 +622,12 @@
       for(const c of document.electrical.components)if(c!==part&&c.kind===part.kind&&c.parameters.group===part.parameters.group&&part.parameters.position<Catalog.switchPositionCount(c))c.parameters.position=part.parameters.position;
     }
   }
-  function momentaryDocument(document,id){const result=clone(document);toggleSwitches(result,id);return result;}
+  function momentaryDocument(document,id){
+    const result=clone(document),component=result.electrical.components.find(c=>c.id===id);
+    if(component?.kind==='logicInput')component.parameters.state=(component.parameters.state+1)%Catalog.switchPositionCount(component);
+    else toggleSwitches(result,id);
+    return result;
+  }
 
   // Frontend-neutral commands use entity references, never DOM events or pixels.
   // execute() records one undo step; applyCommand() is the immutable one-shot API.

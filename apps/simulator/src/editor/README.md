@@ -1,7 +1,6 @@
 # React editor
 
-`CircuitEditor` is independently mountable; `App.tsx` belongs to the application
-shell and was left untouched by this work:
+Mount `CircuitEditor` within the application shell:
 
 ```tsx
 import { CircuitEditor } from '@/editor/CircuitEditor'
@@ -11,11 +10,10 @@ import { CircuitEditor } from '@/editor/CircuitEditor'
 ```
 
 `initialDocument` optionally accepts a schema-v1 document. It is an initial value;
-remount with a different React key to start a different document/session. A valid
-autosave takes precedence by default. Set `autosave={false}` to mount a fixture
-without reading or writing the main app’s saved circuit. The standalone
-`/editor.html` Vite entry uses this option for its divider and RC examples. Run `pnpm --dir wires dev`, then append `/editor.html`
-to the URL printed by Vite.
+remount with a different React key to start a different document/session. The
+main app restores the current tab's recovery draft when present. Set
+`autosave={false}` to mount a fixture without the main app's recovery storage.
+Run `pnpm dev` from the root and open `/editor.html` for the standalone preview.
 
 - `useCircuitSession.ts`: committed editing/history session and worker lifecycle.
 - `CircuitSheet.tsx`: camera and gesture state, separate uncommitted previews.
@@ -48,7 +46,8 @@ drag it onto a new target to reconnect it.
 
 Use Ctrl/⌘ C to copy within the editor, Ctrl/⌘ V to preview a paste, and Ctrl/⌘ D
 to preview a duplicate. Click to place or press Escape to cancel. The File menu
-includes schema-v1 example circuits. E or a double-click opens properties for
+includes schema-v1 example circuits. The Circuits menu lists imported examples
+in the pinned Falstad hierarchy. E or a double-click opens properties for
 a component or probe label. Component dialogs include live readings and the
 actions available for that part. Run controls and the oscilloscope use the
 retained worker.
@@ -85,9 +84,9 @@ serve `dist/engine` with JavaScript MIME types, including nested worker assets.
 Checks:
 
 ```sh
-pnpm --dir wires build
-pnpm --dir wires exec node scripts/test-editor-render.mjs
-pnpm --dir wires exec node scripts/test-worker-assets.mjs
+pnpm --dir apps/simulator build
+pnpm --dir apps/simulator exec node scripts/test-editor-render.mjs
+pnpm --dir apps/simulator exec node scripts/test-worker-assets.mjs
 node tools/check_core.mjs
 ```
 
@@ -96,13 +95,8 @@ packaged classic bootstrap and relative imports in a DOM-free VM, checking divid
 and RC measurements. The render check uses React SSR. Neither certifies browser
 pointer behavior. Browser interaction verification remains pending.
 
-The [parity inventory](../../../../docs/new-simulator/REACT-PARITY.md) records the
-reference behavior, migrated features, and remaining checks. The Add menu lists
-the reference catalog and disables unsupported entries. All 84 supported
-models use their authored TSX views for both placement and the sheet.
-
-The intermediate JavaScript editor has been removed. Engine verification pages
-and test adapters live in `tools/engine-harness`; React does not import them.
-Regenerate the menu hierarchy with `python3 tools/generate_component_menu.py`.
-The original Falstad source/interface is available in `engine/upstream` as a reference.
-The customized LV Labs reskin and deployment remain in the original repository.
+The Add menu lists the reference component catalog and disables unsupported
+entries. Regenerate it with `python3 tools/generate_component_menu.py`.
+`pnpm examples:generate` refreshes the separate Circuits menu and saved example
+documents. See the [import guide](../../../../docs/new-simulator/FALSTAD-IMPORT.md)
+for details.

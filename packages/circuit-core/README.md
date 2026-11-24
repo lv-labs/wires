@@ -1,9 +1,8 @@
 # Circuit core
 
-Reusable document, editing and simulation code extracted from the reference editor.
-No renderer, inspector, component menu, DOM events, browser storage or UI toolkit is
-required. The package uses the existing schema-v1 saved document and existing
-CircuitJS engine/worker protocol. This is an extraction, not a physics rewrite.
+Document, editing and simulation code shared by the React editor and the worker.
+The package owns schema-v1 documents, graph edits and the CircuitJS adapter.
+The host supplies rendering, UI and storage.
 
 ## Import
 
@@ -36,6 +35,7 @@ package neither constructs a Worker nor reads `window`, DOM or storage. Modern
 | `editing` / `commands.js` | Circuit-specific commands, contact resolution, normalization, deletion, copy/paste and editor document/history sessions |
 | `drag.js` | Persistent drag graph; its command dependencies are supplied by `commands.js` rather than importing UI code |
 | `adapter` / `adapter.js` | Electrical validation/projection, synthetic engine input, stable-ID result mapping and synchronous engine sessions |
+| `falstad` / `falstad.js` | Falstad text and XML conversion, scope restoration and import diagnostics |
 | `protocol` / `protocol.js` | Worker-side revision/session guards and operation dispatch |
 | `simulation` / `simulation.js` | Async lifecycle, live updates, Run/Pause and result gating; requires an injected worker factory |
 | `signals` / `signals.js` | Sample history, channel identity, envelopes and scale calculations; no scope DOM |
@@ -162,10 +162,10 @@ contains negotiated capabilities. Browser transport location is explicit so a ne
 frontend can choose its worker/assets location; worker bootstraps and compiled
 Java/GWT artifacts remain runtime host/deployment concerns, not document state.
 
-Revision guards, state-preserving native edits, reset/fault recovery and sample
-DTOs are unchanged. See the existing worker/coordinator contract docs for details.
+See the [worker protocol](../../docs/new-simulator/WORKER-PROTOCOL.md)
+for revision guards, native edits, reset/recovery and sample batches.
 
-## Verify
+## Verification
 
 After building the engine site:
 
@@ -180,14 +180,9 @@ verification is separate:
 
 ```sh
 python3 tools/verify_engine.py
-node tools/test_drag_browser.mjs /path/to/chrome /tmp/fresh-profile http://127.0.0.1:8765/editor.html
 ```
 
-The focused browser runner also opens an independent ESM consumer which loads no
-prototype renderer/inspector, edits a real divider through `execute`, and runs the
-worker while verifying numerical results and state-preserving updates.
-
-### Non-electrical drawings
+## Non-electrical drawings
 
 `layout.drawings` is an optional array, separate from `electrical.components`.
 Each drawing has a stable ID, kind (`text`, `line`, `box`, `ellipse`, `polygon`),
@@ -200,7 +195,7 @@ disables paint. The document validator checks geometry and appearance.
 Drawing entities participate in selection, drag, transforms, copy/paste, deletion
 and undo/redo. Drawing-only drags leave circuit wires untouched. The solver
 projection omits this layout data. Legacy annotation component models remain
-supported for saved documents and Falstad imports.
+supported for existing Wires files. Falstad text, boxes and lines import as sheet drawings.
 
 Run `node tools/test_drawings.mjs` to check drawing operations and projection
 invariance without browser automation.

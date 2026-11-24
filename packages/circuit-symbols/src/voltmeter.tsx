@@ -13,6 +13,7 @@ export const metadata = {
     mode: 0,
     resistance: 10000000,
     scale: 0,
+    showVoltage: true,
     circleSymbol: true,
   },
 } as const;
@@ -40,6 +41,12 @@ export const output = {
       integer: true,
       optional: true,
       default: 0,
+    },
+    showVoltage: {
+      label: "Show value on sheet",
+      type: "boolean",
+      optional: true,
+      default: true,
     },
     circleSymbol: {
       label: "Circular symbol",

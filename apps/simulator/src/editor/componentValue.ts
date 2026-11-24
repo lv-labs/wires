@@ -195,6 +195,7 @@ export function sheetValue(
     return ""
   if (c.kind === "output")
     return p.showVoltage ? format(Number(live?.pinVoltages?.in), "V") : ""
+  if (c.kind === "voltmeter" && p.showVoltage === false) return ""
   if (c.kind === "potentiometer") return format(p.resistance, "Ω")
   if (c.kind === "voltageSource" || c.kind === "voltageRail") {
     const w = p.waveform

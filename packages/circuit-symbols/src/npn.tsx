@@ -3,14 +3,13 @@ import { Lead } from "../svg";
 
 export const kind = "npn";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "Q",
   name: "NPN transistor",
   pins: {
-    base: [-48, 0],
-    collector: [48, -16],
-    emitter: [48, 16],
+    base: [-200, 0],
+    collector: [100, -200],
+    emitter: [100, 200],
   },
   parameters: {
     beta: 100,
@@ -24,21 +23,36 @@ export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
   return (
     <g transform={parameters.swapTerminals ? "scale(1 -1)" : undefined}>
       {parameters.drawCircle === true && <circle cx={4} r={28} />}
-      <Lead from={metadata.pins.base} to={[-12, 0]} />
-      <Lead from={metadata.pins.collector} to={[16, -16]} />
-      <Lead from={metadata.pins.emitter} to={[16, 16]} />
+      <Lead from={metadata.pins.base} to={[-60, 0]} />
+      <Lead from={metadata.pins.collector} to={[100, -100]} />
+      <Lead from={metadata.pins.emitter} to={[100, 100]} />
+      <circle r="111" cx="50"/>
+      <path d="M 25 -75
+      V 75" strokeWidth="20" />
+      
+     <path
+     d="M -60, 0
+     20, 0" />
+   
       <path
-        d="M -12 -20
-          V 20
-          M -12 -8
-          L 16 -16
-          M -12 8
-          L 16 16"
+        d="M 25 -25,
+         100 -100"
       />
+      
       <path
-        d="M 7 8
-          L 16 16
-          L 5 17"
+        d="M 25 25,
+         100 100"
+      />
+      
+     
+      <path
+        d="M 90 90,
+         70 50"
+      />
+      
+      <path
+        d="M 90 90,
+         50 70"
       />
     </g>
   );

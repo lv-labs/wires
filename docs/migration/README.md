@@ -19,13 +19,12 @@ The legacy repository keeps its reskin, Java source, web assets, short-link serv
 configuration and deployment workflows. No short-link records, domains, redirects,
 hosted assets or deployments were changed during this migration.
 
-Older design reports and archived handoffs under `docs/new-simulator` describe
-previous repository layouts. README, engine/README and the current HANDOFF take
-precedence over those historical paths and instructions. Historical proof artifacts
-are preserved under `engine-proof`; saved reference transcripts are portable under
-`tools/upstream-boundary/reference`.
-
-The repository remains local, named `wires`, with no remote or deployment configured.
+Historical proof artifacts are preserved under `engine-proof`. Saved reference
+transcripts and replay instructions are in the
+[engine regression reference](../../tools/upstream-boundary/README.md).
+The source snapshot and validation JSON describe the migration date. Paths in
+the snapshot refer to the files copied at that time. The
+[current handoff](../new-simulator/HANDOFF.md) covers the active checkout.
 
 The former fork's menu differs from upstream by hiding the unsupported Norton amp
 and calling Latch/Register simply Latch. These two UI choices are explicit in

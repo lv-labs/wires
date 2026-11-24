@@ -1,10 +1,13 @@
 // Execute the packaged classic worker and every relative import without a DOM.
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {fileURLToPath} from 'node:url'
+import {resolve,sep} from 'node:path'
+import {fileURLToPath,pathToFileURL} from 'node:url'
 import vm from 'node:vm'
 import {adapter} from '../../../packages/circuit-core/index.mjs'
-const root=new URL('../dist/engine/',import.meta.url)
+const root=process.argv[2]
+  ?pathToFileURL(resolve(process.argv[2],'engine')+sep)
+  :new URL('../dist/engine/',import.meta.url)
 for(const name of ['voltage-divider','rc-charge','opamp-noninverting']){
 const replies=[]
 const context=vm.createContext({console,URL,performance,setTimeout,clearTimeout,structuredClone,crypto,DedicatedWorkerGlobalScope:class {}})

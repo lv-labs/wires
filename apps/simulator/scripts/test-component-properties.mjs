@@ -172,6 +172,11 @@ try {
       `${kind}: opening and applying preserves defaults`
     )
   }
+  assert.equal(panel("logicInput").apply({ momentary: "on" }).momentary, true)
+  assert.equal(
+    panel("transformer").apply({ reverseSecondary: "on" }).reverseSecondary,
+    true
+  )
   for (const kind of ["voltageSource", "voltageRail"]) {
     for (const wave of [
       "dc",
@@ -229,17 +234,17 @@ try {
     assert.equal(reading(2,0.00123456,1), `1.235 m${unit} RMS`)
   }
   assert.equal(componentValue(panel("voltmeter", {scale:3,mode:5}).component, {measurement:{value:1}}), "1", "Binary mode ignores unit scaling")
-  for (const count of [2, 3, 10]) {
+  for (const [count, label] of [[2, "B"], [3, "C"], [10, "J"]]) {
     const p = panel("spdtSwitch", { throwCount: count, position: count - 1 })
     assert.match(
       p.html,
       new RegExp(
-        `<option[^>]*value="${count - 1}" selected="">${count === 2 ? "B" : `Throw ${count}`}</option>`
+        `<option[^>]*value="${count - 1}" selected="">${label}</option>`
       )
     )
     assert.equal(
       componentValue(p.component),
-      count === 2 ? "B" : `Throw ${count}`
+      label
     )
     assert.equal(
       p.apply({ throwCount: "2" }).position,

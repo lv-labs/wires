@@ -16,6 +16,7 @@ try {
   const html=renderToString(React.createElement(CircuitEditor,{initialDocument,autosave:false}))
   assert.ok(html.includes('Voltage divider'))
   assert.ok(html.includes('Circuit sheet'))
+  assert.match(html, /role="menuitem"[^>]*>Circuits<\/button>/)
   assert.match(html,/<input [^>]*aria-label="Simulation Speed"[^>]*aria-valuetext="Falstad default"[^>]*type="range"[^>]*value="172"/)
   assert.match(html,/data-slot="simulation-speed-default-marker"/)
   assert.deepEqual(simulationPacing(172),{batchSteps:26,intervalMs:16})

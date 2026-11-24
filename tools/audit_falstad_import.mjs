@@ -1,4 +1,4 @@
-// Measure bundled text-import coverage without treating rejected circuits as successes.
+// Check conversion and compile coverage for pinned Falstad text and XML files.
 import {readdir,readFile} from 'node:fs/promises';
 import core from '../packages/circuit-core/index.mjs';
 const directory=new URL('../engine/upstream/src/com/lushprojects/circuitjs1/public/circuits/',import.meta.url);

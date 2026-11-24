@@ -3,7 +3,7 @@
 (() => {
   const registry=globalThis.CircuitCoreModules ||= {};
   const Adapter=typeof module==='object'&&module.exports?require('./adapter.js'):registry.adapter;
-  const descriptors=channels=>Adapter.normalizeSampleChannels(channels.map(c=>c.kind==='current'?{id:c.id,kind:'current',componentId:c.componentId}:{id:c.id,positive:c.positive,negative:c.negative}));
+  const descriptors=channels=>Adapter.normalizeSampleChannels(channels.map(c=>c.kind==='current'?{id:c.id,kind:'current',componentId:c.componentId,...(c.polarity!==undefined?{polarity:c.polarity}:{})}:{id:c.id,positive:c.positive,negative:c.negative}));
   const key=channels=>JSON.stringify(descriptors(channels));
   function color(id){let hash=2166136261;for(const c of id)hash=Math.imul(hash^c.charCodeAt(0),16777619);return `hsl(${(hash>>>0)%360} 72% 72%)`;}
   function create({capacity=20000,historySpan}={}) {

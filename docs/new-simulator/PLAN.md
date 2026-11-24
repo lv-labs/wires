@@ -1,71 +1,56 @@
-# New circuit simulator: current plan
+# Falstad parity plan
 
-Updated 2026-11-17. Read [HANDOFF.md](HANDOFF.md) for build/check status and
-[EDITOR-CONTRACT.md](EDITOR-CONTRACT.md) for accepted interaction requirements.
-Previous milestones and the complete pre-cleanup plan are in
-[PLAN-HISTORY.md](PLAN-HISTORY.md); historical instructions there are superseded.
+The goal is to open every pinned Falstad example and valid user-saved Falstad
+circuit in Wires, preserve its electrical behavior, and restore its scopes and
+saved controls. Keep the original Circuits submenu hierarchy and use editable
+Wires documents throughout. The pinned engine and examples are the first
+compatibility baseline. Extend coverage with real exports from maintained public
+releases and older user saves.
 
-## Direction
+## Checkpoint
 
-Complete Falstad functionality in the React/TypeScript app (`apps/simulator/`), retaining
-CircuitJS electrical models and solver algorithms. Use shadcn Base Mira for the
-shell and SVG for the sheet. Preserve the accepted interface, stable document
-identities, explicit connectivity and authored per-symbol TSX metadata/views.
-The JavaScript editor prototype is retired. Original Falstad is available through `engine/upstream` as a development reference.
-The LV Labs reskin remains deployed separately from its original repository.
+The pinned menu has 367 entries. 270 open and pass the library's worker startup
+check, across 269 distinct files. Of those files, 171 open with scope panes.
+97 menu entries remain unavailable. The enabled entries also need verification
+of simulation behavior and saved settings. [Import coverage](FALSTAD-IMPORT.md)
+documents the supported formats and known limitations.
 
-## Current state
+## Work in order
 
-| Area | Implemented | Remaining |
-| --- | --- | --- |
-| Engine | Editor-free Java/GWT worker, bounded stepping, stable-ID results, state-preserving live edits | Complete model/variant coverage and larger-circuit/platform verification |
-| Editor | React menus, properties, file/history/clipboard actions, connected dragging, detached transforms, explicit wiring | Remaining native Falstad behavior and browser verification |
-| Library | 84 authored models, including 3 graphics; generated core metadata | Unsupported components and variants; see catalog/property audits |
-| Inspection | Per-step voltage/current sampling, meters, captures, saved mixed dock/floating/sheet scopes | Frequency/period, triggering/FFT, interactive verification |
-| Documents | Schema v1, explicit graph, JSON save/open/autosave, scope workspace persistence | Broader Falstad import coverage, bundled-example chooser, migration policy |
-| Maintenance | React runtime separated from verification harness; direct core test imports; current tests and build commands | Future upstream update automation |
+1. **Unlock the remaining circuits in measured batches.** Start each batch with
+   the example report. Relays, 555 timers, controlled sources and counters are
+   common blockers. Include missing component variants, custom models,
+   subcircuits, and solver or preflight limitations where they block valid
+   circuits. Compare representative electrical behavior with Falstad and
+   regenerate the library under its original headings.
+2. **Restore scopes and controls alongside circuit support.** Verify ordinary
+   traces and their references first. Add XY and I–V plots, FFT, embedded scopes,
+   wire and terminal currents, power, and remaining settings. Use a diode I–V
+   example and a bundled 2-D example as milestones. Restore saved slider
+   assignments and available simulation state. Verify scope targets, settings,
+   order and layout after editing and saving/reopening.
+3. **Validate users' saved circuits.** Route pasted text, files and self-contained
+   `cct`/`ctz` links through the same import path. Decode links locally. Add
+   versioned fixtures for older text saves, modern XML, unusual geometry, custom
+   models and nested circuits. An invalid or unrepresentable import must leave
+   the open circuit intact and identify the blocking record or option.
 
-## Next work
+## Release checks
 
-1. **Maintain the adopted upstream boundary.** `engine/upstream` pins pristine
-   upstream; `engine/patches` and `engine/integration` own our isolated changes.
-   Normal Gradle and cached builds prepare a disposable patched source tree and
-   use a separate engine source set. See [engine maintenance](../../engine/README.md)
-   for pin updates and integration-gap review. The app now lives in the standalone `wires` repository.
-2. **Expand measured compatibility.** Use [LEGACY-CATALOG.md](LEGACY-CATALOG.md),
-   [PROPERTY-PARITY.md](PROPERTY-PARITY.md) and [REACT-PARITY.md](REACT-PARITY.md).
-   Track component/property coverage, numerical behavior and import fidelity
-   separately. Preserve current UX and original equations.
-3. **Expand explicit legacy import.** The text/XML subset converts 67 bundled
-   circuits (64 compile), including all ten Basics examples; see [FALSTAD-IMPORT.md](FALSTAD-IMPORT.md). Continue to translate coordinate connectivity, flags, definitions/subcircuits,
-   models and scopes into the explicit document graph. Diagnose unsupported
-   records instead of dropping content. Type coverage alone is not import success.
-4. **Automate upstream proposals.** Compile/test pinned revision updates and
-   report added or changed model integration gaps. New Java components still need
-   document/property mappings, authored symbols and verification.
+- Require every pinned menu entry to open under its original headings, every
+  nonblank example to simulate, and supported versions of user exports to pass
+  the same graph, worker and saved-workspace checks.
+- Track conversion, worker startup, numerical comparisons and settings fidelity
+  independently. A short startup run cannot establish waveform accuracy. Compare
+  representative circuit traces and control responses against Falstad with
+  documented time windows and tolerances.
+- Keep unsupported settings visible in diagnostics until covered. Confirm a Wires
+  save/reopen retains the imported circuit, scopes and controls. Use separate
+  browser checks for interaction and rendering.
+- Preserve the pinned upstream boundary, native solver behavior, stable document
+  IDs and explicit connectivity. See the [engine guide](../../engine/README.md)
+  and [editor contract](EDITOR-CONTRACT.md).
 
-## Maintenance checkpoint
-
-- Workers: `packages/circuit-runtime`; shared computation: `packages/circuit-core`.
-- Menus: `apps/simulator/src/editor/menu`; symbols: `packages/circuit-symbols`.
-- Engine demos/reference traces: `tools/engine-harness`; no React dependency.
-- Node tests import the public core directly; symbol/export/slider-property checks
-  exercise active React modules. Prototype-only helpers and adapters are removed.
-- Root `pnpm` commands cover dependency installation, engine/React builds and
-  checks. React CI was removed in `a9c07a42`; original deployment stays in the former repository.
-- Full previous plan/handoff snapshots are archived; keep these entry points short
-  and record current findings rather than accumulating superseded instructions.
-
-## Guardrails and deferred decisions
-
-Preserve local changes. Keep solver changes separate from structural cleanup and
-frontend work. Keep generated symbol metadata fresh; pin identities and native
-engine post order are distinct. Scope display must not change sampling cadence.
-Save/open and undo must preserve the explicit graph and saved workspace.
-
-No renderer rewrite, Rust/GPUI migration or solver rewrite is planned. Desktop
-packaging (Tauri/Electron/platforms) and schema migration policy remain undecided.
-The engine uses a submodule; the application stays in this repository. Custom
-simulation-time control events/ramps, analysis tools and
-automation APIs follow native Falstad compatibility; existing manual property
-sliders remain supported. Do not launch browser verification unless requested.
+Analysis tools, simulation-time automation and desktop packaging remain outside
+the current parity milestone. [Handoff](HANDOFF.md) lists commands and the latest
+verification results.

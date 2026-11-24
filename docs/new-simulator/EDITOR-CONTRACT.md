@@ -1,8 +1,7 @@
 # React editor implementation contract
 
-Updated 2026-11-17. These are current user-facing behavior requirements, not a
-claim of complete browser verification. Read [HANDOFF.md](HANDOFF.md) for current
-checks and [REACT-PARITY.md](REACT-PARITY.md) for remaining parity work.
+This contract records the accepted editor behavior. See the [handoff](HANDOFF.md)
+for verification and the [parity plan](PLAN.md) for remaining work.
 
 ## Editor and symbols
 
@@ -114,7 +113,7 @@ Preserve the accepted simplified interface; do not restore removed toolbars or s
   work over sheet scopes. Hiding the dock leaves undocked scopes visible.
 - **Selection/deletion:** select a scope, then Backspace/Delete or its menu removes
   that scope's probes in one undoable operation; electrical components remain.
-- **Cursor contract (latest user choice):** hovering holds a fixed plot position and
+- **Cursor:** hovering holds a fixed plot position and
   reads new samples as simulation advances. Click-and-hold latches one exact sample,
   which moves across the plot; release resumes hover sampling. All panes use the
   identical sample timestamp regardless of time scale. A pane hides the cursor
@@ -157,3 +156,11 @@ measurement at gesture boundaries/resize. Navigation improvement was user feedba
 not a measured performance benchmark. Worker sampling and numerical behavior must
 stay independent of display cadence. Browser pointer/cursor/layout verification
 remains pending; do not infer it from headless checks.
+
+
+## Interaction checks
+
+Browser verification covers file and recovery flows, menu focus, pointer capture,
+connected drags and cancellation, scope docking and cursor behavior, and slider
+and scope continuity through live updates and save/open. The Node and React SSR
+suites cover shared operations and rendered markup.

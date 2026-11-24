@@ -61,15 +61,29 @@
     return Number.isFinite(positive) && Number.isFinite(negative) ? positive - negative : undefined;
   }
   function scopeChannels(document) {
+    const resolved = new Map();
+    let connections;
     function terminal(start) {
+      const startKey = referenceKey(start);
+      if (resolved.has(startKey)) return resolved.get(startKey);
+      if (!connections) {
+        connections = new Map();
+        for (const { from, to } of document.electrical.wires) for (const [end, other] of [[from, to], [to, from]]) {
+          const key = referenceKey(end);
+          if (!connections.has(key)) connections.set(key, []);
+          connections.get(key).push(other);
+        }
+      }
       const queue = [start], seen = new Set(), pins = [];
       for (let i = 0; i < queue.length; i++) {
         const ref = queue[i], key = referenceKey(ref); if (seen.has(key)) continue; seen.add(key);
         if (ref.kind === 'pin') pins.push(ref);
-        for (const wire of document.electrical.wires) if (referenceKey(wire.from) === key) queue.push(wire.to); else if (referenceKey(wire.to) === key) queue.push(wire.from);
+        for (const other of connections.get(key) || []) queue.push(other);
       }
       pins.sort((a, b) => referenceKey(a) < referenceKey(b) ? -1 : referenceKey(a) > referenceKey(b) ? 1 : 0);
-      return pins.length ? { componentId: pins[0].componentId, pinId: pins[0].pinId } : null;
+      const result = pins.length ? { componentId: pins[0].componentId, pinId: pins[0].pinId } : null;
+      for (const key of seen) resolved.set(key, result);
+      return result;
     }
     const channels = [], unresolved = [];
     for (const probe of document.probes) {

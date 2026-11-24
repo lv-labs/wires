@@ -7,18 +7,147 @@
   const Document=common?require('./document.js'):registry.document;
   const Geometry=common?require('./geometry.js'):registry.geometry;
   const XML=common?require('./falstad-xml.js'):registry.falstad_xml;
-  const types={r:'resistor',c:'capacitor',l:'inductor',v:'voltageSource',R:'voltageRail',g:'ground',i:'currentSource',s:'switch',O:'output',L:'logicInput',M:'logicOutput',d:'diode',a:'opamp',S:'spdtSwitch','172':'variableVoltage','174':'potentiometer'};
+  const Scopes=common?require('./falstad-scopes.js'):registry.falstad_scopes;
+  const types={
+    r:'resistor',c:'capacitor',l:'inductor',v:'voltageSource',R:'voltageRail',g:'ground',
+    i:'currentSource',s:'switch',O:'output',L:'logicInput',M:'logicOutput',d:'diode',z:'zener','162':'led',
+    a:'opamp',S:'spdtSwitch',t:'npn',f:'nmos',j:'njfet',p:'voltmeter',I:'inverter',n:'noiseSource',A:'antennaSource',T:'transformer',m:'memristor',
+    '150':'andGate','151':'nandGate','152':'orGate','153':'norGate','154':'xorGate','431':'xnorGate',
+    '155':'dFlipFlop','156':'jkFlipFlop','193':'tFlipFlop',
+    '159':'analogSwitch','160':'analogSpdtSwitch','182':'schmittTrigger','183':'invertingSchmittTrigger',
+    '169':'tappedTransformer','170':'sweepSource','171':'transmissionLine','172':'variableVoltage','173':'triode','174':'potentiometer',
+    '175':'tunnelDiode','176':'varactor','181':'lamp','187':'sparkGap','207':'labeledNode',
+    '200':'amSource','201':'fmSource','211':'audioOutput',
+    '209':'polarizedCapacitor','368':'testPoint','370':'ammeter','419':'decimalDisplay',
+  };
+  const quarterTurn=angle=>((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
+  const midpoint=(a,b)=>({x:a.x+(b.x-a.x)/2,y:a.y+(b.y-a.y)/2});
+  const sidePins={a:'minus',S:'a',t:'collector',f:'source',j:'source','159':'control','160':'a','173':'plate','174':'wiper'};
+  const drawingKinds={x:'text',b:'box','423':'line'};
+  const textEscapes={n:'\n',r:'\r',s:' ',p:'+',q:'=',h:'#',a:'&'};
+  const unescapeText=text=>text==='\\0'?'':text.replace(/\\(.)/gs,(_,key)=>textEscapes[key]??key);
+  const oldLedModel={name:'old-default-led',mode:'advanced',saturationCurrent:2.2349907006671927e-18,seriesResistance:0,emissionCoefficient:2,breakdownVoltage:0};
+  const flipFlopPosts={
+    '155':[[-1,0],[2,0],[2,2],[-1,1]],
+    '156':[[-1,0],[-1,1],[-1,2],[2,0],[2,2]],
+    '193':[[-1,0],[2,0],[2,2],[-1,1]],
+  };
+
+  function chipLayout({x1,y1,flags},offsets,columns,rows,pins) {
+    const spacing=flags&1?16:32;
+    const transpose=!!(flags&4096),flipX=!!(flags&1024),flipY=!!(flags&2048);
+    const point=(column,row)=>{
+      let [x,y]=transpose?[row,column]:[column,row];
+      if(flipX)x=(transpose?rows:columns)-1-x;
+      if(flipY)y=(transpose?columns:rows)-1-y;
+      return {x:x1+spacing*(1+x),y:y1+spacing*y};
+    };
+    const start=point(-1,0),end=point(columns,0),mirror=(transpose!==flipX)!==flipY;
+    const direction=mirror?-1:1;
+    const rotation=quarterTurn(Math.atan2(direction*(end.y-start.y),direction*(end.x-start.x)));
+    return {anchor:point((columns-1)/2,(rows-1)/2),offsets,rotation,mirror,originOffset:[0,0],
+      posts:pins.map(([column,row])=>point(column,row)),
+      along:transpose?'y':'x',across:transpose?'x':'y',minScale:400/(3*spacing)};
+  }
+
+  function diodeModel(drop,breakdown,line) {
+    if(drop===.805904783&&breakdown===0)return 'default';
+    if(drop===.805904783&&breakdown===5.6)return 'default-zener';
+    if(drop===2.1024259&&breakdown===0)return {...oldLedModel};
+    return {name:`Imported diode ${line}`,mode:'advanced',saturationCurrent:1/Math.expm1(drop/(.025865*2)),breakdownVoltage:breakdown,seriesResistance:0,emissionCoefficient:2};
+  }
+
+  function annotationText(tokens,escaped) {
+    const text=tokens.join(' ');
+    const decoded=escaped?unescapeText(text):text.replace(/%2b/ig,'+');
+    return decoded.replace(/\\(.)/gs,(_,key)=>key==='n'?'\n':key).replace(/\r\n?/g,'\n');
+  }
+
+  function rectangularLayout(offsets,posts,start,end,corner,first,last,side) {
+    const dx=end.x-start.x,dy=end.y-start.y;
+    const along=dx?'x':'y',across=dx?'y':'x';
+    const localX=offsets[last][0]-offsets[first][0],localY=offsets[last][1]-offsets[first][1];
+    const sideX=localX?0:offsets[side][0]-offsets[first][0];
+    const sideY=localX?offsets[side][1]-offsets[first][1]:0;
+    let rotation=quarterTurn(Math.atan2(dy,dx)-Math.atan2(localY,localX));
+    const [rx,ry]=Geometry.rotateOffset(sideX,sideY,rotation);
+    const mirror=(dx?ry:rx)*(corner[across]-start[across])<0;
+    if(mirror&&localX)rotation=(rotation+180)%360;
+    const span=Math.hypot(localX,localY)+2*Catalog.grid;
+    const minScale=Math.max(span/Math.hypot(dx,dy),Math.hypot(sideX,sideY)/Math.abs(corner[across]-start[across]));
+    return {anchor:midpoint(start,corner),offsets,rotation,mirror,originOffset:[0,0],posts,along,across,minScale};
+  }
+
+  function symbolLayout(record,component) {
+    const {type,pins,x1,y1,x2,y2}=record;
+    const start={x:x1,y:y1},end=type==='174'?record.posts[1]:{x:x2,y:y2};
+    const offsets=Catalog.componentPins(component),first=offsets[type==='173'?'grid':pins[0]];
+    const dx=end.x-start.x,dy=end.y-start.y;
+    if(Object.hasOwn(flipFlopPosts,type))return chipLayout(record,offsets,2,3,flipFlopPosts[type]);
+    if(type==='419')return chipLayout(record,offsets,3,4,[[-1,3],[-1,2],[-1,1],[-1,0]]);
+    if(type==='171') {
+      return rectangularLayout(offsets,record.posts,start,end,record.posts[1],'left','right','leftReturn');
+    }
+    if(type==='T'||type==='169') {
+      const posts=record.posts;
+      const primaryEnd=posts[pins.indexOf('p2')];
+      const corner=posts[pins.indexOf(component.parameters.reverseSecondary?'s1':'s2')];
+      return rectangularLayout(offsets,posts,start,primaryEnd,corner,'p1','p2','s1');
+    }
+    if(pins.length===1) {
+      // Ground and rails attach at the symbol origin. Markers have a lead offset.
+      let bodyAngle=-Math.PI/2;
+      if(component.kind==='ground')bodyAngle=Math.PI/2;
+      else if(first[0]||first[1])bodyAngle=Math.atan2(-first[1],-first[0]);
+      return {anchor:start,offsets,rotation:quarterTurn(Math.atan2(dy,dx)-bodyAngle),mirror:false,originOffset:first};
+    }
+
+    const anchor=midpoint(start,end),posts=record.posts||[start,end];
+    const gate=Catalog.gateKind(component.kind);
+    const opposite=offsets[type==='a'||gate?'out':type==='173'?'plate':pins[1]];
+    const axisAngle=pins.length===2?Math.atan2(opposite[1]-first[1],opposite[0]-first[0]):0;
+    const horizontal=Math.abs(dx)>=Math.abs(dy);
+    const angle=horizontal?Math.atan2(0,dx):Math.atan2(dy,0);
+    let rotation=quarterTurn(angle-axisAngle),mirror=false;
+    const sidePin=gate&&pins.length>2?pins[0]:sidePins[type];
+    if(sidePin) {
+      const side=type==='a'||gate?start:type==='174'||type==='159'?anchor:end;
+      const post=posts[pins.indexOf(sidePin)];
+      const [sideX,sideY]=Geometry.rotateOffset(...offsets[sidePin],rotation);
+      mirror=sideX*(post.x-side.x)+sideY*(post.y-side.y)<0;
+      if(mirror)rotation=(rotation+180)%360;
+    }
+
+    const originOffset=pins.length===2?[(first[0]+opposite[0])/2,(first[1]+opposite[1])/2]:[0,0];
+    const along=horizontal?'x':'y',across=horizontal?'y':'x';
+    const span=Math.abs(end[along]-start[along]);
+    const pinSpan=pins.length===2?Math.hypot(opposite[0]-first[0],opposite[1]-first[1]):opposite[0]-first[0];
+    const needsElbow=(sidePin&&type!=='174'&&type!=='159')||start[across]!==end[across];
+    let minScale=(pinSpan+(needsElbow?2*Catalog.grid:0))/span;
+    if(gate&&pins.length>3)minScale=Math.max(minScale,Catalog.grid/(record.flags&1?8:16));
+    if(type==='159'||type==='160')minScale=Math.max(minScale,Math.abs(offsets.control[1])/16);
+    if(type==='174')minScale=Math.max(minScale,Math.abs(offsets.wiper[1]/(posts[2][across]-anchor[across])));
+    return {anchor,offsets,rotation,mirror,originOffset,posts,along,across,minScale};
+  }
+
   function importText(text, options={}) {
-    const diagnostics=[], records=[];
-    const diagnostic=(severity,line,code,message)=>diagnostics.push({severity,line,code,message});
     if(typeof text!=='string'||text.length>5_000_000)return {document:null,diagnostics:[{severity:'error',line:0,code:'INVALID_INPUT',message:'Expected circuit text smaller than 5 MB'}]};
     if(text.trimStart().startsWith('<')) {
       const converted=XML.toLegacy(text);
       if(converted.diagnostics.some(d=>d.severity==='error'))return {document:null,diagnostics:converted.diagnostics};
-      const result=importText(converted.text,options);
-      result.diagnostics=result.diagnostics.map(d=>({...d,line:d.line?converted.sourceLines[d.line-1]||d.line:0}));
+      const result=importLegacy(converted.text,options,converted);
+      result.diagnostics=[
+        ...converted.diagnostics,
+        ...result.diagnostics.map(d=>({...d,line:d.line?converted.sourceLines[d.line-1]||d.line:0})),
+      ].sort((a,b)=>a.line-b.line);
       return result;
     }
+    return importLegacy(text,options);
+  }
+
+  function importLegacy(text, options, xml) {
+    const diagnostics=[],records=[],scopes=[];
+    const diagnostic=(severity,line,code,message)=>diagnostics.push({severity,line,code,message});
     const doc={schemaVersion:1,id:options.id||'falstad-import',title:options.title||'Imported Falstad circuit',electrical:{components:[],junctions:[],wires:[]},layout:{components:{},junctions:{},wires:{}},probes:[],simulation:{timeStep:5e-6}};
     let header=false,legacyGrid=16;
     const lines=text.replace(/^\uFEFF/,'').split(/\r\n|\r|\n/);
@@ -36,21 +165,72 @@
           if(flags&192)throw new Error('Adaptive timestep and automatic DC operating point are not supported');
           continue;
         }
-        if(['o','h','&','38'].includes(type)) {
-          diagnostic('warning',line,'UNSUPPORTED_PRESENTATION',`${type==='o'?'Scope':type==='h'?'Hint':'Slider'} settings are not imported yet`);continue;
+        if(type==='o'){
+          scopes.push({line,tokens,xml:xml?.scopes.get(line)});continue;
         }
-        if(type!=='w'&&!Object.hasOwn(types,type)) {
+        if(['h','&','38'].includes(type)) {
+          diagnostic('warning',line,'UNSUPPORTED_PRESENTATION',`${type==='h'?'Hint':'Slider'} settings are not imported yet`);continue;
+        }
+        if(type!=='w'&&!Object.hasOwn(drawingKinds,type)&&!Object.hasOwn(types,type)) {
           diagnostic('error',line,'UNSUPPORTED_RECORD',`Unsupported Falstad record ${type}`);continue;
         }
         const [x1,y1,x2,y2,flags]=[0,1,2,3,4].map(i=>number(i));
         if(![x1,y1,x2,y2,flags].every(Number.isSafeInteger)||flags<0)throw new Error('Coordinates and flags must be safe integers');
         const record={type,line,x1,y1,x2,y2,flags};
-        if(type==='w'){flagsAllowed(flags,3);if(tokens.length>5)throw new Error('Unexpected wire fields');records.push(record);continue;}
+        if(type==='w'){flagsAllowed(flags,3);if(tokens.length>5)throw new Error('Unexpected wire fields');record.bends=xml?.routes.get(line);records.push(record);continue;}
+        if(type==='x'){
+          flagsAllowed(flags,7);
+          const size=number(5),text=annotationText(tokens.slice(6),!!(flags&4));
+          if(!Number.isSafeInteger(size)||size<=0||!tokens[6]||text.length>4096)throw new Error('Invalid text annotation');
+          records.push({...record,size,text});continue;
+        }
+        if(type==='b'||type==='423'){
+          flagsAllowed(flags,0);
+          if(tokens.length!==5)throw new Error('Unexpected drawing fields');
+          records.push(record);continue;
+        }
         let kind=types[type],parameters={},maxFields=5;
+        if(type==='207'){
+          flagsAllowed(flags,13);
+          const name=flags&4?unescapeText(tokens.slice(5).join(' ')):tokens.slice(5).join(' ');
+          if(!name.trim()||/[\r\n]/.test(name))throw new Error('Invalid labeled net name');
+          if(flags&9)diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','Wires uses standard labeled-node appearance');
+          parameters={name};maxFields=tokens.length;
+        }
         if(type==='r'){flagsAllowed(flags,1);parameters={resistance:number(5)};maxFields=6;}
-        if(type==='c') {
+        if(type==='m'){
+          flagsAllowed(flags,0);
+          parameters={onResistance:number(5),offResistance:number(6),initialDopedWidth:number(7),totalWidth:number(8),mobility:number(9)};
+          if(number(10,0)!==0)diagnostic('warning',line,'RESET_STATE','Memristor current is recalculated from the saved doped width');
+          maxFields=11;
+        }
+        if(type==='175')flagsAllowed(flags,0);
+        if(type==='176'){
+          flagsAllowed(flags,3);
+          if((flags&2)&&tokens[5]!=='default'||!(flags&2)&&(flags&1)&&number(5)!==.805904783)
+            throw new Error('Only the default varactor diode model is supported');
+          const biasIndex=flags?6:5;
+          parameters={capacitance:number(biasIndex+1)};
+          if(number(biasIndex)!==0)diagnostic('warning',line,'RESET_STATE','Varactor starts at zero bias');
+          maxFields=biasIndex+2;
+        }
+        if(type==='181'){
+          flagsAllowed(flags,0);
+          parameters={initialTemperature:tokens[5]==='NaN'?300:number(5),nominalPower:number(6),nominalVoltage:number(7),warmTime:number(8),coolTime:number(9)};
+          maxFields=10;
+        }
+        if(type==='187'){
+          flagsAllowed(flags,0);
+          parameters={onResistance:number(5),offResistance:number(6),breakdownVoltage:number(7),holdingCurrent:number(8)};
+          maxFields=9;
+        }
+        if(type==='c'||type==='209') {
           flagsAllowed(flags,7);parameters={capacitance:number(5),initialVoltage:number(7,1e-3),integration:flags&2?'backwardEuler':'trapezoidal'};
-          number(6);if((flags&4)&&number(8,0)!==0)throw new Error('Capacitor series resistance is not supported');maxFields=flags&4?9:8;
+          number(6);
+          const hasResistance=type==='c'||!!(flags&4);
+          if(hasResistance&&number(8,0)!==0)throw new Error('Capacitor series resistance is not supported');
+          maxFields=hasResistance?9:8;
+          if(type==='209')parameters.maxReverseVoltage=number(maxFields++);
           diagnostic('warning',line,'RESET_STATE','Capacitor starts at its initial voltage, rather than the saved running voltage');
         }
         if(type==='l') {
@@ -61,6 +241,154 @@
         if(type==='172') {
           flagsAllowed(flags,95);if(![6,7].includes(number(5)))throw new Error('Expected variable-voltage waveform');
           parameters={minVoltage:number(8,0),maxVoltage:number(7,5),voltage:number(6,5),label:tokens.slice(11).join(' ').replace(/%2b/ig,'+')||'Voltage'};maxFields=tokens.length;
+        }
+        if(type==='170') {
+          flagsAllowed(flags,3);
+          parameters={minFrequency:number(5),maxFrequency:number(6),amplitude:number(7),sweepTime:number(8),logarithmic:!!(flags&1),bidirectional:!!(flags&2)};
+          maxFields=9;
+        }
+        if(type==='171') {
+          flagsAllowed(flags,0);
+          parameters={delay:number(5),impedance:number(6)};
+          const width=number(7),dx=x2-x1,dy=y2-y1;
+          if(!Number.isSafeInteger(width)||width<=0)throw new Error('Invalid transmission line width');
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal transmission line layout is not supported');
+          if(number(8)!==0)throw new Error('Transmission line losses are not supported');
+          // Falstad indexes the two displaced return posts before the signal posts.
+          const shiftX=dy?width:0,shiftY=dx?width:0;
+          record.posts=[{x:x1+shiftX,y:y1+shiftY},{x:x2+shiftX,y:y2+shiftY},{x:x1,y:y1},{x:x2,y:y2}];
+          maxFields=9;
+        }
+        if(type==='T'||type==='169') {
+          const tapped=type==='169';
+          flagsAllowed(flags,tapped?3:30);
+          parameters={inductance:number(5),ratio:number(6),coupling:number(tapped?10:9,tapped ? .99 : .999),integration:flags&2?'backwardEuler':'trapezoidal'};
+          const currents=tapped?[number(7),number(8),number(9,0)]:[number(7),number(8)];
+          if(currents.some(current=>current!==0))diagnostic('warning',line,'RESET_STATE','Transformer winding currents start at zero');
+          const dx=x2-x1,dy=y2-y1;
+          if(tapped){
+            if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal tapped transformer layout is not supported');
+            const halfWidth=flags&1?32:-32;
+            const shiftX=Math.sign(dy)*halfWidth,shiftY=-Math.sign(dx)*halfWidth;
+            record.posts=[{x:x1,y:y1},{x:x1+2*shiftX,y:y1+2*shiftY},{x:x2,y:y2},
+              {x:x2+shiftX,y:y2+shiftY},{x:x2+2*shiftX,y:y2+2*shiftY}];
+          }else{
+            if(number(10,0)!==0)throw new Error('Transformer core saturation is not supported');
+            const vertical=!!(flags&8),span=vertical?dy:dx;
+            if(!span)throw new Error('Zero-length transformer layout is not supported');
+            const width=number(11,vertical?-Math.max(32,Math.abs(dx)):Math.max(32,Math.abs(dy)));
+            if(!Number.isSafeInteger(width)||!width)throw new Error('Invalid transformer width');
+            const cross=-Math.sign(dy||dx)*width*(flags&16?-1:1)*Math.sign(span);
+            const shiftX=vertical?cross:0,shiftY=vertical?0:-cross;
+            const end={x:vertical?x1:x2,y:vertical?y2:y1};
+            const secondaryStart={x:end.x,y:end.y},secondaryEnd={x:end.x+shiftX,y:end.y+shiftY};
+            const reverseSecondary=!!(flags&4);
+            if(reverseSecondary)parameters.reverseSecondary=true;
+            record.posts=[{x:x1,y:y1},reverseSecondary?secondaryEnd:secondaryStart,{x:x1+shiftX,y:y1+shiftY},reverseSecondary?secondaryStart:secondaryEnd];
+          }
+          maxFields=tapped?11:12;
+        }
+        if(type==='200'||type==='201') {
+          flagsAllowed(flags,2);
+          parameters={carrierFrequency:number(5),signalFrequency:number(6),amplitude:number(7)};
+          if(type==='201')parameters.deviation=number(8);
+          maxFields=type==='201'?9:8;
+        }
+        if(type==='211') {
+          flagsAllowed(flags,0);
+          parameters={duration:number(5),sampleRate:number(6)};
+          const label=number(7);
+          if(!Number.isSafeInteger(label)||label<0)throw new Error('Invalid audio output number');
+          if(label>1)diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','Wires uses its own audio output numbering');
+          maxFields=8;
+        }
+        if(type==='I') {
+          flagsAllowed(flags,0);
+          parameters={slewRate:number(5,.5),highVoltage:number(6,5)};
+          maxFields=7;
+        }
+        if(type==='173'){
+          flagsAllowed(flags,3);
+          parameters={mu:number(5),kg1:number(6)};
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal triode layout is not supported');
+          const ux=Math.sign(dx),uy=Math.sign(dy),side=32*(flags&2?Math.sign(dy||dx):1)*(flags&1?-1:1);
+          record.posts=[{x:x2+uy*side,y:y2-ux*side},{x:x1,y:y1},{x:x2-uy*side-ux*16,y:y2+ux*side-uy*16}];
+          maxFields=7;
+        }
+        if(type==='182'||type==='183'){
+          flagsAllowed(flags,0);
+          parameters={slewRate:number(5,.5),lowerThreshold:number(6,1.66),upperThreshold:number(7,3.33),highVoltage:number(8,5),lowVoltage:number(9,0)};
+          maxFields=10;
+        }
+        if(type==='159'||type==='160'){
+          flagsAllowed(flags,31);
+          parameters={onResistance:number(5,20),offResistance:number(6,1e10),threshold:number(7,2.5),inverted:!!(flags&1),pulldown:!!(flags&2)};
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal analog switch layout is not supported');
+          const spdt=type==='160',flipX=!!(flags&4),flipY=!!(flags&8);
+          const side=((flipX!==flipY)!==!!(flags&16))?-16:16;
+          const shiftX=Math.sign(dy)*side,shiftY=-Math.sign(dx)*side;
+          // Match rounding on the native grid for odd-length and flipped controls.
+          const controlGrid=(a,b,flip)=>Math.floor((Math.trunc((a+b)/2)+(flip?1:-1)+legacyGrid/2-1)/legacyGrid)*legacyGrid;
+          const controlSign=spdt?1:-1;
+          const control={x:controlGrid(x1,x2,flipX)+controlSign*shiftX,y:controlGrid(y1,y2,flipY)+controlSign*shiftY};
+          record.posts=[{x:x1,y:y1}];
+          if(spdt)record.posts.push({x:x2+shiftX,y:y2+shiftY},{x:x2-shiftX,y:y2-shiftY});
+          else record.posts.push({x:x2,y:y2});
+          record.posts.push(control);
+          maxFields=8;
+        }
+        if(Object.hasOwn(flipFlopPosts,type)){
+          const jk=type==='156';
+          if(flags&2||!jk&&(flags&4))throw new Error('Flip-flop asynchronous set/reset pins are not supported');
+          flagsAllowed(flags,1|1024|2048|4096|8192|(jk?4:0));
+          const customVoltage=!!(flags&8192),highVoltage=customVoltage?number(5):5;
+          maxFields=customVoltage?7:6;
+          parameters={highVoltage,initialState:number(maxFields-1)>highVoltage/2,...(jk?{positiveEdge:!!(flags&4)}:{})};
+        }
+        if(type==='419'){
+          flagsAllowed(flags,1|1024|2048|4096);
+          if(number(5,4)!==4)throw new Error('Only four-bit decimal displays are supported');
+          parameters={mode:number(6,0)};
+          maxFields=7;
+        }
+        if(Catalog.gateKind(kind)) {
+          flagsAllowed(flags,7);
+          const inputCount=number(5),initialOutputVoltage=number(6);
+          parameters=Catalog.validateGateParameters({
+            inputCount,highVoltage:number(7,5),propagationDelay:number(8,0),
+            schmittInputs:!!(flags&2),invertInputs:!!(flags&4),
+            ...(initialOutputVoltage!==0?{initialOutputVoltage}:{}),
+          });
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal logic gate layout is not supported');
+          const spacing=flags&1?.5:1;
+          record.posts=Catalog.gateOffsets(inputCount).map(offset=>({
+            x:x1+Math.sign(dy)*offset*spacing,y:y1-Math.sign(dx)*offset*spacing,
+          }));
+          record.posts.push({x:x2,y:y2});
+          maxFields=9;
+        }
+        if(type==='p') {
+          flagsAllowed(flags,3);
+          const mode=number(5,0),scale=number(6,0);
+          if(!Number.isInteger(mode)||mode<0||mode>5)throw new Error('Unsupported voltmeter reading mode');
+          if(!Number.isInteger(scale)||scale<0||scale>3)throw new Error('Unsupported voltmeter scale');
+          parameters={mode,scale,resistance:number(7,0),showVoltage:!!(flags&1),circleSymbol:!!(flags&2)};
+          maxFields=8;
+        }
+        if(type==='370'){
+          flagsAllowed(flags,3);
+          parameters={mode:number(5),scale:number(6,0),circleSymbol:!!(flags&2)};
+          if(!(flags&1))diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','Wires shows the ammeter reading');
+          maxFields=7;
+        }
+        if(type==='368'){
+          flagsAllowed(flags,1);
+          if((flags&1)&&!tokens[6])throw new Error('Missing test point label');
+          parameters={mode:number(5),label:flags&1?unescapeText(tokens[6]):'TP'};
+          maxFields=flags&1?7:6;
         }
         if(type==='174') {
           flagsAllowed(flags,7);parameters={resistance:number(5),position:number(6),label:tokens.slice(7).join(' ')||'Resistance'};maxFields=tokens.length;
@@ -74,8 +402,10 @@
         }
         if(type==='S') {
           flagsAllowed(flags,3);if(!['true','false'].includes(tokens[6]))throw new Error('Invalid SPDT momentary state');
-          if(number(8,2)!==2)throw new Error('Only two-throw switches are supported by this importer');
-          parameters={position:number(5),momentary:tokens[6]==='true',group:number(7,0),throwCount:2,centerOff:!!(flags&1)};maxFields=9;
+          const oldFormat=tokens.length===10&&tokens[8]==='false'&&tokens[9]==='0';
+          if(!oldFormat&&number(8,2)!==2)throw new Error('Only two-throw switches are supported by this importer');
+          const position=tokens[5]==='true'?1:tokens[5]==='false'?0:number(5);
+          parameters={position,momentary:tokens[6]==='true',group:number(7,0),throwCount:2,centerOff:!!(flags&1)};maxFields=oldFormat?10:9;
           const length=Math.hypot(x2-x1,y2-y1);if(!length)throw new Error('Zero-length SPDT switch');
           const dx=16*(y2-y1)/length,dy=-16*(x2-x1)/length;
           record.posts=[{x:x1,y:y1},{x:x2+dx,y:y2+dy},{x:x2-dx,y:y2-dy}];
@@ -85,16 +415,24 @@
         if(type==='O'){flagsAllowed(flags,3);parameters={showVoltage:!!(flags&1)};number(5,0);maxFields=6;}
         if(type==='L') {
           flagsAllowed(flags,3);const state=tokens[5]==='true'?0:tokens[5]==='false'?1:number(5);
-          if(tokens[6]!=='false')throw new Error('Momentary logic input is not supported');
-          parameters={state,highVoltage:number(7,5),lowVoltage:number(8,0),mode:flags&1?'ternary':flags&2?'numeric':'logic'};maxFields=9;
+          if(!['true','false'].includes(tokens[6]))throw new Error('Invalid logic input momentary state');
+          parameters={state,highVoltage:number(7,5),lowVoltage:number(8,0),mode:flags&1?'ternary':flags&2?'numeric':'logic',...(tokens[6]==='true'?{momentary:true}:{})};maxFields=9;
         }
         if(type==='M'){flagsAllowed(flags,7);parameters={threshold:number(5,2.5),mode:flags&1?'ternary':flags&2?'numeric':'logic',pulldown:!!(flags&4)};maxFields=6;}
-        if(type==='d') {
+        if(Catalog.diodeKind(kind)) {
           flagsAllowed(flags,3);
-          if(flags&2){parameters={model:tokens[5]};Catalog.resolveDiodeModel(parameters.model);}
-          else if(!(flags&1)||number(5,.805904783)===.805904783)parameters={model:'default'};
-          else parameters={model:{name:`Imported diode ${line}`,mode:'advanced',saturationCurrent:1/Math.expm1(number(5)/(.025865*2)),breakdownVoltage:0,seriesResistance:0,emissionCoefficient:2}};
-          maxFields=flags?6:5;
+          const next=flags?6:5;
+          if(flags&2){
+            if(!tokens[5])throw new Error('Missing diode model');
+            const name=unescapeText(tokens[5]);
+            parameters={model:name==='old-default-led'?{...oldLedModel}:name};
+          }else {
+            const drop=flags&1?number(5,.805904783):kind==='led'?2.1024259:.805904783;
+            parameters={model:diodeModel(drop,kind==='zener'?number(next):0,line)};
+          }
+          if(kind==='led')Object.assign(parameters,{red:number(next),green:number(next+1),blue:number(next+2),maxCurrent:number(next+3,.01)});
+          parameters=Catalog.validateDiodeParameters(kind,parameters);
+          maxFields=next+(kind==='led'?4:kind==='zener'&&!(flags&2)?1:0);
         }
         if(type==='a') {
           flagsAllowed(flags,15);
@@ -105,19 +443,63 @@
           const hs=(flags&2?8:16)*sign*(flags&1?-1:1);
           record.posts=[{x:x1+hs*(y2-y1)/length,y:y1-hs*(x2-x1)/length},{x:x1-hs*(y2-y1)/length,y:y1+hs*(x2-x1)/length},{x:x2,y:y2}];
         }
+        if(type==='t') {
+          flagsAllowed(flags,3);
+          const polarity=number(5);
+          if(![1,-1].includes(polarity))throw new Error('Invalid transistor polarity');
+          kind=polarity===1?'npn':'pnp';
+          const model=tokens[9]??'default';
+          Catalog.resolveTransistorModel(model);
+          parameters={beta:number(8,100),model,drawCircle:!!(flags&2)};
+          maxFields=10;
+          if(number(6,0)!==0||number(7,0)!==0)diagnostic('warning',line,'RESET_STATE','The simulator recalculates transistor junction voltages on startup');
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal transistor layout is not supported');
+          // Falstad uses the second handle as the midpoint of collector and emitter.
+          const side=16*polarity*(flags&1?-1:1);
+          record.posts=[{x:x1,y:y1},{x:x2+(dy?side:0),y:y2-(dx?side:0)},{x:x2-(dy?side:0),y:y2+(dx?side:0)}];
+        }
+        if(type==='f'||type==='j') {
+          const mosfet=type==='f',pChannel=!!(flags&1);
+          flagsAllowed(flags,mosfet?255:3);
+          kind=mosfet?(pChannel?'pmos':'nmos'):(pChannel?'pjfet':'njfet');
+          parameters={threshold:number(5,mosfet?1.5:-4),beta:number(6,mosfet ? .02 : .00125)};
+          if(!(parameters.beta>0)||!Number.isFinite(1/parameters.beta))throw new Error('Invalid FET beta');
+          if(mosfet)Object.assign(parameters,{
+            bodyDiode:!!(flags&32),bodyTerminal:!!(flags&64),showBulk:!(flags&16),
+            digitalSymbol:!!(flags&4),showBodyDiode:!!(flags&128),swapTerminals:!!(flags&8),
+          });
+          if(flags&2)diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','The FET threshold readout is available in properties');
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Zero-length or diagonal FET layout is not supported');
+          // Match native post indices 1 and 2, including their polarity-specific
+          // electrical roles. Rotation and mirroring affect artwork separately.
+          const side=parameters.swapTerminals?-16:16;
+          record.posts=[{x:x1,y:y1},{x:x2-(dy?side:0),y:y2+(dx?side:0)},{x:x2+(dy?side:0),y:y2-(dx?side:0)}];
+          if(mosfet&&Catalog.activeBody(parameters))record.posts.push({x:x2,y:y2});
+          maxFields=7;
+        }
         if(type==='g'){flagsAllowed(flags,1);number(5,0);maxFields=6;}
         if(type==='s') {
           flagsAllowed(flags,3);const position=tokens[5]==='true'?1:tokens[5]==='false'?0:number(5);
           if(![0,1].includes(position)||!['true','false'].includes(tokens[6]))throw new Error('Unsupported switch state');
           kind=tokens[6]==='true'?'pushSwitch':'switch';parameters=kind==='pushSwitch'?{normallyClosed:position===0}:{closed:position===0};maxFields=7;
         }
-        if(type==='v'||type==='R') {
-          flagsAllowed(flags,31|64);const code=number(5,0),frequency=number(6,40),amplitude=number(7,5),offset=number(8,0),phase=flags&2?Math.PI/2:number(9,0);
-          const waveformKind=['dc','sine','square','triangle','sawtooth','pulse'][code];
-          if(!waveformKind)throw new Error(`Unsupported waveform ${code}`);
-          const waveform=code===0?{kind:'dc',voltage:amplitude+offset}:{kind:waveformKind,frequency,amplitude,offset,phase};
-          if(code===2||code===5)waveform.dutyCycle=code===5&&!(flags&4)?1/(2*Math.PI):number(10,.5);
-          parameters={waveform};maxFields=11;
+        if(['v','R','n','A'].includes(type)) {
+          flagsAllowed(flags,31|64);
+          const code=number(5,0),frequency=number(6,40),amplitude=number(7,5),offset=number(8,0);
+          const phase=flags&2?Math.PI/2:number(9,0);
+          if(type==='n'||type==='R'&&code===6){
+            kind='noiseSource';parameters={amplitude,offset};
+          }else if(type!=='A'){
+            const waveformKind=['dc','sine','square','triangle','sawtooth','pulse'][code];
+            if(!waveformKind)throw new Error(`Unsupported waveform ${code}`);
+            const waveform=code===0?{kind:'dc',voltage:amplitude+offset}:{kind:waveformKind,frequency,amplitude,offset,phase};
+            if(code===1&&amplitude<0){waveform.amplitude=-amplitude;waveform.phase=phase+Math.PI;}
+            if(code===2||code===5)waveform.dutyCycle=code===5&&!(flags&4)?1/(2*Math.PI):number(10,.5);
+            parameters={waveform};
+          }
+          maxFields=11;
         }
         if(tokens.length>maxFields)throw new Error('Unexpected fields (unsupported record variant)');
         const pins=Catalog.componentModel({kind,parameters}).postOrder;
@@ -125,85 +507,89 @@
         records.push({...record,kind,parameters,pins});
       }catch(error){diagnostic('error',line,'UNSUPPORTED_OR_INVALID_RECORD',error.message);}
     }
-    if(!records.some(r=>r.kind))diagnostic('error',0,'EMPTY_CIRCUIT','No supported components found');
+    if(!records.some(r=>r.kind||Object.hasOwn(drawingKinds,r.type))&&(!header||records.length))diagnostic('error',0,'EMPTY_CIRCUIT','No supported components found');
     if(diagnostics.some(d=>d.severity==='error'))return {document:null,diagnostics};
-    // Scale all legacy coordinates together, leaving room for fixed-size symbols.
-    // Connectivity is always derived from original posts, never snapped artwork.
-    const gcd=(a,b)=>b?gcd(b,a%b):a;
-    let unit=0;
-    for(const r of records)for(const value of [r.x1,r.y1,r.x2,r.y2,...(r.posts||[]).flatMap(p=>[p.x,p.y])])unit=gcd(unit,Math.abs(value));
-    const scaleUnit=2*Catalog.grid/(unit||16);
-    let scale=scaleUnit;
-    for(const r of records.filter(r=>r.pins?.length===2)) {
-      const offsets=Catalog.componentPins({kind:r.kind,parameters:r.parameters});
-      const [a,b]=r.pins.map(id=>offsets[id]);
-      scale=Math.max(scale,(Math.hypot(b[0]-a[0],b[1]-a[1])+2*Catalog.grid)/Math.hypot(r.x2-r.x1,r.y2-r.y1));
+    // Use one scale for the circuit and snap the artwork independently. An odd
+    // source coordinate should not force every symbol and wire farther apart.
+    let scale=Catalog.grid/legacyGrid;
+    for(const r of records) {
+      if(!r.kind)continue;
+      const component={id:`c${r.line}`,kind:r.kind,modelVersion:1,parameters:r.parameters};
+      r.component=component;
+      r.symbol=symbolLayout(r,component);
+      scale=Math.max(scale,r.symbol.minScale||0);
     }
-    for(const r of records.filter(r=>r.type==='a'))scale=Math.max(scale,800/Math.hypot(r.x2-r.x1,r.y2-r.y1),150/(r.flags&2?8:16));
-    for(const r of records.filter(r=>r.type==='S'||r.type==='174'))scale=Math.max(scale,600/Math.hypot(r.posts[1].x-r.posts[0].x,r.posts[1].y-r.posts[0].y));
-    scale=Math.ceil(scale/scaleUnit)*scaleUnit;
+    const position=({x,y})=>({x:Geometry.snap(x*scale),y:Geometry.snap(y*scale)});
     const points=new Map();
-    function junction(x,y) {
+    function junction({x,y}) {
+      // Junction identity comes from the original posts, before grid snapping.
       const key=`${x},${y}`;if(points.has(key))return points.get(key);
       const id=`j${points.size+1}`,ref={kind:'junction',junctionId:id};points.set(key,ref);
-      doc.electrical.junctions.push({id});doc.layout.junctions[id]={x:x*scale,y:y*scale};return ref;
+      doc.electrical.junctions.push({id});doc.layout.junctions[id]=position({x,y});return ref;
     }
-    function wire(from,to) {
-      const id=`w${doc.electrical.wires.length+1}`;doc.electrical.wires.push({id,from,to});doc.layout.wires[id]={bends:[]};
+    function wire(from,to,bends=[]) {
+      const id=`w${doc.electrical.wires.length+1}`;doc.electrical.wires.push({id,from,to});doc.layout.wires[id]={bends};
     }
     for(const r of records) {
-      const start=junction(r.x1,r.y1);
-      if(r.type==='w'){wire(start,junction(r.x2,r.y2));continue;}
-      const id=`c${r.line}`,component={id,kind:r.kind,modelVersion:1,parameters:r.parameters};
-      doc.electrical.components.push(component);r.componentId=id;
-      const offsets=Catalog.componentPins(component),first=offsets[r.pins[0]];
-      let rotation=0;
-      if(r.type==='S'||r.type==='174') {
-        const start=r.posts[0],end=r.type==='S'?{x:r.x2,y:r.y2}:r.posts[1];
-        rotation=((Math.round(Math.atan2(end.y-start.y,end.x-start.x)/(Math.PI/2))*90)%360+360)%360;
-        const sidePin=r.type==='S'?offsets.a:offsets.wiper;
-        const side=Geometry.rotateOffset(...sidePin,rotation);
-        const original=r.type==='S'?{x:r.posts[1].x-end.x,y:r.posts[1].y-end.y}:{x:r.posts[2].x-(start.x+end.x)/2,y:r.posts[2].y-(start.y+end.y)/2};
-        const mirror=side[0]*original.x+side[1]*original.y<0;
-        if(mirror)rotation=(rotation+180)%360;
-        doc.layout.components[id]={x:(start.x+end.x)*scale/2,y:(start.y+end.y)*scale/2,rotation,mirror};
-        for(let i=0;i<3;i++)wire({kind:'pin',componentId:id,pinId:r.pins[i]},junction(r.posts[i].x,r.posts[i].y));
-        continue;
-      }else if(r.type==='a') {
-        rotation=((Math.round(Math.atan2(r.y2-r.y1,r.x2-r.x1)/(Math.PI/2))*90)%360+360)%360;
-        const minus=Geometry.rotateOffset(...offsets.minus,rotation);
-        const side={x:r.posts[0].x-r.x1,y:r.posts[0].y-r.y1};
-        const mirror=minus[0]*side.x+minus[1]*side.y<0;
-        if(mirror)rotation=(rotation+180)%360;
-        doc.layout.components[id]={x:(r.x1+r.x2)*scale/2,y:(r.y1+r.y2)*scale/2,rotation,mirror};
-        for(let i=0;i<3;i++)wire({kind:'pin',componentId:id,pinId:r.pins[i]},junction(r.posts[i].x,r.posts[i].y));
-        continue;
-      }else if(r.pins.length===2) {
-        const last=offsets[r.pins[1]],angle=Math.atan2(r.y2-r.y1,r.x2-r.x1)-Math.atan2(last[1]-first[1],last[0]-first[0]);
-        rotation=((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
-        const midpoint=[(first[0]+last[0])/2,(first[1]+last[1])/2];
-        const [dx,dy]=Geometry.rotateOffset(...midpoint,rotation);
-        doc.layout.components[id]={x:(r.x1+r.x2)*scale/2-dx,y:(r.y1+r.y2)*scale/2-dy,rotation,mirror:false};
-      }else {
-        // Ground's body follows its legacy handle; rail artwork points away from its post.
-        const angle=r.kind==='ground'?Math.atan2(r.y2-r.y1,r.x2-r.x1)-Math.PI/2:Math.atan2(r.y2-r.y1,r.x2-r.x1)+Math.PI/2;
-        rotation=((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
-        const [dx,dy]=Geometry.rotateOffset(...first,rotation);
-        doc.layout.components[id]={x:r.x1*scale-dx,y:r.y1*scale-dy,rotation,mirror:false};
+      const start={x:r.x1,y:r.y1};
+      if(r.type==='w'){
+        r.voltageTarget=junction(start);
+        wire(r.voltageTarget,junction({x:r.x2,y:r.y2}),r.bends?.map(position));continue;
       }
-      wire({kind:'pin',componentId:id,pinId:r.pins[0]},start);
-      if(r.pins.length===2)wire({kind:'pin',componentId:id,pinId:r.pins[1]},junction(r.x2,r.y2));
+      if(r.type==='x'){
+        const fontSize=Math.max(8,Math.min(300,r.size*scale));
+        (doc.layout.drawings??=[]).push({
+          id:`d${r.line}`,kind:'text',text:r.text,points:[{x:r.x1*scale,y:r.y1*scale-fontSize}],
+          fill:'currentColor',stroke:'none',strokeWidth:0,strokeStyle:'solid',fontSize,
+          ...(r.flags&2?{overline:true}:{}),
+        });
+        continue;
+      }
+      if(r.type==='b'||r.type==='423'){
+        const end={x:r.x2,y:r.y2},box=r.type==='b';
+        const corners=box?[start,{x:end.x,y:start.y},end,{x:start.x,y:end.y}]:[start,end];
+        (doc.layout.drawings??=[]).push({
+          id:`d${r.line}`,kind:drawingKinds[r.type],points:corners.map(({x,y})=>({x:x*scale,y:y*scale})),
+          fill:'none',stroke:'#808080',strokeWidth:Math.min(50,2*scale),strokeStyle:box?'dashed':'solid',
+        });
+        continue;
+      }
+      const {id}=r.component;
+      doc.electrical.components.push(r.component);
+      const {anchor,offsets,rotation,mirror,originOffset,posts=[start],along,across}=r.symbol;
+      const center=position(anchor);
+      const [dx,dy]=Geometry.rotateOffset(...originOffset,rotation);
+      const pose={x:center.x-dx,y:center.y-dy,rotation,mirror};
+      doc.layout.components[id]=pose;
+      for(const [index,pinId] of r.pins.entries()) {
+        const from={kind:'pin',componentId:id,pinId},to=junction(posts[index]);
+        const [x,y]=offsets[pinId];
+        const [rx,ry]=Geometry.rotateOffset(mirror?-x:x,y,rotation);
+        const pin={x:pose.x+rx,y:pose.y+ry},post=doc.layout.junctions[to.junctionId];
+        const bends=[];
+        const branch=pinId==='control'&&(r.type==='159'||r.type==='160');
+        const axis=branch?across:along,cross=branch?along:across;
+        if(axis&&pin[axis]!==post[axis]&&pin[cross]!==post[cross]) {
+          const turn=r.pins.length===2?post[axis]:Geometry.snap(midpoint(pin,post)[axis]);
+          const firstTurn=turn===pin[axis]?post[axis]:turn;
+          bends.push({...pin,[axis]:firstTurn});
+          if(firstTurn!==post[axis])bends.push({...post,[axis]:firstTurn});
+        }
+        wire(from,to,bends);
+      }
     }
     // Match Falstad's implicit first-source ground rule explicitly, since Wires
     // compiles components to private coordinates rather than original posts.
-    if(!records.some(r=>r.kind==='ground'||r.kind==='voltageRail'||r.kind==='variableVoltage')) {
+    if(!records.some(r=>['ground','voltageRail','variableVoltage','noiseSource','antennaSource'].includes(r.kind))) {
       const source=records.find(r=>r.kind==='voltageSource');
       if(source) {
         const id='implicit-ground';doc.electrical.components.push({id,kind:'ground',modelVersion:1,parameters:{}});
-        doc.layout.components[id]={x:source.x1*scale,y:source.y1*scale,rotation:0,mirror:false};
-        wire({kind:'pin',componentId:id,pinId:'g'},junction(source.x1,source.y1));
+        const post={x:source.x1,y:source.y1};
+        doc.layout.components[id]={...position(post),rotation:0,mirror:false};
+        wire({kind:'pin',componentId:id,pinId:'g'},junction(post));
       }
     }
+    Scopes.restore(doc,records,scopes,(line,code,message)=>diagnostic('warning',line,code,message));
     try {Document.validate(doc);}catch(error){diagnostic('error',0,'INVALID_DOCUMENT',error.message);return {document:null,diagnostics};}
     return {document:doc,diagnostics};
   }

@@ -17,6 +17,7 @@ production. `makeEngineSite` assembles all three entry points plus the independe
 verification harness from `tools/engine-harness`. Both it and the cached build
 fallback remove stale assets from the assembled engine site.
 
-The Java/GWT sources, numerical models and worker protocol are unchanged by this
-source move. Build with `./gradlew makeEngineSite --console plain`, or use
-`python3 tools/build_engine_cached.py` with populated local GWT dependencies.
+Build from the root with `pnpm engine:build`. The
+[engine guide](../../engine/README.md) documents the cached build fallback.
+See [worker protocol](../../docs/new-simulator/WORKER-PROTOCOL.md) for session
+identity and message handling.

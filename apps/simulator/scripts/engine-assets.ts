@@ -3,18 +3,15 @@ import { resolve, sep } from "node:path"
 import type { Plugin } from "vite"
 // Host the existing classic worker and its relative imports in both dev and dist.
 export function engineAssets(root: string): Plugin {
+  const coreSource = resolve(root, "../../packages/circuit-core")
+  const workerSource = resolve(root, "../../build/engine-worker/circuitjsworker")
+  const runtimeSource = resolve(root, "../../packages/circuit-runtime")
   const mappings: [string, string][] = [
-    ["core/", resolve(root, "../../packages/circuit-core")],
-    [
-      "circuitjsworker/",
-      resolve(root, "../../build/engine-worker/circuitjsworker"),
-    ],
-    ["", resolve(root, "../../packages/circuit-runtime")],
+    ["core/", coreSource],
+    ["circuitjsworker/", workerSource],
+    ["", runtimeSource],
   ]
-  const required = resolve(
-    root,
-    "../../build/engine-worker/circuitjsworker/engine-worker.js"
-  )
+  const required = resolve(workerSource, "engine-worker.js")
   return {
     name: "circuit-engine-assets",
     buildStart() {
@@ -41,10 +38,15 @@ export function engineAssets(root: string): Plugin {
     writeBundle(options) {
       const out = resolve(options.dir!, "engine")
       mkdirSync(out, { recursive: true })
-      for (const [prefix, source] of mappings.filter(([prefix]) => prefix))
-        cpSync(source, resolve(out, prefix), { recursive: true })
-      for (const name of ["revision-worker.js"])
-        cpSync(resolve(root, "../../packages/circuit-runtime", name), resolve(out, name))
+      const coreOutput = resolve(out, "core")
+      mkdirSync(coreOutput, { recursive: true })
+      for (const name of ["catalog.js", "adapter.js", "protocol.js"])
+        cpSync(resolve(coreSource, name), resolve(coreOutput, name))
+      cpSync(workerSource, resolve(out, "circuitjsworker"), { recursive: true })
+      cpSync(
+        resolve(runtimeSource, "revision-worker.js"),
+        resolve(out, "revision-worker.js")
+      )
     },
   }
 }

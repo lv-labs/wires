@@ -39,15 +39,13 @@ import { captureCsv, captureWav, normalizedAudio } from "./capture"
 const examples = new Map(
   Object.values(
     import.meta.glob<CircuitDocument>(
-      [
-        "../../../../docs/new-simulator/examples/*.json",
-        "!../../../../docs/new-simulator/examples/worker-session.json",
-      ],
+      "../../../../docs/new-simulator/examples/*.json",
       { eager: true, import: "default" }
     )
   ).map((document) => [document.title, document])
 )
 const exampleNames = [...examples.keys()].sort((a, b) => a.localeCompare(b))
+let falstadExamples: Record<string, CircuitDocument> | undefined
 
 type PendingAdjustment = SliderAdjustment & { document: CircuitDocument }
 
@@ -365,13 +363,19 @@ export function CircuitEditor({
     const component = editor.document.electrical.components.find(
       (c) => c.id === id
     )
-    if (component && core.catalog.switchPositionCount(component) > 2)
-      editor.session.transaction("Release momentary switch", (draft) => {
-        core.editing.toggleSwitches(draft, id)
-        core.editing.toggleSwitches(draft, id)
+    const positions = component ? core.catalog.switchPositionCount(component) : 2
+    if (positions > 2)
+      editor.session.transaction("Release momentary control", (draft) => {
+        const part = draft.electrical.components.find((c) => c.id === id)
+        if (part?.kind === "logicInput")
+          part.parameters.state = (Number(part.parameters.state) + 2) % positions
+        else {
+          core.editing.toggleSwitches(draft, id)
+          core.editing.toggleSwitches(draft, id)
+        }
       })
     void editor.run.current
-      ?.setDocument(editor.document)
+      ?.setDocument(editor.session.document)
       .catch((cause) => setNotice(String(cause)))
   }
   function clearSliderAdjustment() {
@@ -752,8 +756,30 @@ export function CircuitEditor({
   function loadExample(name: string) {
     const example = examples.get(name)
     if (!example) return
+    openExample(example)
+  }
+  function openExample(example: CircuitDocument) {
     documentRequest.current++
-    replaceDocument(example, `Loaded ${name}`)
+    replaceDocument(example, `Loaded ${example.title}`)
+  }
+  async function loadFalstadExample(file: string, title: string, scopeWarning?: boolean) {
+    const request = ++documentRequest.current
+    try {
+      falstadExamples ??= JSON.parse(
+        (await import("./menu/falstad-examples.json?raw")).default
+      )
+      if (request !== documentRequest.current) return
+      const example = falstadExamples?.[file]
+      if (!example) throw new Error("Missing example document")
+      const notice = scopeWarning
+        ? `Loaded ${title}. Some Falstad scope settings are unavailable.`
+        : `Loaded ${title}`
+      replaceDocument({ ...example, title }, notice)
+    } catch (cause) {
+      if (request === documentRequest.current) {
+        setProjectError(`Could not open example: ${String(cause)}`)
+      }
+    }
   }
   const title = editor.document.title
   const error = editor.simulation.error?.message || editor.error
@@ -1091,6 +1117,7 @@ export function CircuitEditor({
           onImportFalstad={() => setImportFalstad(true)}
           onNewDocument={newDocument}
           onLoadExample={loadExample}
+          onLoadFalstadExample={loadFalstadExample}
           exampleNames={exampleNames}
           canUndo={editor.session.canUndo}
           canRedo={editor.session.canRedo}

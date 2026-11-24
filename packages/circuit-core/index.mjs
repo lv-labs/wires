@@ -2,6 +2,7 @@ import './catalog.js';
 import './geometry.js';
 import './document.js';
 import './falstad-xml.js';
+import './falstad-scopes.js';
 import './falstad.js';
 import './history.js';
 import './drag.js';

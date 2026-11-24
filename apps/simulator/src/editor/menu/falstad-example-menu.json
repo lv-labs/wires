@@ -1,0 +1,2187 @@
+[
+  {
+    "title": "Basics",
+    "children": [
+      {
+        "title": "Ohm's Law",
+        "file": "ohms.txt",
+        "enabled": true
+      },
+      {
+        "title": "Resistors",
+        "file": "resistors.txt",
+        "enabled": true
+      },
+      {
+        "title": "Capacitor",
+        "file": "cap.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inductor",
+        "file": "induct.txt",
+        "enabled": true
+      },
+      {
+        "title": "LRC Circuit",
+        "file": "lrc.txt",
+        "enabled": true
+      },
+      {
+        "title": "Voltage Divider",
+        "file": "voltdivide.txt",
+        "enabled": true
+      },
+      {
+        "title": "Potentiometer",
+        "file": "pot.txt",
+        "enabled": true
+      },
+      {
+        "title": "Potentiometer Divider",
+        "file": "potdivide.txt",
+        "enabled": true
+      },
+      {
+        "title": "Thevenin's Theorem",
+        "file": "thevenin.txt",
+        "enabled": true
+      },
+      {
+        "title": "Norton's Theorem",
+        "file": "norton.txt",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "title": "A/C Circuits",
+    "children": [
+      {
+        "title": "Capacitor",
+        "file": "capac.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inductor",
+        "file": "inductac.txt",
+        "enabled": true
+      },
+      {
+        "title": "Caps of Various Capacitances",
+        "file": "capmultcaps.txt",
+        "enabled": true
+      },
+      {
+        "title": "Caps w/ Various Frequencies",
+        "file": "capmultfreq.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inductors of Various Inductances",
+        "file": "indmultind.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inductors w/ Various Frequencies",
+        "file": "indmultfreq.txt",
+        "enabled": true
+      },
+      {
+        "title": "Impedances of Same Magnitude",
+        "file": "impedance.txt",
+        "enabled": true
+      },
+      {
+        "title": "Series Resonance",
+        "file": "res-series.txt",
+        "enabled": true
+      },
+      {
+        "title": "Parallel Resonance",
+        "file": "res-par.txt",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "title": "Passive Filters",
+    "children": [
+      {
+        "title": "High-Pass Filter (RC)",
+        "file": "filt-hipass.txt",
+        "enabled": true
+      },
+      {
+        "title": "Low-Pass Filter (RC)",
+        "file": "filt-lopass.txt",
+        "enabled": true
+      },
+      {
+        "title": "High-Pass Filter (RL)",
+        "file": "filt-hipass-l.txt",
+        "enabled": true
+      },
+      {
+        "title": "Low-Pass Filter (RL)",
+        "file": "filt-lopass-l.txt",
+        "enabled": true
+      },
+      {
+        "title": "Band-pass Filter",
+        "file": "bandpass.txt",
+        "enabled": true
+      },
+      {
+        "title": "Band-pass w/ Noise",
+        "file": "bandnoise.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Notch Filter",
+        "file": "notch.txt",
+        "enabled": true
+      },
+      {
+        "title": "Twin-T Filter",
+        "file": "twint.txt",
+        "enabled": true
+      },
+      {
+        "title": "Crossover",
+        "file": "crossover.txt",
+        "enabled": true
+      },
+      {
+        "title": "Butterworth Low-Pass (10 pole)",
+        "file": "butter10lo.txt",
+        "enabled": true
+      },
+      {
+        "title": "Butterworth High-Pass (10 pole)",
+        "file": "butter10hi.txt",
+        "enabled": true
+      },
+      {
+        "title": "Butterworth Low-Pass w/ Noise",
+        "file": "butter10loaud.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Butterworth High-Pass w/ Noise",
+        "file": "butter10hiaud.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Butterworth Band-Stop",
+        "file": "butterbandstop.txt",
+        "enabled": true
+      },
+      {
+        "title": "Bessel vs Butterworth",
+        "file": "besselbutter.txt",
+        "enabled": true
+      },
+      {
+        "title": "Band-pass with Ringing",
+        "file": "ringing.txt",
+        "enabled": true
+      },
+      {
+        "title": "Comb Filter",
+        "file": "comb.txt",
+        "enabled": true,
+        "scopeWarning": true
+      }
+    ]
+  },
+  {
+    "title": "Other Passive Circuits",
+    "children": [
+      {
+        "title": "Series/Parallel",
+        "children": [
+          {
+            "title": "Inductors in Series",
+            "file": "indseries.txt",
+            "enabled": true
+          },
+          {
+            "title": "Inductors in Parallel",
+            "file": "indpar.txt",
+            "enabled": true
+          },
+          {
+            "title": "Caps in Series",
+            "file": "capseries.txt",
+            "enabled": true
+          },
+          {
+            "title": "Caps in Parallel",
+            "file": "cappar.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Transformers",
+        "children": [
+          {
+            "title": "Transformer",
+            "file": "transformer.txt",
+            "enabled": true
+          },
+          {
+            "title": "Transformer w/ DC",
+            "file": "transformerdc.txt",
+            "enabled": true
+          },
+          {
+            "title": "Step-Up Transformer",
+            "file": "transformerup.txt",
+            "enabled": true
+          },
+          {
+            "title": "Step-Down Transformer",
+            "file": "transformerdown.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Long-Distance Power Transmission",
+            "file": "longdist.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Saturable Core",
+            "children": [
+              {
+                "title": "Saturable vs Linear Inductor (DC)",
+                "file": "satcore-inductor.txt",
+                "enabled": false
+              },
+              {
+                "title": "Low vs High Drive (AC Saturation)",
+                "file": "satcore-comparison.txt",
+                "enabled": false
+              },
+              {
+                "title": "Transformer with Saturable Core",
+                "file": "satcore-transformer.txt",
+                "enabled": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Relays",
+        "children": [
+          {
+            "title": "Relay",
+            "file": "relay.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay AND",
+            "file": "relayand.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay OR",
+            "file": "relayor.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay XOR",
+            "file": "relayxor.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay Mux",
+            "file": "relaymux.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay Flip-Flop",
+            "file": "relayff.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay Toggle Flip-Flop",
+            "file": "relaytff.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay Oscillator",
+            "file": "relayosc.txt",
+            "enabled": false
+          },
+          {
+            "title": "Relay Counter",
+            "file": "relayctr.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "3-Way Light Switches",
+        "file": "3way.txt",
+        "enabled": true
+      },
+      {
+        "title": "3- and 4-Way Light Switches",
+        "file": "4way.txt",
+        "enabled": true
+      },
+      {
+        "title": "Differentiator",
+        "file": "diff.txt",
+        "enabled": true
+      },
+      {
+        "title": "Wheatstone Bridge",
+        "file": "wheatstone.txt",
+        "enabled": true
+      },
+      {
+        "title": "Critically Damped LRC",
+        "file": "lrc-critical.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Source",
+        "file": "currentsrcelm.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inductive Kickback",
+        "file": "inductkick.txt",
+        "enabled": false
+      },
+      {
+        "title": "Blocking Inductive Kickback",
+        "file": "inductkick-snub.txt",
+        "enabled": false
+      },
+      {
+        "title": "Power Factor",
+        "file": "powerfactor1.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Power Factor Correction",
+        "file": "powerfactor2.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Resistor Grid",
+        "file": "grid.txt",
+        "enabled": true
+      },
+      {
+        "title": "Resistor Grid 2",
+        "file": "grid2.txt",
+        "enabled": true
+      },
+      {
+        "title": "Resistor Cube",
+        "file": "cube.txt",
+        "enabled": false
+      },
+      {
+        "title": "Coupled LC's",
+        "children": [
+          {
+            "title": "LC Modes (2)",
+            "file": "coupled1.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Weak Coupling",
+            "file": "coupled2.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "LC Modes (3)",
+            "file": "coupled3.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "LC Ladder",
+            "file": "ladder.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Phase-Sequence Network",
+        "file": "phaseseq.txt",
+        "enabled": true
+      },
+      {
+        "title": "3-Phase Wye-Wye Balanced Load",
+        "file": "3phasewye.txt",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "title": "Diodes",
+    "children": [
+      {
+        "title": "Diode",
+        "file": "diodevar.txt",
+        "enabled": true
+      },
+      {
+        "title": "Diode I/V Curve",
+        "file": "diodecurve.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Half-Wave Rectifier",
+        "file": "rectify.txt",
+        "enabled": true
+      },
+      {
+        "title": "Full-Wave Rectifier",
+        "file": "fullrect.txt",
+        "enabled": true
+      },
+      {
+        "title": "Full-Wave Rectifier w/ Filter",
+        "file": "fullrectf.txt",
+        "enabled": true
+      },
+      {
+        "title": "Diode Limiter",
+        "file": "diodelimit.txt",
+        "enabled": true
+      },
+      {
+        "title": "Zener Diodes",
+        "children": [
+          {
+            "title": "I/V Curve",
+            "file": "zeneriv.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Voltage Reference",
+            "file": "zenerref.txt",
+            "enabled": true
+          },
+          {
+            "title": "Voltage Reference w/ Follower",
+            "file": "zenerreffollow.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "DC Restoration",
+        "file": "dcrestoration.txt",
+        "enabled": true
+      },
+      {
+        "title": "Blocking Inductive Kickback",
+        "file": "inductkick-block.txt",
+        "enabled": false
+      },
+      {
+        "title": "Spike Generator",
+        "file": "spikegen.txt",
+        "enabled": true
+      },
+      {
+        "title": "Voltage Multipliers",
+        "children": [
+          {
+            "title": "Voltage Doubler",
+            "file": "voltdouble.txt",
+            "enabled": true
+          },
+          {
+            "title": "Voltage Doubler 2",
+            "file": "voltdouble2.txt",
+            "enabled": true
+          },
+          {
+            "title": "Voltage Tripler",
+            "file": "volttriple.txt",
+            "enabled": true
+          },
+          {
+            "title": "Voltage Quadrupler",
+            "file": "voltquad.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "AM Detector",
+        "file": "amdetect.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Waveform Clipper",
+        "file": "diodeclip.txt",
+        "enabled": true
+      },
+      {
+        "title": "Triangle-to-Sine Converter",
+        "file": "sinediode.txt",
+        "enabled": true
+      },
+      {
+        "title": "Ring Modulator",
+        "file": "ringmod.txt",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "title": "Op-Amps",
+    "children": [
+      {
+        "title": "Op-Amp",
+        "file": "opamp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Op-Amp Feedback",
+        "file": "opampfeedback.txt",
+        "enabled": true
+      },
+      {
+        "title": "Amplifiers",
+        "children": [
+          {
+            "title": "Inverting Amplifier",
+            "file": "amp-invert.txt",
+            "enabled": true
+          },
+          {
+            "title": "Noninverting Amplifier",
+            "file": "amp-noninvert.txt",
+            "enabled": true
+          },
+          {
+            "title": "Follower",
+            "file": "amp-follower.txt",
+            "enabled": true
+          },
+          {
+            "title": "Differential Amplifier",
+            "file": "amp-diff.txt",
+            "enabled": true
+          },
+          {
+            "title": "Summing Amplifier",
+            "file": "amp-sum.txt",
+            "enabled": true
+          },
+          {
+            "title": "Log Amplifier",
+            "file": "logconvert.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Class-D Amplifier",
+            "file": "classd.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Oscillators",
+        "children": [
+          {
+            "title": "Relaxation Oscillator",
+            "file": "relaxosc.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Phase-Shift Oscillator",
+            "file": "phaseshiftosc.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Triangle Wave Generator",
+            "file": "triangle.txt",
+            "enabled": true
+          },
+          {
+            "title": "Sine Wave Generator",
+            "file": "sine.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Sawtooth Wave Generator",
+            "file": "sawtooth.txt",
+            "enabled": true
+          },
+          {
+            "title": "Voltage-Controlled Oscillator",
+            "file": "vco.txt",
+            "enabled": true
+          },
+          {
+            "title": "Triangle VCO",
+            "file": "trianglevco.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Half-Wave Rectifier (inverting)",
+        "file": "amp-rect.txt",
+        "enabled": true
+      },
+      {
+        "title": "Full-Wave Rectifier",
+        "file": "amp-fullrect.txt",
+        "enabled": true
+      },
+      {
+        "title": "Peak Detector",
+        "file": "peak-detect.txt",
+        "enabled": true
+      },
+      {
+        "title": "Integrator",
+        "file": "amp-integ.txt",
+        "enabled": true
+      },
+      {
+        "title": "Differentiator (inverting)",
+        "file": "amp-dfdx.txt",
+        "enabled": true
+      },
+      {
+        "title": "Schmitt Trigger",
+        "file": "amp-schmitt.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Negative Impedance Converter",
+        "file": "nic-r.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Gyrator",
+        "file": "gyrator.txt",
+        "enabled": true
+      },
+      {
+        "title": "Capacitance Multiplier",
+        "file": "capmult.txt",
+        "enabled": true
+      },
+      {
+        "title": "Howland Current Source",
+        "file": "howland.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "I-to-V Converter",
+        "file": "itov.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Delta PWM Encoder",
+        "file": "delta-pwm.txt",
+        "enabled": true
+      },
+      {
+        "title": "Voltage Regulator",
+        "file": "opamp-regulator.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "741 Internals",
+        "file": "opint.txt",
+        "enabled": true
+      },
+      {
+        "title": "741 (inverting amplifier)",
+        "file": "opint-invert-amp.txt",
+        "enabled": true
+      },
+      {
+        "title": "741 Slew Rate",
+        "file": "opint-slew.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "741 Current Limits",
+        "file": "opint-current.txt",
+        "enabled": true
+      },
+      {
+        "title": "Chaotic Circuits",
+        "children": [
+          {
+            "title": "Rossler",
+            "file": "rossler.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Vilnius",
+            "file": "vilnius.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Chua",
+            "file": "chua.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Chaos 1",
+            "file": "chaos1.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Chaos 2",
+            "file": "chaos2.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Jerk",
+            "file": "jerk.txt",
+            "enabled": true,
+            "scopeWarning": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Transistors",
+    "children": [
+      {
+        "title": "NPN Transistor",
+        "file": "npn.txt",
+        "enabled": true
+      },
+      {
+        "title": "PNP Transistor",
+        "file": "pnp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Switch",
+        "file": "transswitch.txt",
+        "enabled": true
+      },
+      {
+        "title": "Emitter Follower",
+        "file": "follower.txt",
+        "enabled": true
+      },
+      {
+        "title": "Multivibrators",
+        "children": [
+          {
+            "title": "Astable Multivib",
+            "file": "multivib-a.txt",
+            "enabled": false
+          },
+          {
+            "title": "Bistable Multivib (Flip-Flop)",
+            "file": "multivib-bi.txt",
+            "enabled": true
+          },
+          {
+            "title": "Monostable Multivib (One-Shot)",
+            "file": "multivib-mono.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Common-Emitter Amplifier",
+        "file": "ceamp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Unity-Gain Phase Splitter",
+        "file": "phasesplit.txt",
+        "enabled": true
+      },
+      {
+        "title": "Schmitt Trigger",
+        "file": "schmitt.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Current Source",
+        "file": "currentsrc.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Source Ramp",
+        "file": "currentsrcramp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Mirror",
+        "file": "mirror.txt",
+        "enabled": true
+      },
+      {
+        "title": "Darlington Pair",
+        "file": "darlington.txt",
+        "enabled": true
+      },
+      {
+        "title": "Differential Amplifiers",
+        "children": [
+          {
+            "title": "Differential Input",
+            "file": "trans-diffamp.txt",
+            "enabled": true
+          },
+          {
+            "title": "Common-Mode Input",
+            "file": "trans-diffamp-common.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Common-Mode w/Current Source",
+            "file": "trans-diffamp-cursrc.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Push-Pull Follower",
+        "children": [
+          {
+            "title": "Simple, with distortion",
+            "file": "pushpullxover.txt",
+            "enabled": true
+          },
+          {
+            "title": "Improved",
+            "file": "pushpull.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Oscillators",
+        "children": [
+          {
+            "title": "Colpitts Oscillator",
+            "file": "colpitts.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Hartley Oscillator",
+            "file": "hartley.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Emitter-Coupled LC Oscillator",
+            "file": "eclosc.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Crystal Oscillator",
+            "file": "crystalosc2.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Gilbert Cell Multiplier",
+        "file": "gilbertcell.txt",
+        "enabled": true
+      },
+      {
+        "title": "True RMS Converter",
+        "file": "rmsconverter.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Joule Thief",
+        "file": "joule-thief.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Full-Wave Rectifier",
+        "file": "transrectifier.txt",
+        "enabled": true
+      },
+      {
+        "title": "Early Effect",
+        "file": "early.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "MOSFETs",
+    "children": [
+      {
+        "title": "n-MOSFET",
+        "file": "nmosfet.txt",
+        "enabled": true
+      },
+      {
+        "title": "p-MOSFET",
+        "file": "pmosfet.txt",
+        "enabled": true
+      },
+      {
+        "title": "Switch",
+        "file": "mosswitch.txt",
+        "enabled": true
+      },
+      {
+        "title": "Source Follower",
+        "file": "mosfollower.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Source",
+        "file": "moscurrentsrc.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Ramp",
+        "file": "moscurrentramp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Current Mirror",
+        "file": "mosmirror.txt",
+        "enabled": true
+      },
+      {
+        "title": "Common-Source Amplifier",
+        "file": "mosfetamp.txt",
+        "enabled": true
+      },
+      {
+        "title": "CMOS Inverter",
+        "file": "cmosinverter.txt",
+        "enabled": true
+      },
+      {
+        "title": "CMOS Inverter (w/capacitance)",
+        "file": "cmosinvertercap.txt",
+        "enabled": true
+      },
+      {
+        "title": "CMOS Inverter (slow transition)",
+        "file": "cmosinverterslow.txt",
+        "enabled": true
+      },
+      {
+        "title": "CMOS Transmission Gate",
+        "file": "cmostransgate.txt",
+        "enabled": true
+      },
+      {
+        "title": "CMOS Multiplexer",
+        "file": "mux.txt",
+        "enabled": true
+      },
+      {
+        "title": "Sample-and-Hold",
+        "file": "samplenhold.txt",
+        "enabled": true
+      },
+      {
+        "title": "Delayed Buffer",
+        "file": "delayrc.txt",
+        "enabled": true
+      },
+      {
+        "title": "Leading-Edge Detector",
+        "file": "leadingedge.txt",
+        "enabled": true
+      },
+      {
+        "title": "Switchable Filter",
+        "file": "switchfilter.txt",
+        "enabled": true
+      },
+      {
+        "title": "Voltage Inverter",
+        "file": "voltinvert.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inverter Amplifier",
+        "file": "invertamp.txt",
+        "enabled": true
+      },
+      {
+        "title": "Inverter Oscillator",
+        "file": "inv-osc.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "CMOS Crystal Oscillator",
+        "file": "crystalosc.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "555 Timer Chip",
+    "children": [
+      {
+        "title": "Square Wave Generator",
+        "file": "555square.txt",
+        "enabled": false
+      },
+      {
+        "title": "Internals",
+        "file": "555int.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Sawtooth Oscillator",
+        "file": "555saw.txt",
+        "enabled": false
+      },
+      {
+        "title": "Low-duty-cycle Oscillator",
+        "file": "555lowduty.txt",
+        "enabled": false
+      },
+      {
+        "title": "Monostable Multivibrator",
+        "file": "555monostable.txt",
+        "enabled": false
+      },
+      {
+        "title": "Pulse Width Modulator",
+        "file": "555pulsemod.txt",
+        "enabled": false
+      },
+      {
+        "title": "Pulse Sequencer",
+        "file": "555sequencer.txt",
+        "enabled": false
+      },
+      {
+        "title": "Schmitt Trigger (inverting)",
+        "file": "555schmitt.txt",
+        "enabled": false
+      },
+      {
+        "title": "Missing Pulse Detector",
+        "file": "555missing.txt",
+        "enabled": false
+      },
+      {
+        "title": "Adjustable Duty Cycle Oscillator",
+        "file": "555dutycycle.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Active Filters",
+    "children": [
+      {
+        "title": "VCVS Low-Pass Filter",
+        "file": "filt-vcvs-lopass.txt",
+        "enabled": true
+      },
+      {
+        "title": "VCVS High-Pass Filter",
+        "file": "filt-vcvs-hipass.txt",
+        "enabled": true
+      },
+      {
+        "title": "Switched-Capacitor Filter",
+        "file": "switchedcap.txt",
+        "enabled": true
+      },
+      {
+        "title": "Allpass",
+        "file": "allpass1.txt",
+        "enabled": true
+      },
+      {
+        "title": "Allpass w/ Square",
+        "file": "allpass2.txt",
+        "enabled": true
+      },
+      {
+        "title": "Butterworth Low-Pass",
+        "file": "actbutterlo.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Butterworth High-Pass",
+        "file": "actbutterhi.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Butterworth Band-Pass",
+        "file": "actbutterband.txt",
+        "enabled": true,
+        "scopeWarning": true
+      }
+    ]
+  },
+  {
+    "title": "Logic Families",
+    "children": [
+      {
+        "title": "RTL",
+        "children": [
+          {
+            "title": "RTL Inverter",
+            "file": "rtlinverter.txt",
+            "enabled": true
+          },
+          {
+            "title": "RTL NOR",
+            "file": "rtlnor.txt",
+            "enabled": true
+          },
+          {
+            "title": "RTL NAND",
+            "file": "rtlnand.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "DTL",
+        "children": [
+          {
+            "title": "DTL Inverter",
+            "file": "dtlinverter.txt",
+            "enabled": true
+          },
+          {
+            "title": "DTL NAND",
+            "file": "dtlnand.txt",
+            "enabled": true
+          },
+          {
+            "title": "DTL NOR",
+            "file": "dtlnor.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "TTL",
+        "children": [
+          {
+            "title": "TTL Inverter",
+            "file": "ttlinverter.txt",
+            "enabled": true
+          },
+          {
+            "title": "TTL NAND",
+            "file": "ttlnand.txt",
+            "enabled": true
+          },
+          {
+            "title": "TTL NOR",
+            "file": "ttlnor.txt",
+            "enabled": true
+          },
+          {
+            "title": "Fan-Out",
+            "file": "fanout.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "NMOS",
+        "children": [
+          {
+            "title": "NMOS Inverter",
+            "file": "nmosinverter.txt",
+            "enabled": true
+          },
+          {
+            "title": "Inverter with only MOSFETs",
+            "file": "nmosinverter2.txt",
+            "enabled": true
+          },
+          {
+            "title": "Depletion-load NMOS Inverter",
+            "file": "nmosinverter3.txt",
+            "enabled": true
+          },
+          {
+            "title": "NMOS NAND",
+            "file": "nmosnand.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "CMOS",
+        "children": [
+          {
+            "title": "CMOS Inverter",
+            "file": "cmosinverter.txt",
+            "enabled": true
+          },
+          {
+            "title": "CMOS NAND",
+            "file": "cmosnand.txt",
+            "enabled": true
+          },
+          {
+            "title": "CMOS NOR",
+            "file": "cmosnor.txt",
+            "enabled": true
+          },
+          {
+            "title": "CMOS XOR",
+            "file": "cmosxor.txt",
+            "enabled": true
+          },
+          {
+            "title": "CMOS Flip-Flop",
+            "file": "cmosff.txt",
+            "enabled": true
+          },
+          {
+            "title": "CMOS Master-Slave Flip-Flop",
+            "file": "cmosmsff.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "ECL",
+        "children": [
+          {
+            "title": "ECL NOR/OR",
+            "file": "eclnor.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Ternary",
+        "children": [
+          {
+            "title": "CGAND",
+            "file": "3-cgand.txt",
+            "enabled": true
+          },
+          {
+            "title": "CGOR",
+            "file": "3-cgor.txt",
+            "enabled": true
+          },
+          {
+            "title": "Complement (F210)",
+            "file": "3-invert.txt",
+            "enabled": true
+          },
+          {
+            "title": "F211",
+            "file": "3-f211.txt",
+            "enabled": true
+          },
+          {
+            "title": "F220",
+            "file": "3-f220.txt",
+            "enabled": true
+          },
+          {
+            "title": "F221",
+            "file": "3-f221.txt",
+            "enabled": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Combinational Logic",
+    "children": [
+      {
+        "title": "Exclusive OR",
+        "file": "xor.txt",
+        "enabled": true
+      },
+      {
+        "title": "Half Adder",
+        "file": "halfadd.txt",
+        "enabled": true
+      },
+      {
+        "title": "Full Adder",
+        "file": "fulladd.txt",
+        "enabled": true
+      },
+      {
+        "title": "1-of-4 Decoder",
+        "file": "decoder.txt",
+        "enabled": true
+      },
+      {
+        "title": "Priority Encoder",
+        "file": "priencoder.txt",
+        "enabled": true
+      },
+      {
+        "title": "2-to-1 Mux",
+        "file": "mux3state.txt",
+        "enabled": true
+      },
+      {
+        "title": "Majority Logic",
+        "file": "majority.txt",
+        "enabled": true
+      },
+      {
+        "title": "2-Bit Comparator",
+        "file": "digcompare.txt",
+        "enabled": true
+      },
+      {
+        "title": "7-Segment LED Decoder",
+        "file": "7segdecoder.txt",
+        "enabled": false
+      },
+      {
+        "title": "Brent-Kung Adder",
+        "file": "brentkung.txt",
+        "enabled": false
+      },
+      {
+        "title": "74181 ALU",
+        "file": "alu74181.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Sequential Logic",
+    "children": [
+      {
+        "title": "Flip-Flops",
+        "children": [
+          {
+            "title": "SR Flip-Flop",
+            "file": "nandff.txt",
+            "enabled": true
+          },
+          {
+            "title": "Clocked SR Flip-Flop",
+            "file": "clockedsrff.txt",
+            "enabled": true
+          },
+          {
+            "title": "Master-Slave Flip-Flop",
+            "file": "masterslaveff.txt",
+            "enabled": true
+          },
+          {
+            "title": "Edge-Triggered D Flip-Flop",
+            "file": "edgedff.txt",
+            "enabled": true
+          },
+          {
+            "title": "JK Flip-Flop",
+            "file": "jkff.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Counters",
+        "children": [
+          {
+            "title": "4-Bit Ripple Counter",
+            "file": "counter.txt",
+            "enabled": true
+          },
+          {
+            "title": "8-Bit Ripple Counter",
+            "file": "counter8.txt",
+            "enabled": false
+          },
+          {
+            "title": "Synchronous Counter",
+            "file": "synccounter.txt",
+            "enabled": true
+          },
+          {
+            "title": "Up/Down Counter",
+            "file": "updownctr.txt",
+            "enabled": true
+          },
+          {
+            "title": "Decimal Counter",
+            "file": "deccounter.txt",
+            "enabled": true
+          },
+          {
+            "title": "Gray Code Counter",
+            "file": "graycode.txt",
+            "enabled": false
+          },
+          {
+            "title": "Johnson Counter",
+            "file": "johnsonctr.txt",
+            "enabled": true
+          },
+          {
+            "title": "Cascading Ring Counters",
+            "file": "ringcascade.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Shift Registers",
+        "children": [
+          {
+            "title": "Serial-In Parallel-Out",
+            "file": "sipo-sr.txt",
+            "enabled": true
+          },
+          {
+            "title": "Parallel-In Serial-Out",
+            "file": "piso-sr.txt",
+            "enabled": false
+          },
+          {
+            "title": "Universal",
+            "file": "unishiftreg.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Divide-by-2",
+        "file": "divideby2.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Divide-by-3",
+        "file": "divideby3.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "LED Flasher",
+        "file": "ledflasher.txt",
+        "enabled": false
+      },
+      {
+        "title": "Traffic Light",
+        "file": "traffic.txt",
+        "enabled": false
+      },
+      {
+        "title": "Static RAM",
+        "file": "sram.txt",
+        "enabled": true
+      },
+      {
+        "title": "Dynamic RAM",
+        "file": "dram.txt",
+        "enabled": true
+      },
+      {
+        "title": "TD4 CPU",
+        "children": [
+          {
+            "title": "TD4 LED Strobe",
+            "file": "td4.txt",
+            "enabled": false
+          },
+          {
+            "title": "TD4 Counter",
+            "file": "td4-ctr.txt",
+            "enabled": false
+          },
+          {
+            "title": "TD4 Down Counter",
+            "file": "td4-ctr-dn.txt",
+            "enabled": false
+          },
+          {
+            "title": "TD4 Up-Down Counter",
+            "file": "td4-ctr-up-dn.txt",
+            "enabled": false
+          },
+          {
+            "title": "TD4 Add 2",
+            "file": "td4-add2.txt",
+            "enabled": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Analog/Digital",
+    "children": [
+      {
+        "title": "Flash ADC",
+        "file": "flashadc.txt",
+        "enabled": false
+      },
+      {
+        "title": "Delta-Sigma ADC",
+        "file": "deltasigma.txt",
+        "enabled": false
+      },
+      {
+        "title": "Half-Flash (Subranging) ADC",
+        "file": "hfadc.txt",
+        "enabled": false
+      },
+      {
+        "title": "Binary-Weighted DAC",
+        "file": "dac.txt",
+        "enabled": true
+      },
+      {
+        "title": "R-2R Ladder DAC",
+        "file": "r2rladder.txt",
+        "enabled": true
+      },
+      {
+        "title": "Switch-Tree DAC",
+        "file": "swtreedac.txt",
+        "enabled": false
+      },
+      {
+        "title": "Digital Sine Wave",
+        "file": "digsine.txt",
+        "enabled": true
+      },
+      {
+        "title": "QAM-256 Modulator/Demodulator",
+        "file": "qam-256.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Power Converters",
+    "children": [
+      {
+        "title": "Boost Converter",
+        "file": "conv-boost.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Buck Converter",
+        "file": "conv-buck.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Buck-Boost Converter",
+        "file": "conv-buckboost.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Ćuk Converter",
+        "file": "conv-cuk.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "SEPIC Converter",
+        "file": "conv-sepic.txt",
+        "enabled": true,
+        "scopeWarning": true
+      }
+    ]
+  },
+  {
+    "title": "Phase-Locked Loops",
+    "children": [
+      {
+        "title": "XOR Phase Detector",
+        "file": "xorphasedet.txt",
+        "enabled": true
+      },
+      {
+        "title": "Type I PLL",
+        "file": "pll.txt",
+        "enabled": false
+      },
+      {
+        "title": "Phase Comparator (Type II)",
+        "file": "phasecomp.txt",
+        "enabled": false
+      },
+      {
+        "title": "Phase Comparator Internals",
+        "file": "phasecompint.txt",
+        "enabled": false
+      },
+      {
+        "title": "Type II PLL",
+        "file": "pll2.txt",
+        "enabled": false
+      },
+      {
+        "title": "Type II PLL (fast)",
+        "file": "pll2a.txt",
+        "enabled": false
+      },
+      {
+        "title": "Frequency Doubler",
+        "file": "freqdouble.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Transmission Lines",
+    "children": [
+      {
+        "title": "Simple TL",
+        "file": "tl.txt",
+        "enabled": true
+      },
+      {
+        "title": "Standing Wave",
+        "file": "tlstand.txt",
+        "enabled": true
+      },
+      {
+        "title": "Termination",
+        "file": "tlterm.txt",
+        "enabled": true
+      },
+      {
+        "title": "Mismatched lines (Pulse)",
+        "file": "tlmismatch.txt",
+        "enabled": true
+      },
+      {
+        "title": "Mismatched lines (Standing Wave)",
+        "file": "tlmis1.txt",
+        "enabled": true
+      },
+      {
+        "title": "Impedance Matching (L-Section)",
+        "file": "tlmatch1.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Impedance Matching (Shunt Stub)",
+        "file": "tlmatch2.txt",
+        "enabled": true,
+        "scopeWarning": true
+      },
+      {
+        "title": "Stub Frequency Response",
+        "file": "tlfreq.txt",
+        "enabled": true
+      },
+      {
+        "title": "Low-Pass Filter",
+        "file": "tllopass.txt",
+        "enabled": true
+      },
+      {
+        "title": "Light Switch",
+        "file": "tllight.txt",
+        "enabled": true
+      }
+    ]
+  },
+  {
+    "title": "Controlled Sources",
+    "children": [
+      {
+        "title": "VCCS Resistor",
+        "file": "cs-resistor.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCCS Varying Resistor",
+        "file": "cs-varyresistor.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Op-Amp",
+        "file": "cs-opamp.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Op-Amp With Rails",
+        "file": "cs-opamprail.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Multiplier",
+        "file": "cs-multiplier.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Full Rectifier",
+        "file": "cs-fullrectifier.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Voltage Ramp",
+        "file": "cs-ramp.txt",
+        "enabled": false
+      },
+      {
+        "title": "Current Adder",
+        "file": "cs-currentadder.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Integrator",
+        "file": "cs-integrator.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCVS Differentiator",
+        "file": "cs-diff.txt",
+        "enabled": false
+      },
+      {
+        "title": "CCVS Variable Inductor",
+        "file": "cs-varinduct.txt",
+        "enabled": false
+      },
+      {
+        "title": "VCCS Variable Capacitor",
+        "file": "cs-varicap.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Subcircuits",
+    "children": [
+      {
+        "title": "Full Rectifier",
+        "file": "fullrect-sc.txt",
+        "enabled": false
+      },
+      {
+        "title": "Full Adder (nested)",
+        "file": "adder4-sc.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Misc Devices",
+    "children": [
+      {
+        "title": "JFETs",
+        "children": [
+          {
+            "title": "JFET Current Source",
+            "file": "jfetcurrentsrc.txt",
+            "enabled": true
+          },
+          {
+            "title": "JFET Follower",
+            "file": "jfetfollower.txt",
+            "enabled": true
+          },
+          {
+            "title": "JFET Follower w/zero offset",
+            "file": "jfetfollower-nooff.txt",
+            "enabled": true
+          },
+          {
+            "title": "Common-Source Amplifier",
+            "file": "jfetamp.txt",
+            "enabled": true
+          },
+          {
+            "title": "Volume Control",
+            "file": "volume.txt",
+            "enabled": true
+          },
+          {
+            "title": "Lambda Diode",
+            "file": "lambda-diode.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Lambda Diode Oscillator",
+            "file": "lambda-diode-osc.txt",
+            "enabled": true,
+            "scopeWarning": true
+          }
+        ]
+      },
+      {
+        "title": "Tunnel Diodes",
+        "children": [
+          {
+            "title": "I/V Curve",
+            "file": "tdiode.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "LC Oscillator",
+            "file": "tdosc.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Relaxation Oscillator",
+            "file": "tdrelax.txt",
+            "enabled": true,
+            "scopeWarning": true
+          }
+        ]
+      },
+      {
+        "title": "Memristors",
+        "children": [
+          {
+            "title": "Memristor",
+            "file": "mr.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Sine Wave",
+            "file": "mr-sine.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Square Wave",
+            "file": "mr-square.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Triangle Wave",
+            "file": "mr-triangle.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Hard-Switching 1",
+            "file": "mr-sine2.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Hard-Switching 2",
+            "file": "mr-sine3.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "Crossbar Memory",
+            "file": "mr-crossbar.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Triodes",
+        "children": [
+          {
+            "title": "Triode",
+            "file": "triode.txt",
+            "enabled": true
+          },
+          {
+            "title": "Amplifier",
+            "file": "triodeamp.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Silicon-Controlled Rectifiers",
+        "children": [
+          {
+            "title": "SCR",
+            "file": "scr.txt",
+            "enabled": false
+          },
+          {
+            "title": "AC Trigger",
+            "file": "scractrig.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Current Conveyor",
+        "children": [
+          {
+            "title": "CCII+",
+            "file": "cc2.txt",
+            "enabled": false
+          },
+          {
+            "title": "CCII-",
+            "file": "cc2n.txt",
+            "enabled": false
+          },
+          {
+            "title": "Inductor Simulator",
+            "file": "ccinductor.txt",
+            "enabled": false
+          },
+          {
+            "title": "CCII+ Implementation",
+            "file": "cc2imp.txt",
+            "enabled": true
+          },
+          {
+            "title": "CCII- Implementation",
+            "file": "cc2impn.txt",
+            "enabled": true
+          },
+          {
+            "title": "Current Amplifier",
+            "file": "cciamp.txt",
+            "enabled": false
+          },
+          {
+            "title": "VCCS",
+            "file": "ccvccs.txt",
+            "enabled": false
+          },
+          {
+            "title": "Current Differentiator",
+            "file": "ccdiff.txt",
+            "enabled": false
+          },
+          {
+            "title": "Current Integrator",
+            "file": "ccint.txt",
+            "enabled": false
+          },
+          {
+            "title": "Current-Controlled Voltage Source",
+            "file": "ccitov.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Spark Gap",
+        "children": [
+          {
+            "title": "Sawtooth Generator",
+            "file": "spark-sawtooth.txt",
+            "enabled": true
+          },
+          {
+            "title": "Tesla Coil",
+            "file": "tesla.txt",
+            "enabled": true
+          },
+          {
+            "title": "Marx Generator",
+            "file": "spark-marx.txt",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "title": "Operational Transconductance Amplifier (OTA)",
+        "children": [
+          {
+            "title": "OTA Voltage Controlled Amplifier (VCA)",
+            "file": "ota-vca.txt",
+            "enabled": false
+          },
+          {
+            "title": "OTA Single Stage VCF (low pass)",
+            "file": "ota-vcf-single.txt",
+            "enabled": false
+          },
+          {
+            "title": "OTA Ring Modulator",
+            "file": "ota-ringmod.txt",
+            "enabled": false
+          },
+          {
+            "title": "LM137000 Gain Oddity",
+            "file": "ota-gain.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "Light Bulb",
+        "children": [
+          {
+            "title": "Light Bulb",
+            "file": "lightbulb.txt",
+            "enabled": false
+          },
+          {
+            "title": "Wien Bridge Oscillator",
+            "file": "wienbridge.txt",
+            "enabled": true,
+            "scopeWarning": true
+          }
+        ]
+      },
+      {
+        "title": "Varactor",
+        "children": [
+          {
+            "title": "Varactor",
+            "file": "varactor.txt",
+            "enabled": true,
+            "scopeWarning": true
+          },
+          {
+            "title": "VCO",
+            "file": "varactorvco.txt",
+            "enabled": true,
+            "scopeWarning": true
+          }
+        ]
+      },
+      {
+        "title": "Norton Amplifier",
+        "children": [
+          {
+            "title": "Norton Inverting Amplifier",
+            "file": "norton-invert.txt",
+            "enabled": false
+          },
+          {
+            "title": "Norton Noninverting Amplifier",
+            "file": "norton-noninvert.txt",
+            "enabled": false
+          },
+          {
+            "title": "Norton Sawtooth Oscillator",
+            "file": "norton-saw.txt",
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "title": "LED Array",
+        "file": "ledarray.txt",
+        "enabled": false
+      },
+      {
+        "title": "DIAC/TRIAC Dimmer",
+        "file": "triacdimmer.txt",
+        "enabled": false
+      },
+      {
+        "title": "Unijunction Oscillator",
+        "file": "ujtosc.txt",
+        "enabled": false
+      },
+      {
+        "title": "3-Phase Motor",
+        "file": "3motor.txt",
+        "enabled": false
+      },
+      {
+        "title": "Latching Relay",
+        "file": "latchingrelay.txt",
+        "enabled": false
+      },
+      {
+        "title": "Gyrator",
+        "file": "gyratorelm.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "2-D Scope",
+    "children": [
+      {
+        "title": "Lissajous Figures",
+        "file": "lissa.txt",
+        "enabled": false
+      },
+      {
+        "title": "Checkerboard",
+        "file": "plot2d-checker.txt",
+        "enabled": false
+      },
+      {
+        "title": "Color Checkerboard",
+        "file": "plot2d-color.txt",
+        "enabled": false
+      },
+      {
+        "title": "Smiley",
+        "file": "plot2d-smile.txt",
+        "enabled": false
+      }
+    ]
+  },
+  {
+    "title": "Blank Circuit",
+    "file": "blank.txt",
+    "enabled": true
+  }
+]

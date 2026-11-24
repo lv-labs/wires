@@ -69,7 +69,8 @@ if(!isMainThread){
       const compiled=CircuitDocumentAdapter.compile(d),base={documentId:d.id,circuitRevision:1,runEpoch:1};
       const initialized=await request('initialize',{fresh:true});assert.ok(initialized.result.models.includes(kind+'@1'));
       await request('installCircuit',{base:{documentId:null,circuitRevision:0,runEpoch:0},target:base,payload:{circuit:JSON.parse(compiled.canonical)}});
-      const count=steps??(kind==='transmissionLine'?150:levels||typeof control==='object'?250:10),channels=kind==='transmissionLine'?[{id:'right',positive:{componentId:'part',pinId:'right'},negative:null}]:levels?[{id:'q',positive:{componentId:'part',pinId:kind==='counter'?'Q0':'O0'},negative:null}]:typeof control==='object'?[{id:'a',positive:{componentId:'part',pinId:kind==='analogSwitch'?'b':'a'},negative:null}]:undefined;
+      const lineDelay=kind==='transmissionLine'?d.electrical.components.find(c=>c.id==='part').parameters.delay:0;
+      const count=steps??(lineDelay?Math.ceil(lineDelay/d.simulation.timeStep)+2:levels||typeof control==='object'?250:10),channels=kind==='transmissionLine'?[{id:'right',positive:{componentId:'part',pinId:'right'},negative:null}]:levels?[{id:'q',positive:{componentId:'part',pinId:kind==='counter'?'Q0':'O0'},negative:null}]:typeof control==='object'?[{id:'a',positive:{componentId:'part',pinId:kind==='analogSwitch'?'b':'a'},negative:null}]:undefined;
       const stepped=await request('step',{base,payload:{count,channels}});
       const direct=CircuitDocumentAdapter.createSession(createEngine());direct.loadDocument(d);const expected=direct.step(count,channels);
       if(channels){assert.deepEqual(stepped.result.sampleBatch,expected.sampleBatch);assert.equal(expected.sampleBatch.times.length,count);const values=Object.values(expected.sampleBatch.values)[0];assert.ok(Math.max(...values)>(kind==='transmissionLine'?2:4));assert.equal(Math.min(...values),0);}

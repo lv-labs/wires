@@ -23,7 +23,10 @@ if(!isMainThread){
  assert.deepEqual(catalog.simulationModels.voltageSource.postOrder,['n','p'],'Native post order differs from display order deliberately');
  const input=JSON.parse(await readFile(new URL('../docs/new-simulator/examples/voltage-divider.json',import.meta.url))),before=structuredClone(input);
  const model=editing.create(input,()=>{},{wireSections:true}),initial=model.document,canonical=adapter.compile(initial).canonical;
- model.execute({type:'transform',selection:[{kind:'component',id:'r1'}],dx:32,dy:16});
+ const connectedDrag=editing.createDragSession(initial,new Set([geometry.token('component','r1')]));
+ connectedDrag.update(0,-100);
+ model.execute({type:'replace',document:connectedDrag.finish()});
+ assert.equal(model.document.layout.components.r1.y,initial.layout.components.r1.y-100);
  assert.equal(adapter.compile(model.document).canonical,canonical);model.undo();assert.deepEqual(model.document,initial);
  model.execute({type:'setParameters',componentId:'r1',parameters:{resistance:2000}});assert.equal(model.document.electrical.components.find(c=>c.id==='r1').parameters.resistance,2000);
  model.undo();assert.deepEqual(model.document,initial);
@@ -31,7 +34,7 @@ if(!isMainThread){
  assert.throws(()=>model.execute({type:'invented'}),/Unknown editing command/);
  const detached=editing.applyCommand(initial,{type:'transform',selection:[{kind:'component',id:'r1'}],rotation:90});documents.validate(detached);assert.deepEqual(input,before,'One-shot commands preserve caller ownership');
  const base=editing.empty(),placed=editing.applyCommand(base,{type:'addComponent',kind:'resistor',x:128,y:128});assert.equal(base.electrical.components.length,0);assert.equal(placed.electrical.components.length,1);
- const pin=geometry.pin(placed,{kind:'pin',componentId:placed.electrical.components[0].id,pinId:'a'});assert.deepEqual(pin,{x:150,y:50});
+ const pin=geometry.pin(placed,{kind:'pin',componentId:placed.electrical.components[0].id,pinId:'a'});assert.deepEqual(pin,{x:250,y:150});
  const original=structuredClone(initial),session=editing.createDragSession(initial,new Set([geometry.token('component','r1')]));session.update(32,16);assert.deepEqual(initial,original);assert.deepEqual(session.cancel(),original);
  // A second frontend can drive the retained solver directly via the package.
  const engine=adapter.createSession(createEngine());engine.loadDocument(initial);const frame=engine.step(10);assert.ok(Math.abs(frame.pinVoltages.r2.a-2.5)<1e-10);
@@ -45,7 +48,7 @@ if(!isMainThread){
  const sandbox={structuredClone,crypto,console,setTimeout,clearTimeout};
  for(const name of ['document','window','localStorage','Worker','CircuitEditorModel','CircuitDocumentAdapter'])Object.defineProperty(sandbox,name,{get(){throw new Error('Core accessed UI dependency: '+name);}});
  const context=vm.createContext(sandbox);
- for(const name of ['catalog','geometry','document','falstad-xml','falstad','history','drag','commands','adapter','protocol','simulation','signals','browser-transport','index'])vm.runInContext(await readFile(new URL(`../packages/circuit-core/${name}.js`,import.meta.url),'utf8'),context,{filename:name+'.js'});
+ for(const name of ['catalog','geometry','document','falstad-xml','falstad-scopes','falstad','history','drag','commands','adapter','protocol','simulation','signals','browser-transport','index'])vm.runInContext(await readFile(new URL(`../packages/circuit-core/${name}.js`,import.meta.url),'utf8'),context,{filename:name+'.js'});
  const classic=context.CircuitCore;assert.ok(classic.falstad.importText('r 0 0 96 0 0 1000').document);
  const doc=classic.editing.applyCommand(classic.editing.empty(),{type:'addComponent',kind:'resistor',x:64,y:64});assert.equal(doc.electrical.components.length,1);
  assert.equal(classic.adapter.compile(initial).canonical,canonical);

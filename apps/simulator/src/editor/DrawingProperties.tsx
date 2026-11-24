@@ -75,6 +75,15 @@ export function DrawingProperties({
                 onChange={(e) => update({ fontSize: Number(e.target.value) })}
               />
             </label>
+            {!styleOnly && (
+              <label className="flex items-center gap-2 text-xs">
+                <Checkbox
+                  checked={draft.overline ?? false}
+                  onCheckedChange={(checked) => update({ overline: checked })}
+                />
+                Overline
+              </label>
+            )}
           </>
         )}
         <div className="grid grid-cols-2 gap-4">

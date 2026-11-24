@@ -23,7 +23,7 @@
         assert(['line','box','ellipse','polygon','text'].includes(d.kind)&&Array.isArray(d.points)&&d.points.every(point)&&(d.kind==='polygon'?d.points.length>=3&&d.points.length<=1000:d.points.length===counts[d.kind]),'Invalid drawing geometry');
         assert(color(d.stroke)&&color(d.fill)&&Number.isFinite(d.strokeWidth)&&d.strokeWidth>=0&&d.strokeWidth<=50&&['solid','dashed','dotted'].includes(d.strokeStyle),'Invalid drawing style');
         assert(d.rotation===undefined||Number.isFinite(d.rotation),'Invalid drawing rotation');
-        if(d.kind==='text')assert(typeof d.text==='string'&&d.text.length<=4096&&Number.isFinite(d.fontSize)&&d.fontSize>=8&&d.fontSize<=300,'Invalid drawing text');
+        if(d.kind==='text')assert(typeof d.text==='string'&&d.text.length<=4096&&Number.isFinite(d.fontSize)&&d.fontSize>=8&&d.fontSize<=300&&(d.overline===undefined||typeof d.overline==='boolean'),'Invalid drawing text');
       }
     }
     for (const c of e.components) {
@@ -46,6 +46,7 @@
       if (['transformer','tappedTransformer'].includes(c.kind)) assert(Number.isFinite(v.inductance) && v.inductance > 0 && Number.isFinite(v.ratio) && v.ratio > 0 && Number.isFinite(v.coupling) && v.coupling > 0 && v.coupling < 1 && ['backwardEuler', 'trapezoidal'].includes(v.integration), 'Transformer needs positive inductance/ratio and coupling strictly between 0 and 1');
       if (c.kind === 'inductor') assert(Number.isFinite(v.inductance) && v.inductance > 0 && Number.isFinite(v.initialCurrent) && ['backwardEuler', 'trapezoidal'].includes(v.integration), 'Invalid inductor parameters');
       if (c.kind === 'currentSource') assert(Number.isFinite(v.current) && Number.isFinite(v.maxVoltage) && v.maxVoltage >= 0, 'Invalid current source parameters');
+      if(c.kind==='transformer')assert(v.reverseSecondary===undefined||typeof v.reverseSecondary==='boolean','Invalid transformer secondary orientation');
       if (c.kind === 'potentiometer') {
         assert(Number.isFinite(v.resistance) && v.resistance > 0 && Number.isFinite(v.position) && v.position >= 0 && v.position <= 1, 'Potentiometer position must be between 0 and 1');
         assert(!Object.hasOwn(v, 'label') || typeof v.label === 'string', 'Potentiometer slider label must be text');
@@ -53,7 +54,7 @@
       if (c.kind === 'analogSwitch' || c.kind === 'analogSpdtSwitch') assert([v.onResistance, v.offResistance].every(r => Number.isFinite(r) && r > 0 && Number.isFinite(1 / r)) && Number.isFinite(v.threshold) && typeof v.inverted === 'boolean' && typeof v.pulldown === 'boolean', 'Invalid analog switch parameters');
       if (c.kind === 'output') assert(typeof v.showVoltage === 'boolean', 'Invalid output marker');
       if (c.kind === 'logicOutput') assert(Number.isFinite(v.threshold) && ['logic', 'numeric', 'ternary'].includes(v.mode) && typeof v.pulldown === 'boolean', 'Invalid logic output parameters');
-      if (c.kind === 'logicInput') assert(['logic', 'numeric', 'ternary'].includes(v.mode) && Number.isInteger(v.state) && v.state >= 0 && v.state <= (v.mode === 'ternary' ? 2 : 1) && Number.isFinite(v.highVoltage) && Number.isFinite(v.lowVoltage) && Number.isFinite(v.highVoltage - v.lowVoltage), 'Invalid logic input state or voltage');
+      if (c.kind === 'logicInput') assert(['logic', 'numeric', 'ternary'].includes(v.mode) && Number.isInteger(v.state) && v.state >= 0 && v.state <= (v.mode === 'ternary' ? 2 : 1) && Number.isFinite(v.highVoltage) && Number.isFinite(v.lowVoltage) && Number.isFinite(v.highVoltage - v.lowVoltage) && (v.momentary===undefined||typeof v.momentary==='boolean'), 'Invalid logic input state or voltage');
       if(['counter','latch','halfAdder','fullAdder'].includes(c.kind))assert(Number.isFinite(v.highVoltage)&&v.highVoltage>0,'Invalid chip logic voltage');
       if(['counter','latch'].includes(c.kind))assert(Number.isInteger(v.initialValue)&&v.initialValue>=0&&v.initialValue<=15,'Initial value must be 0 to 15');
       if(c.kind==='counter')assert(Number.isInteger(v.modulus)&&v.modulus>=0&&v.modulus<=16&&typeof v.invertReset==='boolean'&&typeof v.negativeEdge==='boolean','Invalid counter parameters');
@@ -85,6 +86,7 @@
       assert(p.scale === undefined || Number.isFinite(p.scale) && p.scale > 0, 'Invalid trace vertical scale');
       assert(p.offset === undefined || Number.isFinite(p.offset) && Math.abs(p.offset) <= 8, 'Invalid trace vertical position');
       assert(p.coupling === undefined || ['dc','ac'].includes(p.coupling), 'Invalid trace coupling');
+      assert(p.polarity === undefined || p.kind === 'current' && [1,-1].includes(p.polarity), 'Invalid trace current polarity');
     }
     if (l.scopes !== undefined) {
       const scopes = l.scopes, record = value => value && typeof value === 'object' && !Array.isArray(value);

@@ -113,9 +113,9 @@ export function useCircuitSession(
     setScopeData(scope.window(scopeSpan.current))
     const coordinator = run.current
     coordinator?.setSampleChannels(
-      channels.map(({ id, kind, componentId, positive, negative }) =>
+      channels.map(({ id, kind, componentId, positive, negative, polarity }) =>
         kind === "current"
-          ? { id, kind, componentId }
+          ? { id, kind, componentId, ...(polarity !== undefined ? { polarity } : {}) }
           : { id, positive, negative }
       )
     )

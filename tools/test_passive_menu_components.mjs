@@ -58,7 +58,13 @@ for(const timeStep of [1e-5,2e-5,5e-6])for(const steps of [1,2,10,100]){
  }
  session.reset();near(session.step(1).pinVoltages.part.right,0);
 }
-const line=passiveMenuCircuit('transmissionLine');line.electrical.wires=line.electrical.wires.filter(w=>w.from.pinId!=='leftReturn');assert.throws(()=>A.compile(line),/return pins/);
+const line=passiveMenuCircuit('transmissionLine');
+line.electrical.wires=line.electrical.wires.filter(w=>w.from.pinId!=='leftReturn');
+session.loadDocument(line);
+assert.throws(()=>session.step(250),/Need to ground transmission line/);
+line.electrical.wires.push({id:'driven-return',from:{kind:'pin',componentId:'vin',pinId:'p'},to:{kind:'pin',componentId:'part',pinId:'leftReturn'}});
+session.loadDocument(line);
+assert.throws(()=>session.step(2),/Need to ground transmission line/);
 for(const kind of ['tappedTransformer','customTransformer']){
  const d=passiveMenuCircuit(kind),pins=kind==='tappedTransformer'?['p1','p2']:['p1a','p1b'];d.electrical.wires=d.electrical.wires.filter(w=>![w.from,w.to].some(end=>end.componentId==='part'&&pins.includes(end.pinId)));assert.ok(A.compile(d).diagnostics.some(d=>d.code==='FLOATING_NET'));
 }

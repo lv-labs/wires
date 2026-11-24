@@ -7,9 +7,11 @@ TypeScript; simulation runs locally in your browser.
 
 ## Import Falstad circuits
 
-Use **File → Import Falstad…** to paste exported text/XML, or **Open…** for `.txt`/`.cir`/`.xml`
-files. The importer supports a measured subset and reports unsupported records.
-See [import coverage and remaining work](docs/new-simulator/FALSTAD-IMPORT.md).
+Use **File → Import Falstad…** to paste exported text or XML, or **File → Open
+from file…** for Falstad files. The **Circuits** menu follows the pinned Falstad
+submenu layout. The importer restores supported scopes and reports unsupported
+records and settings. See the [import guide](docs/new-simulator/FALSTAD-IMPORT.md)
+and the [active parity plan](docs/new-simulator/PLAN.md).
 
 ## Files, links and recovery
 
@@ -106,7 +108,8 @@ Source changes reach the live site when the updated build is committed and pushe
 | `docs` | Design contracts, examples and development notes |
 
 See [engine maintenance](engine/README.md) for engine builds and patch updates,
-and the [editor contract](docs/new-simulator/EDITOR-CONTRACT.md) for editor behavior.
+the [editor contract](docs/new-simulator/EDITOR-CONTRACT.md) for editor behavior,
+and the [handoff](docs/new-simulator/HANDOFF.md) for active checks and source paths.
 
 ## Acknowledgements and license
 

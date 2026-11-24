@@ -4,9 +4,10 @@ The circuit editor uses React/TypeScript, shadcn Base Mira and an SVG sheet.
 Circuit documents and editing operations come from `packages/circuit-core`; a
 dedicated Java/GWT CircuitJS worker retains the original simulation models.
 
-From the repository root, with Java 8, Node 24+ and pnpm 10.30.3:
+From the repository root, with Java 8, Python 3.9+, Node 24+ and pnpm 10.30.3:
 
 ```sh
+git submodule update --init engine/upstream
 pnpm deps:install
 pnpm engine:build
 pnpm dev
@@ -19,7 +20,8 @@ React files are in `apps/simulator/dist` and are committed for static hosting.
 See the root [deployment instructions](../../README.md#deploy-to-cloudflare-pages).
 
 `pnpm check` runs the computational suites, frontend production build, SSR render
-and packaged-worker checks. It does not launch browser interaction verification.
+and packaged-worker checks, then replays the saved engine references. Browser
+interaction checks are separate.
 For frontend-only work, `pnpm --dir apps/simulator build` uses the existing compiled engine;
 `pnpm --dir apps/simulator typecheck` checks the app and tooling TypeScript projects.
 

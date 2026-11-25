@@ -2,13 +2,11 @@ import { Lead } from "../svg";
 
 export const kind = "currentSource";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "I",
   name: "DC current source",
   pins: {
-    a: [-48, 0],
-    b: [48, 0],
+    a: [-150, 0],
+    b: [150, 0],
   },
   parameters: {
     current: 0.01,
@@ -19,15 +17,14 @@ export const metadata = {
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.a} to={[-24, 0]} />
-      <Lead from={metadata.pins.b} to={[24, 0]} />
-      <circle r={24} />
+      <Lead from={metadata.pins.a} to={[-50, 0]} />
+      <Lead from={metadata.pins.b} to={[50, 0]} />
+      <circle r={50} />
       <path
-        d="M -12 0
-          H 12
-          M 4 -7
-          L 12 0
-          L 4 7"
+        d="M -25 0
+          H 25
+          M 8 -15
+          L 25 0, 8 15"
       />
     </>
   );

@@ -3,12 +3,10 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "antennaSource";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "V",
   name: "Antenna",
   pins: {
-    p: [0, 32],
+    p: [0, 0],
   },
   parameters: {},
 } as const;
@@ -21,9 +19,9 @@ export const output = {
 export function Symbol({ pose }: SymbolProps) {
   return (
     <>
-      <circle r={20} />
-      <Lead from={metadata.pins.p} to={[0, 20]} />
-      <UprightText pose={pose} y={4} textAnchor="middle" fontSize={12}>
+      <circle cy={-100} r={50} />
+      <Lead from={metadata.pins.p} to={[0, -50]} />
+      <UprightText pose={pose} y={-90} textAnchor="middle" fontSize={30}>
         Ant
       </UprightText>
     </>

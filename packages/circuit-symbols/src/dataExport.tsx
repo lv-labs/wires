@@ -1,4 +1,4 @@
-import { TerminalBox } from "../svg";
+import { Lead, UprightText } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "dataExport";
@@ -30,5 +30,13 @@ export const output = {
 };
 
 export function Symbol({ pose }: SymbolProps) {
-  return <TerminalBox pin={metadata.pins.in} label="DATA" pose={pose} />;
+  return (
+    <>
+      <Lead from={metadata.pins.in} to={[-24, 0]} />
+      <rect x={-24} y={-16} width={48} height={32} />
+      <UprightText pose={pose} y={4} textAnchor="middle" fontSize={10}>
+        DATA
+      </UprightText>
+    </>
+  );
 }

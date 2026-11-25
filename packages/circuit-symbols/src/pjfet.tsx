@@ -3,14 +3,12 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "pjfet";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "Q",
   name: "PJFET",
   pins: {
-    gate: [-48, 0],
-    source: [48, 16],
-    drain: [48, -16],
+    gate: [-200, 0],
+    source: [100, 200],
+    drain: [100, -200],
   },
   parameters: {
     threshold: -4,
@@ -21,18 +19,19 @@ export const metadata = {
 export function Symbol({ pose }: SymbolProps) {
   return (
     <>
-      <Lead from={metadata.pins.gate} to={[-16, 0]} />
-      <Lead from={metadata.pins.drain} to={[-8, -16]} />
-      <Lead from={metadata.pins.source} to={[-8, 16]} />
+      <circle cx={50} r={111} strokeWidth={10} />
+      <Lead from={metadata.pins.gate} to={[10, 0]} />
+      <Lead from={metadata.pins.drain} to={[100, -55]} />
+      <Lead from={metadata.pins.source} to={[100, 50]} />
+      <path d="M 10 -75 V 75" strokeWidth={10} />
       <path
-        d="M -16 -20
-          V 20
-          M -8 -20
-          V 20"
+        d="M 100 -55
+          H 10
+          M 100 50
+          H 10"
       />
-      <UprightText pose={pose} y={5} fontSize={9}>
-        PJFET
-      </UprightText>
+      <polygon points="-40,0 -5,-15 -5,15" fill="currentColor" />
+
     </>
   );
 }

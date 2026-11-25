@@ -5,18 +5,9 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { EditorDialog } from "./EditorDialog"
 import { core } from "./core"
-import type { Component } from "./core"
+import type { Component, PropertySlider } from "./core"
 
-export type PropertySlider = {
-  id: string
-  componentId: string
-  field: string
-  label: string
-  min: number
-  max: number
-  step: number
-  logarithmic?: boolean
-}
+export type { PropertySlider } from "./core"
 
 export function numericProperties(
   parameters: Component["parameters"],

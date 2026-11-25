@@ -93,6 +93,16 @@ export type ProbeDisplay = {
   decimals?: number
   showLabel?: boolean
 }
+export type PropertySlider = {
+  id: string
+  componentId: string
+  field: string
+  label: string
+  min: number
+  max: number
+  step: number
+  logarithmic?: boolean
+}
 export type CircuitDocument = {
   schemaVersion: number
   id: string
@@ -111,6 +121,7 @@ export type CircuitDocument = {
     >
     drawings?: Drawing[]
     scopes?: ScopeLayout
+    propertySliders?: PropertySlider[]
     probes?: Record<string, Point & ProbeDisplay>
   }
   probes: (TraceSettings & {
@@ -263,7 +274,7 @@ export const core = implementation as {
       component: Component
     ): { x: number; y: number; right: number; bottom: number }
     graphicSize(component: Component): { width: number; height: number }
-    componentHitBox(component: Component): Point
+    componentHitBox(component: Component): Point & { centerX?: number; centerY?: number }
     probePoint(
       d: CircuitDocument,
       probe: CircuitDocument["probes"][number]
@@ -380,6 +391,8 @@ export const core = implementation as {
       definition?: { pins: Record<string, readonly number[]> }
     ): Record<string, [number, number]>
     gateKind(kind: string): boolean
+    counterKind(kind: string): boolean
+    displayChipKind(kind: string): boolean
     mosfetKind(kind: string): boolean
     mosfetOptions: Record<string, boolean>
     transistorModels: string[]

@@ -54,7 +54,7 @@
     return root;
   }
   function toLegacy(text) {
-    const diagnostics=[],lines=[],sourceLines=[],scopes=new Map(),routes=new Map();
+    const diagnostics=[],lines=[],sourceLines=[],scopes=new Map(),routes=new Map(),adjustables=new Map(),bitOrders=new Map();
     const error=(line,message)=>diagnostics.push({severity:'error',line,code:'UNSUPPORTED_XML_RECORD',message});
     let root;
     try{root=read(text.replace(/^\uFEFF/,''));}catch(cause){return {diagnostics:[{severity:'error',line:cause.line||1,code:'INVALID_XML',message:cause.message}]};}
@@ -86,22 +86,28 @@
       if(name==='o'||name==='Scope'){
         emit(line,name==='Scope'?'403':'o');scopes.set(lines.length,node);continue;
       }
-      if(name==='h'||name==='adj'){emit(line,name==='adj'?'&':name);continue;}
+      if(name==='adj'){emit(line,'&');adjustables.set(lines.length,node);continue;}
+      if(name==='h'){emit(line,name);continue;}
       try{
         if(node.children.length||(name!=='rw'&&node.text?.trim()))throw new Error(`Unsupported nested XML record <${name}>`);
         const voltage=['wf','fr','maxv','bias','phaseShift','dutyCycle','riseTime','ir'];
         const gate=Object.hasOwn(gateTypes,name);
+        const counterType={RingCounter:'163',Decade:'163',ctr:'164',Counter:'164',ctr2:'421',Counter2:'421'}[name];
+        const controlledType={VCVS:'212',VCCS:'213',CCVS:'214',CCCS:'215'}[name];
         const flipFlopType={DFlipFlop:'155',JKFlipFlop:'156',TFlipFlop:'193'}[name];
         const flipFlopState=flipFlopType==='156'?'v3':'v1';
-        const allowed=gate?['in','o','hi','pd']:flipFlopType?['hv',flipFlopState]:{
+        const allowed=gate?['in','o','hi','pd']:controlledType?['hv','ic','ex']:flipFlopType?['hv',flipFlopState]:counterType?
+          ['bi','bo','hv',...(counterType==='163'?[]:counterType==='164'?['in','mo']:['mo']),...Array.from({length:32},(_,i)=>'v'+i)]:{
           w:[],rw:[],ln:['te'],x:['si','te'],b:[],Line:[],t:['pn','be','mo','vbe','vbc'],f:['vt','be'],j:['vt','be'],r:['r'],c:['c','iv','sr','vd'],pc:['c','iv','sr','vd','mv'],l:['l','ic','isat','i'],
           v:voltage,R:voltage,A:voltage,VarRail:[...voltage,'st'],sw:['mi','ma','mv','sw'],tl:['de','im','wi'],
           AM:['cf','sf','mv'],FM:['cf','sf','mv','dv'],aout:['du','sa','la'],
           T:['in','ra','co','wi','isat','c0','c1'],tt:['in','ra','co','c0','c1','c2'],
           as:['ron','roff','th'],as2:['ron','roff','th'],Schmitt:['slr','lt','ut','lon','loff'],InvertingSchmitt:['slr','lt','ut','lon','loff'],
           Ammeter:['me','sc'],TestPoint:['me','lb'],m:['ron','rof','do','to','mo'],dd:['bc','dm','bo','hv'],
+          ssd:['bi','bo','hv','ba','ex','di'],LEDArray:['sx','sy'],
           SparkGap:['on','of','br','ho'],TunnelDiode:[],Lamp:['te','np','nv','wa','co'],Varactor:['mo','ca','ba'],Triode:['mu','kg'],
           rl:['mo','i','ip','po','in','ron','roff','on','coR','of','sw'],Timer:['hv','v5'],SCR:['tr','ho','gr'],Diac:['ron','roff','bd','hc'],Triac:['ti','hi','cr','st'],
+          CC2:['hv','ga'],CC2Neg:['hv','ga'],
           a:['ma','mi','ga','vd'],g:['sy'],i:['cu','mv'],s:['p','mm','lab','key','r'],O:['sc'],L:['p','mm','lab','key','r','hi','lo'],
           M:['th'],d:['mo'],z:['mo'],LED:['mo','cr','cg','cb','mbc'],S:['p','mm','lab','key','r','li','th'],pt:['ma','po','sl','li'],I:['sl','hi'],p:['me','sc','re'],
         }[name];
@@ -109,7 +115,25 @@
         check(node,['x','f',...allowed]);
         if(!a.x||a.x.trim().split(/\s+/).length!==4)throw new Error(`Expected four coordinates on <${name}>`);
         const defaultFlags={sw:2,as:2,as2:2,Ammeter:3,Triode:2,SCR:1};
-        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(flipFlopType||name==='Timer'||name==='dd'?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
+        const conveyor=name==='CC2'||name==='CC2Neg';
+        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(flipFlopType||conveyor||controlledType||counterType||['Timer','dd','ssd','LEDArray'].includes(name)?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
+        if(counterType){
+          const ring=counterType==='163',binary=counterType==='164';
+          const bits=num('bi',ring?10:4),order=num('bo',0),voltage=num('hv',5);
+          if(!Number.isInteger(bits)||bits<(binary?3:2)||bits>30)throw new Error('Unsupported counter width');
+          if(![0,1].includes(order))throw new Error('Bus counter pins are not supported');
+          if(voltage!==5||flags&8192)flags|=8192;
+          const outputs=Array.from({length:bits},(_,i)=>num('v'+(i+(ring||binary?2:0)),0));
+          fields=[bits,...(flags&8192?[voltage]:[]),...outputs];
+          if(binary)fields.push(a.in??'false');
+          if(!ring)fields.push(num('mo',0));
+          bitOrders.set(lines.length+1,order);
+        }
+        if(controlledType){
+          if(a.hv!==undefined)flags|=8192;
+          const expression=a.ex??(name.startsWith('CC')?'2*a':'.1*(a-b)');
+          fields=[...(flags&8192?[num('hv',5)]:[]),num('ic',2),escapeText(expression)];
+        }
         if(name==='ln'){
           flags|=4;fields=[escapeText(a.te??'label')];
         }
@@ -139,10 +163,16 @@
           if(name==='pc')fields.push(num('mv',1));
         }
         if(name==='Ammeter')fields=[num('me',0),num('sc',0)];
-        if(name==='dd'){
-          if(num('bo',0)!==0||num('hv',5)!==5)throw new Error('Unsupported decimal display bit order or logic voltage');
-          fields=[num('bc',4),num('dm',0)];
+        if(name==='dd'||name==='ssd'){
+          const order=num('bo',0),voltage=num('hv',5);
+          if(![0,1].includes(order))throw new Error('Bus display pins are not supported');
+          if(voltage!==5)flags|=8192;
+          if(a.bi!==undefined)num('bi');
+          const configuration=name==='dd'?[num('bc',4),num('dm',0)]:[num('ba',7),num('ex',0),num('di',0)];
+          fields=[...(flags&8192?[voltage]:[]),...configuration];
+          bitOrders.set(lines.length+1,order);
         }
+        if(name==='LEDArray')fields=[num('sx',8),num('sy',8)];
         if(name==='m')fields=[num('ron',100),num('rof',16000),num('do',0),num('to',1e-8),num('mo',1e-10)];
         if(name==='SparkGap')fields=[num('on',1e3),num('of',1e9),num('br',1e3),num('ho',.001)];
         if(name==='Lamp')fields=[num('te',300),num('np',100),num('nv',120),num('wa',.4),num('co',.4)];
@@ -166,6 +196,10 @@
           const m=(key,fallback)=>numeric(model,key,fallback);
           fields=[m('po',1),m('in',.2),num('i',0),m('ron',.05),m(a.mo===undefined?'roff':'rof',1e6),
             m('on',.02),m('coR',20),m('of',.015),m('sw',.005),num('ip',0)];
+        }
+        if(conveyor){
+          if(a.hv!==undefined)flags|=8192;
+          fields=[...(flags&8192?[num('hv',5)]:[]),num('ga',1)];
         }
         if(name==='Timer'){
           const voltage=num('hv',5);
@@ -241,16 +275,17 @@
             routes.set(lines.length+1,points.slice(1,-1));
           }else diagnostics.push({severity:'warning',line,code:'UNSUPPORTED_PRESENTATION',message:'Saved wire route endpoints differ from the circuit. The wire will use an orthogonal route.'});
         }
-        const type=gate?gateTypes[name]:flipFlopType||{
+        const type=gate?gateTypes[name]:counterType||controlledType||flipFlopType||{
           pt:'174',VarRail:'172',sw:'170',tl:'171',tt:'169',ln:'207',rw:'w',AM:'200',FM:'201',aout:'211',
           LED:'162',as:'159',as2:'160',Schmitt:'182',InvertingSchmitt:'183',pc:'209',Ammeter:'370',TestPoint:'368',dd:'419',
+          ssd:'157',LEDArray:'405',
           SparkGap:'187',TunnelDiode:'175',Lamp:'181',Varactor:'176',Triode:'173',Line:'423',
-          SCR:'177',Diac:'203',Triac:'206',Timer:'165',rl:'178',
+          SCR:'177',Diac:'203',Triac:'206',Timer:'165',rl:'178',CC2:'179',CC2Neg:'179',
         }[name]||name;
         emit(line,`${type} ${coordinates.join(' ')} ${flags} ${fields.join(' ')}`.trim());
       }catch(cause){error(line,cause.message);}
     }
-    return {text:lines.join('\n'),sourceLines,diagnostics,scopes,routes};
+    return {text:lines.join('\n'),sourceLines,diagnostics,scopes,routes,adjustables,bitOrders};
   }
   const api=Object.freeze({toLegacy});registry.falstad_xml=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

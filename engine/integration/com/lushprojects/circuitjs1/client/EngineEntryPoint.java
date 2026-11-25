@@ -58,12 +58,27 @@ public class EngineEntryPoint implements EntryPoint {
                 if (passiveModel != null) { passiveModel.setPoints(); elements.add(passiveModel); continue; }
                 CircuitElm semiconductor = EngineSemiconductorSupport.construct(fields, x1, y1, x2, y2, flags, timeStep);
                 if (semiconductor != null) { semiconductor.setPoints(); elements.add(semiconductor); continue; }
+                ChipElm displayChip = EngineDisplaySupport.construct(fields, x1, y1, x2, y2, flags);
+                if (displayChip != null) { displayChip.setPoints(); elements.add(displayChip); continue; }
                 CircuitElm output = EngineOutputSupport.construct(fields,timeStep);
                 if (output != null) { output.setPoints(); elements.add(output); continue; }
+                VCCSElm controlled = EngineControlledSourceSupport.construct(fields,x1,y1,x2,y2,flags);
+                if (controlled != null) { controlled.setPoints(); elements.add(controlled); continue; }
+                ChipElm counter = EngineCounterSupport.construct(fields,x1,y1,x2,y2,flags);
+                if (counter != null) { counter.setPoints(); elements.add(counter); continue; }
                 if (type.equals("178")) {
                     RelayElm relay = EngineRelaySupport.construct(fields,x1,y1,x2,y2,flags,timeStep);
                     relay.setPoints();
                     elements.add(relay);
+                    continue;
+                }
+                if (type.equals("179")) {
+                    if (fields.length != 7 || flags != 0 || y1 != 32 || y2 != 32 || x2-x1 != 64 ||
+                        !finite(Double.parseDouble(fields[6])))
+                        throw new IllegalArgumentException("Invalid current conveyor flags, geometry or gain");
+                    CC2Elm conveyor = new CC2Elm(x1, y1, x2, y2, flags, new StringTokenizer(fields[6]));
+                    conveyor.setPoints();
+                    elements.add(conveyor);
                     continue;
                 }
                 if (type.equals("165")) {
@@ -88,22 +103,21 @@ public class EngineEntryPoint implements EntryPoint {
                     type.equals("174") ? 9 : type.equals("i") ? 8 : type.equals("l") ? 10 : type.equals("s") ? 8 :
                     voltage || type.equals("a") ? 12 : type.equals("w") || type.equals("g") || type.equals("d") ? 6 : -1;
                 boolean passive = type.equals("169") || type.equals("406") || type.equals("171") || type.equals("416");
-                boolean nextChip = type.equals("164") || type.equals("168") || type.equals("195") || type.equals("196");
+                boolean nextChip = type.equals("168") || type.equals("195") || type.equals("196");
                 int extraVoltage = (flags & 8192) != 0 ? 1 : 0;
-                boolean countOk = passive ? fields.length == (type.equals("169") ? 12 : type.equals("406") ? 13 : type.equals("171") ? 10 : 9) : nextChip ? fields.length == ((type.equals("164") ? 13 : type.equals("168") ? 11 : type.equals("195") ? 6 : 7) + extraVoltage) : chip ? fields.length == (((flags & 8192) != 0) ? 9 : 8) :
+                boolean countOk = passive ? fields.length == (type.equals("169") ? 12 : type.equals("406") ? 13 : type.equals("171") ? 10 : 9) : nextChip ? fields.length == ((type.equals("168") ? 11 : type.equals("195") ? 6 : 7) + extraVoltage) : chip ? fields.length == (((flags & 8192) != 0) ? 9 : 8) :
                     display ? (type.equals("L") ? (fields.length == 8 || fields.length == 10) :
                     (fields.length == 6 || fields.length == 7)) : (gate ? fields.length == 9 || fields.length == 10 : fields.length == expected);
                 if (!countOk)
                     throw new IllegalArgumentException("Unsupported type or field count: " + type);
                 int chipFlags = flags & ~8192;
-                boolean nextChipFlags = type.equals("164") ? chipFlags == 0 || chipFlags == 8 :
-                    type.equals("168") ? chipFlags == 2 || chipFlags == 6 : type.equals("196") ? chipFlags == 2 : chipFlags == 0;
+                boolean nextChipFlags = type.equals("168") ? chipFlags == 2 || chipFlags == 6 : type.equals("196") ? chipFlags == 2 : chipFlags == 0;
                 if (nextChip && !nextChipFlags)
                     throw new IllegalArgumentException("Unsupported chip flags");
                 if (flags != 0 && !(gate && (flags == 2 || flags == 4 || flags == 6)) && !(passive && (type.equals("169") || type.equals("406")) && flags == 2) && !(nextChip && nextChipFlags) && !(chip && (type.equals("156") ? (flags == 4 || flags == 8192 || flags == 8196) : flags == 8192)) && !(analog && flags >= 0 && flags <= 3) && !(display && flags >= 0 && flags <= (type.equals("M") ? 7 : 3)) && !((type.equals("S") || type.equals("162") || type.equals("z")) && flags == 1) && !(type.equals("T") && flags == 2) && !(fet && (type.equals("f") ? flags >= 0 && flags <= 255 : flags == 1)) && !((capacitor || type.equals("l")) && flags == 2) && !(type.equals("a") && flags == 8) && !(voltage && flags == 4 && fields[6].equals("5")))
                     throw new IllegalArgumentException("Unsupported flags");
                 for (int i = 6; i < fields.length; i++)
-                    if (!(type.equals("406") && i == 8) && !(type.equals("416") && i == 7) && !(type.equals("164") && i == fields.length - 2) && !((type.equals("s") || type.equals("S") || type.equals("429")) && i == 7) && !(type.equals("L") && i == 7) && !(type.equals("174") && i == 8) && !finite(Double.parseDouble(fields[i])))
+                    if (!(type.equals("406") && i == 8) && !(type.equals("416") && i == 7) && !((type.equals("s") || type.equals("S") || type.equals("429")) && i == 7) && !(type.equals("L") && i == 7) && !(type.equals("174") && i == 8) && !finite(Double.parseDouble(fields[i])))
                         throw new IllegalArgumentException("Non-finite parameter");
                 if ((type.equals("r") || capacitor || type.equals("l")) && Double.parseDouble(fields[6]) <= 0)
                     throw new IllegalArgumentException("Resistance/capacitance must be positive");
@@ -148,17 +162,12 @@ public class EngineEntryPoint implements EntryPoint {
                     base += extraVoltage;
                     if ((!half && !fields[6].equals("4")) || hv <= 0 || !finite(hv) || y1 != y2 || x2-x1 != 64)
                         throw new IllegalArgumentException("Invalid chip size, geometry or logic voltage");
-                    if (type.equals("164") || type.equals("168"))
+                    if (type.equals("168"))
                         for (int i = 0; i < 4; i++) {
                             double state = Double.parseDouble(fields[base+i]);
                             if (state != 0 && state != hv)
                                 throw new IllegalArgumentException("Invalid stored chip output");
                         }
-                    if (type.equals("164")) {
-                        int modulus = Integer.parseInt(fields[fields.length-1]);
-                        if (!(fields[fields.length-2].equals("true") || fields[fields.length-2].equals("false")) || modulus < 0 || modulus > 16)
-                            throw new IllegalArgumentException("Invalid counter reset polarity or modulus");
-                    }
                 }
                 if (chip) {
                     int base = ((flags & 8192) != 0) ? 7 : 6;
@@ -279,7 +288,6 @@ public class EngineEntryPoint implements EntryPoint {
                 else if (type.equals("406")) elm = new CustomTransformerElm(x1, y1, x2, y2, flags, tokens);
                 else if (type.equals("171")) elm = new TransLineElm(x1, y1, x2, y2, flags, tokens);
                 else if (type.equals("416")) elm = new MBBSwitchElm(x1, y1, x2, y2, flags, tokens);
-                else if (type.equals("164")) elm = new CounterElm(x1, y1, x2, y2, flags, tokens);
                 else if (type.equals("168")) elm = new LatchElm(x1, y1, x2, y2, flags, tokens);
                 else if (type.equals("195")) elm = new HalfAdderElm(x1, y1, x2, y2, flags, tokens);
                 else if (type.equals("196")) elm = new FullAdderElm(x1, y1, x2, y2, flags, tokens);

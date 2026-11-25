@@ -89,7 +89,25 @@ XML exports use the same supported component set, including `VarRail` and `pt`.
 The DOM-free XML reader decodes attributes/entities, validates structure, preserves
 source line diagnostics and maps XML defaults separately from legacy text defaults.
 Unsupported XML components and attributes produce specific errors. DTDs and entity
-declarations are rejected. Hint and adjustable XML records warn as in text.
+declarations are rejected. XML sliders that adjust the current of an independent
+current source or the voltage of an unbiased DC source are saved with the circuit.
+Other adjustable records and circuit hints produce import warnings.
+
+VCVS, VCCS, CCVS and CCCS preserve their input count and output expression in
+both formats. Current-controlled models use their built-in current-sensing
+terminal pairs. The SPICE option that senses current through a separate voltage
+source is unsupported.
+
+Ring counter (`163`), binary counter (`164`) and counter with load (`421`)
+records preserve saved outputs, width, native pin positions and supported
+clock/reset options. XML also preserves the selected order of discrete pins.
+Bus counter pins are unsupported.
+
+Decimal display (`419`, XML `dd`) preserves 1–16 discrete bits, radix,
+logic voltage and XML bit order. Segment display (`157`, XML `ssd`) preserves
+7, 14 or 16 segments, the decimal point or colon, and logic or diode inputs.
+LED arrays (`405`, XML `LEDArray`) preserve 2–16 rows and columns and their
+native terminal positions. Bus display pins are unsupported.
 
 Ordinary voltage and supported component-current scopes import from legacy text,
 multi-plot text and XML. Wires restores docked pane grouping, trace labels,
@@ -112,10 +130,18 @@ it also steps past the longest configured propagation delay.
 `node tools/generate_falstad_examples.mjs --check --report` verifies the saved
 library and prints each disabled entry's first blocker.
 
-The menu currently enables 292 of 367 entries, including Blank Circuit and all
-ten **Transmission Lines** examples, across 291 distinct files. Of those files,
-185 open with imported scope panes. The nine native 555 examples and nine
-ordinary relay examples are enabled.
+The menu currently enables 319 of 367 entries, including Blank Circuit and all
+ten **Transmission Lines** examples, across 318 distinct files. Of those files,
+202 open with imported scope panes. The nine native 555 examples, nine
+ordinary relay examples, eight current conveyor examples, and all twelve
+**Controlled Sources** examples are enabled. The VCVS Multiplier and VCVS Full
+Rectifier warn about the saved maximum-scale scope option.
+The Cascading Ring Counters, LED Flasher, Traffic Light and Gray Code Counter
+examples are enabled, along with 7-Segment LED Decoder, 8-Bit Ripple Counter and
+Flash ADC. The LED Array example remains blocked by the demultiplexer and
+custom logic records.
+VCCS, Current Integrator, and Current-Controlled Voltage Source in the
+**Current Conveyor** submenu warn about saved wire-current traces.
 The separate `node tools/audit_falstad_import.mjs`
 audit covers all 373 bundled files,
 including files outside the menu. Three inductor-kick examples encounter the

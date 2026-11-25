@@ -3,13 +3,12 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "lamp";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "LP",
   name: "Lamp",
   pins: {
-    a: [-48, 0],
-    b: [48, 0],
+    a: [-100, 0],
+    b: [100, 0],
   },
   parameters: {
     nominalPower: 100,
@@ -58,14 +57,14 @@ export function Symbol({ measured }: SymbolProps) {
   const brightness = Math.max(0, Math.min(1, (temperature - 700) / 2000));
   return (
     <>
-      <Lead from={metadata.pins.a} to={[-24, 0]} />
-      <Lead from={metadata.pins.b} to={[24, 0]} />
-      <circle r={24} fill={`rgba(255,175,55,${brightness})`} />
+      <Lead from={metadata.pins.a} to={[-50, 0]} />
+      <Lead from={metadata.pins.b} to={[50, 0]} />
+      <circle r={50} fill={`rgba(255,175,55,${brightness})`} />
       <path
-        d="M -16 -16
-          L 16 16
-          M -16 16
-          L 16 -16"
+        d="M -35 -35
+          L 35 35
+          M -35 35
+          L 35 -35"
       />
     </>
   );

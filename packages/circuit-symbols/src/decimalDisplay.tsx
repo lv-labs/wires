@@ -3,18 +3,19 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "decimalDisplay";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "DISP",
-  name: "Decimal display (4 bit)",
+  name: "Decimal display",
   pins: {
-    I0: [-48, 48],
-    I1: [-48, 16],
-    I2: [-48, -16],
-    I3: [-48, -48],
+    I0: [-150, 150],
+    I1: [-150, 50],
+    I2: [-150, -50],
+    I3: [-150, -150],
   },
   parameters: {
     mode: 0,
+    bitCount: 4,
+    highVoltage: 5,
+    lsbFirst: false,
   },
 } as const;
 
@@ -28,14 +29,37 @@ export const output = {
       max: 2,
       integer: true,
     },
+    bitCount: {
+      label: "Bits · 1 to 16",
+      type: "number",
+      min: 1,
+      max: 16,
+      integer: true,
+      optional: true,
+    },
+    highVoltage: {
+      label: "Logic high voltage · V",
+      type: "number",
+      exclusiveMin: 0,
+      optional: true,
+    },
+    lsbFirst: {
+      label: "Least significant bit first",
+      type: "boolean",
+      optional: true,
+    },
   },
   sign: null,
 };
 
-export function Symbol({ measured, pose }: SymbolProps) {
+export function Symbol({
+  measured,
+  pose,
+  pinPositions = metadata.pins,
+}: SymbolProps) {
   return (
     <Display
-      pins={metadata.pins}
+      pins={pinPositions}
       value={String(measured?.text ?? "—")}
       pose={pose}
     />

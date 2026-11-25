@@ -33,6 +33,8 @@ final class EngineCircuitUpdate {
         if(old instanceof InverterElm){InverterElm a=(InverterElm)old,b=(InverterElm)fresh;a.slewRate=b.slewRate;a.highVoltage=b.highVoltage;}
         if(old instanceof ChipElm){ChipElm a=(ChipElm)old,b=(ChipElm)fresh;a.highVoltage=b.highVoltage;}
         if(old instanceof RelayElm)EngineRelaySupport.configure((RelayElm)old,(RelayElm)fresh);
+        if(old instanceof CC2Elm)((CC2Elm)old).gain=((CC2Elm)fresh).gain;
+        if(old instanceof VCCSElm)EngineControlledSourceSupport.configure((VCCSElm)old,(VCCSElm)fresh);
         if(old instanceof TimerElm){
             TimerElm timer=(TimerElm)old;
             double[] previousVoltages=timer.volts;
@@ -40,7 +42,8 @@ final class EngineCircuitUpdate {
             if(timer.volts!=previousVoltages)
                 System.arraycopy(previousVoltages,0,timer.volts,0,Math.min(previousVoltages.length,timer.volts.length));
         }
-        if(old instanceof CounterElm){CounterElm a=(CounterElm)old,b=(CounterElm)fresh;a.modulus=b.modulus;a.invertreset=b.invertreset;}
+        if(old instanceof RingCounterElm||old instanceof CounterElm||old instanceof Counter2Elm)
+            EngineCounterSupport.configure((ChipElm)old,(ChipElm)fresh);
         if(old instanceof TransformerElm){TransformerElm a=(TransformerElm)old,b=(TransformerElm)fresh;a.inductance=b.inductance;a.ratio=b.ratio;a.couplingCoef=b.couplingCoef;a.saturationCurrent=b.saturationCurrent;}
         if(old instanceof TappedTransformerElm){TappedTransformerElm a=(TappedTransformerElm)old,b=(TappedTransformerElm)fresh;a.inductance=b.inductance;a.ratio=b.ratio;a.couplingCoef=b.couplingCoef;}
         if(old instanceof CustomTransformerElm){CustomTransformerElm a=(CustomTransformerElm)old,b=(CustomTransformerElm)fresh;a.inductance=b.inductance;a.couplingCoef=b.couplingCoef;a.description=b.description;}
@@ -51,8 +54,16 @@ final class EngineCircuitUpdate {
         if(old instanceof TestPointElm){TestPointElm a=(TestPointElm)old,b=(TestPointElm)fresh;a.meter=b.meter;a.label=b.label;}
         if(old instanceof AmmeterElm){AmmeterElm a=(AmmeterElm)old,b=(AmmeterElm)fresh;a.meter=b.meter;}
         if(old instanceof WattmeterElm){WattmeterElm a=(WattmeterElm)old,b=(WattmeterElm)fresh;a.meter=b.meter;}
-        if(old instanceof DecimalDisplayElm){DecimalDisplayElm a=(DecimalDisplayElm)old,b=(DecimalDisplayElm)fresh;a.displayMode=b.displayMode;}
-        if(old instanceof InstructionDisplayElm){InstructionDisplayElm a=(InstructionDisplayElm)old,b=(InstructionDisplayElm)fresh;a.threshold=b.threshold;a.lookupText=b.lookupText;}
+        if(old instanceof DecimalDisplayElm)EngineDisplaySupport.configure((DecimalDisplayElm)old,(DecimalDisplayElm)fresh);
+        if(old instanceof SevenSegElm)EngineDisplaySupport.configure((SevenSegElm)old,(SevenSegElm)fresh);
+        if(old instanceof LEDArrayElm)EngineDisplaySupport.configure((LEDArrayElm)old,(LEDArrayElm)fresh);
+        if(old instanceof InstructionDisplayElm){
+            InstructionDisplayElm a=(InstructionDisplayElm)old,b=(InstructionDisplayElm)fresh;
+            a.threshold=b.threshold;
+            a.lookupText=b.lookupText;
+            if(a.busWidth!=b.busWidth){a.busWidth=b.busWidth;a.allocNodes();}
+            a.parseEntries(null);
+        }
         if(old instanceof StopTriggerElm){StopTriggerElm a=(StopTriggerElm)old,b=(StopTriggerElm)fresh;a.triggerVoltage=b.triggerVoltage;a.delay=b.delay;a.type=b.type;}
         if(old instanceof LEDElm){LEDElm a=(LEDElm)old,b=(LEDElm)fresh;a.maxBrightnessCurrent=b.maxBrightnessCurrent;a.colorR=b.colorR;a.colorG=b.colorG;a.colorB=b.colorB;}
         if(old instanceof InductorElm){InductorElm a=(InductorElm)old,b=(InductorElm)fresh;a.inductance=b.inductance;a.initialCurrent=b.initialCurrent;a.saturationCurrent=b.saturationCurrent;a.ind.setup(a.inductance,a.current,a.flags,a.saturationCurrent);}
@@ -64,7 +75,6 @@ final class EngineCircuitUpdate {
             if(a.model.junctionCapBE==0&&a.model.transitTimeF==0)a.geqBE=a.ceqBE=a.capCurBE=0;
             if(a.model.junctionCapBC==0&&a.model.transitTimeR==0)a.geqBC=a.ceqBC=a.capCurBC=0;
         }
-        if(old instanceof InstructionDisplayElm)((InstructionDisplayElm)old).parseEntries(null);
         if(old instanceof TransLineElm){TransLineElm a=(TransLineElm)old,b=(TransLineElm)fresh;if(a.delay!=b.delay){a.delay=b.delay;a.reset();}a.imped=b.imped;}
         if(old instanceof DataRecorderElm){DataRecorderElm a=(DataRecorderElm)old,b=(DataRecorderElm)fresh;if(a.dataCount!=b.dataCount){a.dataCount=b.dataCount;a.data=b.data;a.dataPtr=0;a.dataFull=false;}}
         if(old instanceof AudioOutputElm){AudioOutputElm a=(AudioOutputElm)old,b=(AudioOutputElm)fresh;if(a.duration!=b.duration||a.samplingRate!=b.samplingRate){a.duration=b.duration;a.samplingRate=b.samplingRate;a.dataCount=b.dataCount;a.data=b.data;a.sampleStep=b.sampleStep;a.reset();EngineOutputSupport.initialize(a);}}

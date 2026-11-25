@@ -6,7 +6,7 @@ export const metadata = {
   // Original 16-unit artwork, scaled to the 50-unit sheet grid.
   drawingScale: 3.125,
   prefix: "U",
-  name: "Counter (4 bit)",
+  name: "Counter",
   pins: {
     clock: [-48, -48],
     reset: [-48, 48],
@@ -21,19 +21,24 @@ export const metadata = {
     modulus: 0,
     invertReset: true,
     negativeEdge: false,
+    bits: 4,
+    upDown: false,
+    lsbFirst: false,
   },
 } as const;
 
 export function Symbol({
   parameters = metadata.parameters,
+  pinPositions = metadata.pins,
   pose,
 }: SymbolProps) {
   return (
     <Chip
-      pins={metadata.pins}
+      pins={pinPositions}
       labels={{
         clock: parameters.negativeEdge ? "○▷" : "▷",
-        reset: parameters.invertReset ? "R̅" : "reset",
+        reset: parameters.invertReset ? "R̅" : "R",
+        direction: "U/D",
       }}
       pose={pose}
     />

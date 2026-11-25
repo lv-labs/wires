@@ -1396,7 +1396,7 @@
       {
         "title": "7-Segment LED Decoder",
         "file": "7segdecoder.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Brent-Kung Adder",
@@ -1454,7 +1454,7 @@
           {
             "title": "8-Bit Ripple Counter",
             "file": "counter8.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Synchronous Counter",
@@ -1474,7 +1474,7 @@
           {
             "title": "Gray Code Counter",
             "file": "graycode.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Johnson Counter",
@@ -1484,7 +1484,7 @@
           {
             "title": "Cascading Ring Counters",
             "file": "ringcascade.txt",
-            "enabled": false
+            "enabled": true
           }
         ]
       },
@@ -1523,12 +1523,12 @@
       {
         "title": "LED Flasher",
         "file": "ledflasher.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Traffic Light",
         "file": "traffic.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Static RAM",
@@ -1578,7 +1578,7 @@
       {
         "title": "Flash ADC",
         "file": "flashadc.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Delta-Sigma ADC",
@@ -1755,62 +1755,64 @@
       {
         "title": "VCCS Resistor",
         "file": "cs-resistor.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCCS Varying Resistor",
         "file": "cs-varyresistor.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCVS Op-Amp",
         "file": "cs-opamp.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCVS Op-Amp With Rails",
         "file": "cs-opamprail.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCVS Multiplier",
         "file": "cs-multiplier.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "VCVS Full Rectifier",
         "file": "cs-fullrectifier.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "VCVS Voltage Ramp",
         "file": "cs-ramp.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Current Adder",
         "file": "cs-currentadder.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCVS Integrator",
         "file": "cs-integrator.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCVS Differentiator",
         "file": "cs-diff.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "CCVS Variable Inductor",
         "file": "cs-varinduct.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "VCCS Variable Capacitor",
         "file": "cs-varicap.txt",
-        "enabled": false
+        "enabled": true
       }
     ]
   },
@@ -1979,17 +1981,17 @@
           {
             "title": "CCII+",
             "file": "cc2.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "CCII-",
             "file": "cc2n.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Inductor Simulator",
             "file": "ccinductor.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "CCII+ Implementation",
@@ -2004,27 +2006,30 @@
           {
             "title": "Current Amplifier",
             "file": "cciamp.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "VCCS",
             "file": "ccvccs.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           },
           {
             "title": "Current Differentiator",
             "file": "ccdiff.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Current Integrator",
             "file": "ccint.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           },
           {
             "title": "Current-Controlled Voltage Source",
             "file": "ccitov.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           }
         ]
       },

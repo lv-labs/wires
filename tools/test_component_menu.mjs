@@ -23,6 +23,13 @@ assert.equal(available.find(e=>e.legacyClass==='RoutedWireElm').available,false)
 assert.equal(available.find(e=>e.legacyClass==='WireElm').tool,'wire');
 assert.ok(resolved.find(e=>e.label==='Outputs and Labels').children.every(e=>e.available),'Every output/label entry has a real editor tool');
 assert.equal(available.find(e=>e.legacyClass==='VarRailElm').tool,'variableVoltage');
+assert.equal(available.find(e=>e.legacyClass==='CC2Elm').tool,'currentConveyor');
+assert.equal(available.find(e=>e.legacyClass==='CC2NegElm').tool,'negativeCurrentConveyor');
+for(const kind of ['vcvs','vccs','ccvs','cccs'])
+  assert.equal(available.find(e=>e.legacyClass===kind.toUpperCase()+'Elm').tool,kind);
+assert.equal(available.find(e=>e.legacyClass==='DecadeElm').tool,'ringCounter');
+assert.equal(available.find(e=>e.legacyClass==='Counter2Elm').tool,'loadCounter');
+assert.equal(available.find(e=>e.legacyClass==='SevenSegElm').tool,'sevenSegment');
 const clock=M.placementDefinitions.clockRail.parameters.waveform;assert.deepEqual(clock,{kind:'square',amplitude:2.5,frequency:100,offset:2.5,dutyCycle:.5});
 for(const preset of ['clockRail','squareRail','opamp','opampPlusTop','opampMinusTop']){
  const model=M.create(M.empty());model.addComponent(preset,0,0,preset==='opampMinusTop'?180:0,preset==='opampMinusTop');M.validate(model.document);

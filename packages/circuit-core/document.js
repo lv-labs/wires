@@ -14,6 +14,16 @@
     Catalog.validateSharedDiodeModels(e.components);
     Catalog.validateSharedTransistorModels(e.components);
     const components = ids(e.components), junctions = ids(e.junctions); ids(e.wires);
+    if(l.propertySliders!==undefined){
+      assert(Array.isArray(l.propertySliders)&&l.propertySliders.length<=1000,'Invalid property sliders');
+      ids(l.propertySliders);
+      for(const slider of l.propertySliders){
+        assert(components.has(slider.componentId)&&typeof slider.field==='string'&&/^[a-z][\w]*(?:\.[a-z][\w]*)*$/i.test(slider.field)&&
+          typeof slider.label==='string'&&slider.label.length<=200&&Number.isFinite(slider.min)&&Number.isFinite(slider.max-slider.min)&&
+          slider.max>slider.min&&Number.isFinite(slider.step)&&slider.step>0&&
+          (slider.logarithmic===undefined||slider.logarithmic===false||slider.logarithmic===true&&slider.min>0),'Invalid property slider');
+      }
+    }
     const point = p => p && Number.isFinite(p.x) && Number.isFinite(p.y);
     if(l.drawings!==undefined){
       assert(Array.isArray(l.drawings)&&l.drawings.length<=10000,'Invalid sheet drawings');ids(l.drawings);
@@ -56,9 +66,9 @@
       if (c.kind === 'output') assert(typeof v.showVoltage === 'boolean', 'Invalid output marker');
       if (c.kind === 'logicOutput') assert(Number.isFinite(v.threshold) && ['logic', 'numeric', 'ternary'].includes(v.mode) && typeof v.pulldown === 'boolean', 'Invalid logic output parameters');
       if (c.kind === 'logicInput') assert(['logic', 'numeric', 'ternary'].includes(v.mode) && Number.isInteger(v.state) && v.state >= 0 && v.state <= (v.mode === 'ternary' ? 2 : 1) && Number.isFinite(v.highVoltage) && Number.isFinite(v.lowVoltage) && Number.isFinite(v.highVoltage - v.lowVoltage) && (v.momentary===undefined||typeof v.momentary==='boolean'), 'Invalid logic input state or voltage');
-      if(['counter','latch','halfAdder','fullAdder'].includes(c.kind))assert(Number.isFinite(v.highVoltage)&&v.highVoltage>0,'Invalid chip logic voltage');
-      if(['counter','latch'].includes(c.kind))assert(Number.isInteger(v.initialValue)&&v.initialValue>=0&&v.initialValue<=15,'Initial value must be 0 to 15');
-      if(c.kind==='counter')assert(Number.isInteger(v.modulus)&&v.modulus>=0&&v.modulus<=16&&typeof v.invertReset==='boolean'&&typeof v.negativeEdge==='boolean','Invalid counter parameters');
+      if(Catalog.counterKind(c.kind))Catalog.validateCounterParameters(c.kind,v);
+      if(['latch','halfAdder','fullAdder'].includes(c.kind))assert(Number.isFinite(v.highVoltage)&&v.highVoltage>0,'Invalid chip logic voltage');
+      if(c.kind==='latch')assert(Number.isInteger(v.initialValue)&&v.initialValue>=0&&v.initialValue<=15,'Initial value must be 0 to 15');
       if(c.kind==='latch')assert(typeof v.edgeTriggered==='boolean','Invalid latch mode');
       if (['dFlipFlop', 'jkFlipFlop', 'tFlipFlop'].includes(c.kind)) assert(Number.isFinite(v.highVoltage) && v.highVoltage > 0 && typeof v.initialState === 'boolean' && (c.kind !== 'jkFlipFlop' || typeof v.positiveEdge === 'boolean'), 'Invalid flip-flop parameters');
       if (c.kind === 'polarizedCapacitor') assert(Number.isFinite(v.maxReverseVoltage) && v.maxReverseVoltage >= 0, 'Maximum reverse voltage must be nonnegative');

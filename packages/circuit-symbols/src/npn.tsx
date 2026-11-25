@@ -29,31 +29,18 @@ export function Symbol({ parameters = metadata.parameters }: SymbolProps) {
       <circle r="111" cx="50"/>
       <path d="M 25 -75
       V 75" strokeWidth="20" />
-      
-     <path
-     d="M -60, 0
-     20, 0" />
-   
+      <path
+        d="M -60, 0
+        20, 0" />
       <path
         d="M 25 -25,
-         100 -100"
-      />
-      
+        100 -100" />
       <path
         d="M 25 25,
-         100 100"
-      />
-      
-     
-      <path
-        d="M 90 90,
-         70 50"
-      />
-      
-      <path
-        d="M 90 90,
-         50 70"
-      />
+        100 100" />
+      <polygon
+        points="90,90 70,50 50,70"
+        fill="white" />
     </g>
   );
 }

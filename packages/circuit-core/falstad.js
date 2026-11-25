@@ -14,11 +14,13 @@
     a:'opamp',S:'spdtSwitch',t:'npn',f:'nmos',j:'njfet',p:'voltmeter',I:'inverter',n:'noiseSource',A:'antennaSource',T:'transformer',m:'memristor',
     '150':'andGate','151':'nandGate','152':'orGate','153':'norGate','154':'xorGate','431':'xnorGate',
     '155':'dFlipFlop','156':'jkFlipFlop','193':'tFlipFlop','165':'timer555',
+    '163':'ringCounter','164':'counter','421':'loadCounter',
     '159':'analogSwitch','160':'analogSpdtSwitch','182':'schmittTrigger','183':'invertingSchmittTrigger',
     '169':'tappedTransformer','170':'sweepSource','171':'transmissionLine','172':'variableVoltage','173':'triode','174':'potentiometer',
-    '175':'tunnelDiode','176':'varactor','177':'scr','178':'relay','181':'lamp','187':'sparkGap','207':'labeledNode',
+    '175':'tunnelDiode','176':'varactor','177':'scr','178':'relay','179':'currentConveyor','181':'lamp','187':'sparkGap','207':'labeledNode',
     '200':'amSource','201':'fmSource','203':'diac','206':'triac','211':'audioOutput',
-    '209':'polarizedCapacitor','368':'testPoint','370':'ammeter','419':'decimalDisplay',
+    '212':'vcvs','213':'vccs','214':'ccvs','215':'cccs',
+    '157':'sevenSegment','209':'polarizedCapacitor','368':'testPoint','370':'ammeter','405':'ledArray','419':'decimalDisplay',
   };
   const quarterTurn=angle=>((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
   const midpoint=(a,b)=>({x:a.x+(b.x-a.x)/2,y:a.y+(b.y-a.y)/2});
@@ -33,7 +35,7 @@
     '193':[[-1,0],[2,0],[2,2],[-1,1]],
   };
 
-  function chipLayout({x1,y1,flags},offsets,columns,rows,pins) {
+  function chipLayout({x1,y1,flags},offsets,columns,rows,pins,anchorRow=(rows-1)/2,anchorColumn=(columns-1)/2) {
     const spacing=flags&1?16:32;
     const transpose=!!(flags&4096),flipX=!!(flags&1024),flipY=!!(flags&2048);
     const point=(column,row)=>{
@@ -45,7 +47,7 @@
     const start=point(-1,0),end=point(columns,0),mirror=(transpose!==flipX)!==flipY;
     const direction=mirror?-1:1;
     const rotation=quarterTurn(Math.atan2(direction*(end.y-start.y),direction*(end.x-start.x)));
-    return {anchor:point((columns-1)/2,(rows-1)/2),offsets,rotation,mirror,originOffset:[0,0],
+    return {anchor:point(anchorColumn,anchorRow),offsets,rotation,mirror,originOffset:[0,0],
       posts:pins.map(([column,row])=>point(column,row)),
       along:transpose?'y':'x',across:transpose?'x':'y',minScale:400/(3*spacing)};
   }
@@ -109,6 +111,13 @@
     const offsets=Catalog.componentPins(component),first=offsets[type==='173'?'grid':pins[0]];
     const dx=end.x-start.x,dy=end.y-start.y;
     if(Object.hasOwn(flipFlopPosts,type))return chipLayout(record,offsets,2,3,flipFlopPosts[type]);
+    if(Catalog.counterKind(component.kind)){
+      const {columns,rows,pins,anchorRow,anchorColumn}=Catalog.counterLayout(component.kind,component.parameters);
+      const posts=pins.map(([,column,row])=>[column,row]);
+      const layout=chipLayout(record,offsets,columns,rows,posts,anchorRow,anchorColumn);
+      const minScale=(component.kind==='ringCounter'?50:100)/(record.flags&1?16:32);
+      return {...layout,minScale,postAxes:posts.map(([,row])=>row<0||row>=rows?layout.across:layout.along)};
+    }
     if(type==='178'){
       const {poleCount,coilStyle}=component.parameters,len=Math.hypot(dx,dy);
       const direction=(dy===0?Math.sign(dx):Math.sign(dy))*(record.flags&8?-1:1);
@@ -126,7 +135,25 @@
       const layout=chipLayout(record,offsets,3,5,Catalog.timerPostOffsets.slice(0,pins.length));
       return {...layout,minScale:Catalog.grid/(record.flags&1?16:32)};
     }
-    if(type==='419')return chipLayout(record,offsets,3,4,[[-1,3],[-1,2],[-1,1],[-1,0]]);
+    if(type==='179'){
+      const layout=chipLayout(record,offsets,2,3,Catalog.conveyorPostOffsets);
+      return {...layout,minScale:(offsets.z[0]-offsets.x[0])/(3*(record.flags&1?16:32))};
+    }
+    if(Catalog.controlledSourceKind(component.kind)){
+      const {inputCount}=component.parameters;
+      const posts=Catalog.controlledSourcePosts(component.kind,inputCount).map(([,column,row])=>[column,row]);
+      const layout=chipLayout(record,offsets,2,Math.max(2,inputCount),posts,0);
+      return {...layout,minScale:200/(3*(record.flags&1?16:32))};
+    }
+    if(Catalog.displayChipKind(component.kind)){
+      const {columns,rows,pins}=Catalog.displayChipLayout(component.kind,component.parameters);
+      const posts=pins.map(([,column,row])=>[column,row]);
+      const layout=chipLayout(record,offsets,columns,rows,posts);
+      const smaller=Math.min(columns,rows);
+      const span=type==='157'?50:type==='405'?100*(smaller+2)/(smaller+1):400/3;
+      const minScale=span/(record.flags&1?16:32);
+      return {...layout,minScale,postAxes:posts.map(([,row])=>row===rows?layout.across:layout.along)};
+    }
     if(type==='171') {
       return rectangularLayout(offsets,record.posts,start,end,record.posts[1],'left','right','leftReturn');
     }
@@ -214,7 +241,8 @@
           scopes.push({line,tokens,xml:xml?.scopes.get(line),onSheet:type==='403'});continue;
         }
         if(['h','&','38'].includes(type)) {
-          diagnostic('warning',line,'UNSUPPORTED_PRESENTATION',`${type==='h'?'Hint':'Slider'} settings are not imported yet`);continue;
+          if(xml?.adjustables.has(line))continue;
+          diagnostic('warning',line,'UNSUPPORTED_PRESENTATION',`${type==='h'?'Hint':'Legacy slider'} settings are not imported yet`);continue;
         }
         if(type!=='w'&&!Object.hasOwn(drawingKinds,type)&&!Object.hasOwn(types,type)) {
           diagnostic('error',line,'UNSUPPORTED_RECORD',`Unsupported Falstad record ${type}`);continue;
@@ -235,6 +263,40 @@
           records.push(record);continue;
         }
         let kind=types[type],parameters={},maxFields=5;
+        if(Catalog.counterKind(kind)){
+          const ring=kind==='ringCounter',binary=kind==='counter';
+          flagsAllowed(flags,1|1024|2048|4096|8192|(ring?6:binary?12:0));
+          const bits=number(5),custom=!!(flags&8192),first=custom?7:6;
+          if(!Number.isInteger(bits)||bits<(binary?3:2)||bits>30)throw new Error('Unsupported counter width');
+          const highVoltage=custom?number(6):5;
+          let initialValue=0;
+          for(let i=0;i<bits;i++)if(number(first+i)>highVoltage/2)initialValue+=2**(ring?i:bits-1-i);
+          maxFields=first+bits;
+          parameters={highVoltage,initialValue,bits};
+          if(ring){
+            parameters.invertReset=!(flags&4);
+            parameters.clockInhibit=!!(flags&2);
+          }else{
+            if(binary){
+              const reset=tokens[maxFields++]??'true';
+              if(!['true','false'].includes(reset))throw new Error('Invalid counter reset polarity');
+              parameters.invertReset=reset==='true';
+              parameters.upDown=!!(flags&4);
+              parameters.negativeEdge=!!(flags&8);
+            }
+            parameters.modulus=number(maxFields++,0);
+            parameters.lsbFirst=xml?.bitOrders.get(line)===1;
+          }
+          Catalog.validateCounterParameters(kind,parameters);
+        }
+        if(Catalog.controlledSourceKind(kind)){
+          flagsAllowed(flags,1|1024|2048|4096|8192);
+          const index=flags&8192?6:5;
+          if(flags&8192)number(5);
+          if(tokens[index+1]===undefined)throw new Error('Missing controlled-source output expression');
+          parameters=Catalog.validateOutput({kind,parameters:{inputCount:number(index),expression:unescapeText(tokens[index+1])}});
+          maxFields=index+2;
+        }
         if(type==='207'){
           flagsAllowed(flags,13);
           const name=flags&4?unescapeText(tokens.slice(5).join(' ')):tokens.slice(5).join(' ');
@@ -411,6 +473,13 @@
             showBox:!!(flags&2),pulldown:!!(flags&16)};
           maxFields=15;
         }
+        if(type==='179'){
+          flagsAllowed(flags,1|1024|2048|4096|8192);
+          const gainIndex=flags&8192?6:5;
+          if(flags&8192)number(5);
+          parameters={gain:number(gainIndex)};
+          maxFields=gainIndex+1;
+        }
         if(type==='165'){
           flagsAllowed(flags,1|2|4|8|1024|2048|4096|8192);
           const stateIndex=flags&8192?6:5;
@@ -426,11 +495,20 @@
           maxFields=customVoltage?7:6;
           parameters={highVoltage,initialState:number(maxFields-1)>highVoltage/2,...(jk?{positiveEdge:!!(flags&4)}:{})};
         }
-        if(type==='419'){
-          flagsAllowed(flags,1|1024|2048|4096);
-          if(number(5,4)!==4)throw new Error('Only four-bit decimal displays are supported');
-          parameters={mode:number(6,0)};
-          maxFields=7;
+        if(Catalog.displayChipKind(kind)){
+          flagsAllowed(flags,1|1024|2048|4096|(type==='405'?0:8192));
+          const custom=!!(flags&8192),first=custom?6:5,highVoltage=custom?number(5):5;
+          if(type==='419'){
+            const bitCount=number(first,4);
+            parameters={mode:number(first+1,0),...(bitCount===4?{}:{bitCount}),...(highVoltage===5?{}:{highVoltage}),
+              ...(xml?.bitOrders.get(line)===1?{lsbFirst:true}:{})};
+          }else if(type==='405'){
+            parameters={columns:number(5,8),rows:number(6,8)};
+          }else{
+            parameters={segments:number(first,7),extra:number(first+1,0),diodeDirection:number(first+2,0),highVoltage};
+          }
+          Catalog.validateOutput({kind,parameters});
+          maxFields=first+(type==='157'?3:2);
         }
         if(Catalog.gateKind(kind)) {
           flagsAllowed(flags,7);
@@ -574,6 +652,7 @@
             const waveformKind=['dc','sine','square','triangle','sawtooth','pulse'][code];
             if(!waveformKind)throw new Error(`Unsupported waveform ${code}`);
             const waveform=code===0?{kind:'dc',voltage:amplitude+offset}:{kind:waveformKind,frequency,amplitude,offset,phase};
+            if(code===0&&offset===0&&['R','v'].includes(type))record.adjustableVoltage=true;
             if(code===1&&amplitude<0){waveform.amplitude=-amplitude;waveform.phase=phase+Math.PI;}
             if(code===2||code===5)waveform.dutyCycle=code===5&&!(flags&4)?1/(2*Math.PI):number(10,.5);
             parameters={waveform};
@@ -582,7 +661,8 @@
         }
         if(tokens.length>maxFields)throw new Error('Unexpected fields (unsupported record variant)');
         const pins=Catalog.componentModel({kind,parameters}).postOrder;
-        if(pins.length===2&&x1===x2&&y1===y2)throw new Error('Zero-length component layout is not supported');
+        if(pins.length===2&&x1===x2&&y1===y2&&!Catalog.controlledSourceKind(kind)&&!Catalog.displayChipKind(kind))
+          throw new Error('Zero-length component layout is not supported');
         records.push({...record,kind,parameters,pins});
       }catch(error){diagnostic('error',line,'UNSUPPORTED_OR_INVALID_RECORD',error.message);}
     }
@@ -636,7 +716,7 @@
       }
       const {id}=r.component;
       doc.electrical.components.push(r.component);
-      const {anchor,offsets,rotation,mirror,originOffset,posts=[start],along,across}=r.symbol;
+      const {anchor,offsets,rotation,mirror,originOffset,posts=[start],along,across,postAxes}=r.symbol;
       const center=position(anchor);
       const [dx,dy]=Geometry.rotateOffset(...originOffset,rotation);
       const pose={x:center.x-dx,y:center.y-dy,rotation,mirror};
@@ -648,7 +728,7 @@
         const pin={x:pose.x+rx,y:pose.y+ry},post=doc.layout.junctions[to.junctionId];
         const bends=[];
         const branch=pinId==='control'&&(r.type==='159'||r.type==='160')||pinId==='gate'&&(r.type==='177'||r.type==='206');
-        const axis=branch?across:along,cross=branch?along:across;
+        const axis=postAxes?.[index]??(branch?across:along),cross=axis===along?across:along;
         if(axis&&pin[axis]!==post[axis]&&pin[cross]!==post[cross]) {
           const turn=r.pins.length===2?post[axis]:Geometry.snap(midpoint(pin,post)[axis]);
           const firstTurn=turn===pin[axis]?post[axis]:turn;
@@ -670,6 +750,25 @@
       }
     }
     Scopes.restore(doc,records,scopes,scale,(line,code,message)=>diagnostic('warning',line,code,message));
+    for(const [line,node] of xml?.adjustables??[]){
+      const {attrs:a}=node;
+      const target=records[Number(a.e)];
+      const field=target?.kind==='currentSource'?'current':target?.adjustableVoltage?'waveform.voltage':null;
+      const min=Number(a.mn??1),max=Number(a.mx??1000),step=Number(a.stp??0);
+      const logarithmic=Number(a.log??0)===1;
+      if(!/^\d+$/.test(a.e??'')||!field||Number(a.ei??0)!==0||a.en&&a.en!==(field==='current'?'Current (A)':'Voltage')||
+        Number(a.ss??-1)!==-1||node.children.length||node.text?.trim()||
+        Object.keys(a).some(key=>!['e','ei','en','mn','mx','st','stp','ss','log'].includes(key))||
+        !Number.isFinite(max-min)||min>=max||!Number.isFinite(step)||step<0||
+        ![0,1].includes(Number(a.log??0))||logarithmic&&min<=0||!a.st?.trim()||a.st.length>200||
+        (doc.layout.propertySliders?.length??0)>=1000){
+        diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','Slider target or settings could not be restored');continue;
+      }
+      (doc.layout.propertySliders??=[]).push({
+        id:`falstad-slider-${line}`,componentId:target.component.id,field,label:a.st,min,max,
+        step:step||Math.max(Number.MIN_VALUE,(max-min)/100),...(logarithmic?{logarithmic}:{}),
+      });
+    }
     try {Document.validate(doc);}catch(error){diagnostic('error',0,'INVALID_DOCUMENT',error.message);return {document:null,diagnostics};}
     return {document:doc,diagnostics};
   }

@@ -425,7 +425,10 @@ try {
         }),
       );
       assert.ok(!drawing.includes("NaN"));
-      if (waveformKind === "dc")
+      if (waveformKind === "dc" && kind === "voltageRail") {
+        assert.match(drawing, /M -30 -50\s+L 0 -100, 30 -50/);
+        assert.doesNotMatch(drawing, /<circle/);
+      } else if (waveformKind === "dc")
         assert.ok(drawing.includes(dcGlyph), "DC uses the authored glyph");
       else
         assert.ok(

@@ -33,12 +33,12 @@ export const output = {
 export function Symbol({ pose }: SymbolProps) {
   return (
     <>
-      <Lead from={metadata.pins.returnIn} to={[-50, 50]} />
-      <Lead from={metadata.pins.returnOut} to={[50, 50]} />
-      <Lead from={metadata.pins.currentIn} to={[-50, -50]} />
-      <Lead from={metadata.pins.currentOut} to={[50, -50]} />
-      <rect x={-50} y={-80} width={100} height={160} />
-      <UprightText pose={pose} y={16} textAnchor="middle" fontSize={64}>
+      <Lead from={metadata.pins.returnIn} to={[-60, 50]} />
+      <Lead from={metadata.pins.returnOut} to={[60, 50]} />
+      <Lead from={metadata.pins.currentIn} to={[-60, -50]} />
+      <Lead from={metadata.pins.currentOut} to={[60, -50]} />
+      <rect x={-60} y={-65} width={120} height={130} rx={12} />
+      <UprightText pose={pose} dy="0.35em" textAnchor="middle" fontSize={60}>
         W
       </UprightText>
     </>

@@ -1,3 +1,4 @@
+import { core } from "./core"
 import type { Component } from "./core"
 
 export function spdtPositionLabels(
@@ -99,6 +100,10 @@ export function propertyCaption(
   component: Component,
   key: string
 ): string | undefined {
+  if (core.catalog.counterKind(component.kind) && key === "bits")
+    return component.kind === "counter" ? "Bits · 3 to 30" : "Bits · 2 to 30"
+  if (component.kind === "ringCounter" && key === "initialValue")
+    return "Initial outputs · bit mask (Q0 = 1)"
   if (key === "mode") {
     if (
       ["voltmeter", "testPoint", "ammeter", "wattmeter"].includes(
@@ -168,6 +173,11 @@ export function propertyChoices(
     if (component.kind === "wattmeter") return ["Instantaneous", "Average"]
     if (component.kind === "decimalDisplay")
       return ["Decimal", "Hexadecimal", "Octal"]
+  }
+  if (component.kind === "sevenSegment") {
+    if (key === "segments") return ["7 segments", "14 segments", "16 segments"]
+    if (key === "extra") return ["None", "Decimal point", "Colon"]
+    if (key === "diodeDirection") return ["Logic inputs", "Common cathode", "Common anode"]
   }
   if (component.kind === "stopTrigger" && key === "direction") return ["≥", "≤"]
 }

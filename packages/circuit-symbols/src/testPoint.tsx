@@ -1,14 +1,13 @@
-import { TerminalBox } from "../svg";
+import { Lead, Upright } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "testPoint";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "TP",
   name: "Test point",
   pins: {
-    in: [-48, 0],
+    in: [0, 0],
   },
   parameters: {
     mode: 0,
@@ -38,12 +37,43 @@ export const output = {
 export function Symbol({
   parameters = metadata.parameters,
   pose,
+  reading,
 }: SymbolProps) {
+  const label = String(parameters.label);
+  const rotation = pose?.rotation ?? 0;
+  const textAnchor =
+    rotation === 90 ? "start" : rotation === 270 ? "end" : "middle";
+  const textY = -195;
+  const lineHeight = 44;
+  const linesAboveAnchor = [1, 0.5, 0, 0.5][rotation / 90] ?? 0;
+  const labelOffset = label && reading ? -lineHeight * linesAboveAnchor : 0;
   return (
-    <TerminalBox
-      pin={metadata.pins.in}
-      label={String(parameters.label)}
-      pose={pose}
-    />
+    <>
+      <Lead from={metadata.pins.in} to={[0, -100]} />
+      <circle  cy={-130} r={30} />
+      <Upright pose={pose} y={textY}>
+        <text
+          x={0}
+          y={textY + labelOffset}
+          textAnchor={textAnchor}
+          dominantBaseline="central"
+          fontSize={40}
+          fill="currentColor"
+          stroke="none"
+        >
+          {label && <tspan x={0}>{label}</tspan>}
+          {reading && (
+            <tspan
+              x={0}
+              dy={label ? lineHeight : 0}
+              opacity={0.7}
+              pointerEvents="none"
+            >
+              {reading}
+            </tspan>
+          )}
+        </text>
+      </Upright>
+    </>
   );
 }

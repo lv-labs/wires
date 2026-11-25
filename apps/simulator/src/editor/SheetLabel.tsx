@@ -31,7 +31,7 @@ export function SheetLabel({ pose, kind, children }: {
     const right = Math.max(...points.map(p => p.x))
     const top = Math.min(...points.map(p => p.y))
     const bottom = Math.max(...points.map(p => p.y))
-    const alignAbove = ["variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter", "testPoint"].includes(kind) || right - left > bottom - top
+    const alignAbove = ["variableVoltage", "ammeter", "voltmeter", "ohmmeter", "wattmeter"].includes(kind) || right - left > bottom - top
     let side: (typeof oppositeLowerPin)[number] = alignAbove ? "above" : "right"
     if (kind === "voltageRail" || kind === "potentiometer")
       side = oppositeLowerPin[pose.rotation / 90]

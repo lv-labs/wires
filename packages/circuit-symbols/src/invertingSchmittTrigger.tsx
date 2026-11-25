@@ -2,13 +2,12 @@ import { Lead } from "../svg";
 
 export const kind = "invertingSchmittTrigger";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "U",
   name: "Inverting Schmitt trigger",
   pins: {
-    input: [-48, 0],
-    out: [48, 0],
+    input: [-150, 0],
+    out: [150, 0],
   },
   parameters: {
     slewRate: 0.5,
@@ -49,24 +48,16 @@ export const output = {
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.input} to={[-24, 0]} />
-      <Lead from={metadata.pins.out} to={[26, 0]} />
-      <path
-        d="M -24 -24
-          V 24
-          L 18 0
-          Z"
-      />
-      <path
-        d="M -15 6
-          H -7
-          L 1 -6
-          H 9
-          M -7 -6
-          H 1
-          L -7 6"
-      />
-      <circle cx={22} r={4} />
+      <Lead from={metadata.pins.input} to={[-100, 0]} />
+      <Lead from={metadata.pins.out} to={[130, 0]} />
+      <polygon 
+        points="100,0 -100,100, -100,-100 " />
+      <polygon 
+        points="-10,-20 -30,-20 -30 20 -10 20"
+        strokeWidth={5} />
+      <path d="M -10,-20 H5" strokeWidth={5}/>
+      <path d="M -10,20 H-45" strokeWidth={5}/>
+      <circle cx={115} r={15} />
     </>
   );
 }

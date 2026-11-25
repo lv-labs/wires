@@ -1,14 +1,12 @@
 import { Lead } from "../svg";
 export const kind = "triode";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   name: "Triode",
   prefix: "Q",
   pins: {
-    plate: [32, -48],
-    grid: [-48, 0],
-    cathode: [32, 48],
+    plate: [0, -200],
+    grid: [-150, 0],
+    cathode: [-50, 200],
   },
   parameters: {
     mu: 93,
@@ -31,24 +29,34 @@ export const output = {
   },
   sign: 1,
 };
+// Artwork adapted from KiCad Valve:EC92 (CC BY-SA 4.0).
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.plate} to={[0, -10]} />
-      <Lead from={metadata.pins.grid} to={[-20, 0]} />
-      <Lead from={metadata.pins.cathode} to={[7, 10]} />
-      <circle r={24} />
+      <Lead from={metadata.pins.plate} to={[0, -100]} />
+      <Lead from={metadata.pins.grid} to={[-62.5, 0]} />
+      <Lead from={metadata.pins.cathode} to={[-50, 100]} />
       <path
-        d="M -16 -10
-          H 16
-          M -16 0
-          H -9
-          M -5 0
-          H 2
-          M 6 0
-          H 13
-          M -10 10
-          H 10"
+        d="M -100 -50
+          A 100 100 0 0 1 100 -50
+          V 50
+          A 100 100 0 0 1 -100 50
+          Z
+          M -62.5 0
+          H -37.5
+          M -12.5 0
+          H 12.5
+          M 37.5 0
+          H 62.5"
+      />
+      <path
+        d="M -50 -100
+          H 50
+          M -50 100
+          A 52 52 0 0 1 50 100
+          M -50,135
+          V 100"
+        strokeWidth={10}
       />
     </>
   );

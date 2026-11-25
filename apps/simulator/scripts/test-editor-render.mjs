@@ -32,6 +32,41 @@ try {
   assert.doesNotMatch(html,/>R[12]<\/text>/)
   assert.ok(!html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,'').includes('NaN'))
 
+  const currentAdderPath=new URL('../../../engine/upstream/src/com/lushprojects/circuitjs1/public/circuits/cs-currentadder.txt',import.meta.url)
+  const currentAdder=core.falstad.importText(readFileSync(currentAdderPath,'utf8')).document
+  assert.ok(currentAdder)
+  const currentAdderHtml=renderToString(React.createElement(CircuitEditor,{initialDocument:currentAdder,autosave:false}))
+  assert.match(currentAdderHtml,/>CCVS<\/text>/)
+  assert.match(currentAdderHtml,/>VCCS<\/text>/)
+  assert.match(currentAdderHtml,/aria-label="Current 1"/)
+  assert.match(currentAdderHtml,/aria-label="Current 2"/)
+
+  const ringParameters={...core.catalog.definitions.ringCounter.parameters,bits:3}
+  const ringHtml=renderToStaticMarkup(React.createElement(SymbolBody,{
+    component:{kind:'ringCounter',parameters:ringParameters},pose:{rotation:90,mirror:true},
+  }))
+  assert.match(ringHtml,/>Q0<\/text>/)
+  assert.match(ringHtml,/>Q2<\/text>/)
+  assert.doesNotMatch(ringHtml,/>Q3<\/text>/)
+
+  const displaySymbol = (kind, parameters, measured) => renderToStaticMarkup(React.createElement(SymbolBody,{
+    component:{kind,parameters:{...core.catalog.definitions[kind].parameters,...parameters}},
+    measured,pose:{rotation:0,mirror:false},
+  }))
+  for(const kind of ['decimalDisplay','instructionDisplay'])for(const bitCount of [1,4,8,16]){
+    const html=displaySymbol(kind,{bitCount},{text:'165'})
+    assert.match(html,/>165<\/text>/)
+    assert.match(html,new RegExp(`height="${Math.max(150,bitCount*100)}" rx="12"`))
+    assert.equal((html.match(/<path\b/g)||[]).length,bitCount)
+    assert.match(html,new RegExp(`>${bitCount-1}<\\/text>`))
+  }
+  const segmentHtml=displaySymbol('sevenSegment',{segments:14,extra:2},{segments:Array(15).fill(1)})
+  assert.equal((segmentHtml.match(/<line\b/g)||[]).length,14)
+  assert.equal((segmentHtml.match(/<circle\b/g)||[]).length,2)
+  const matrixHtml=displaySymbol('ledArray',{columns:3,rows:2},{currents:[.01,0,0,0,0,0]})
+  assert.equal((matrixHtml.match(/<circle\b/g)||[]).length,6)
+  assert.match(matrixHtml,/fill="rgba\(255,75,45,1\)"/)
+
   const potDocument = core.document.empty()
   const pot = {id: 'pot', kind: 'potentiometer', modelVersion: 1, parameters: {resistance: 1000, position: 0.25}}
   potDocument.electrical.components.push(pot)
@@ -57,9 +92,23 @@ try {
       pose: {rotation: 90, mirror: true},
     }))
     const dc = renderSource({kind: 'dc', voltage: 5})
-    assert.match(dc, /scale\(-1 1\) rotate\(-90\)[^>]*><path d="M -24 -9 H 24\s+M -24 9 H -14\s+M -5 9 H 5\s+M 14 9 H 24"/)
+    if (kind === 'voltageRail') {
+      assert.match(dc, /M 0 0\s+L 0 -100/)
+      assert.match(dc, /M -30 -50\s+L 0 -100, 30 -50/)
+      assert.doesNotMatch(dc, /<circle|<polygon|M -24 -9/)
+      const zero = renderSource({kind: 'dc', voltage: 0})
+      assert.match(zero, /M -30 -50\s+L 0 -100, 30 -50/)
+      assert.doesNotMatch(zero, /<polygon/)
+      const negative = renderSource({kind: 'dc', voltage: -5})
+      assert.match(negative, /M 0 0\s+L 0 -100/)
+      assert.match(negative, /<polygon points="-30,-50 0,-100 30,-50" fill="currentColor"/)
+      assert.doesNotMatch(negative, /<circle/)
+    } else {
+      assert.match(dc, /scale\(-1 1\) rotate\(-90\)[^>]*><path d="M -24 -9 H 24\s+M -24 9 H -14\s+M -5 9 H 5\s+M 14 9 H 24"/)
+    }
     assert.doesNotMatch(dc, /C -20 -30/)
     const sine = renderSource({kind: 'sine', amplitude: 1, frequency: 1000, offset: 0})
+    assert.match(sine, /<circle r="50"/)
     assert.match(sine, /M -25 0\s+C -20 -30/)
   }
 
@@ -127,6 +176,25 @@ try {
   assert.ok(labelRows,'The name and reading render as separate centered lines')
   assert.equal(labelRows[1],labelRows[3])
   assert.ok(Number(labelRows[2])<Number(labelRows[4]))
+
+  const testPointDocument = core.document.empty()
+  testPointDocument.electrical.components.push({
+    id:'probe', kind:'testPoint', modelVersion:1, parameters:{mode:0,label:'Sense'},
+  })
+  const testPointFrame = {pinVoltages:{probe:{in:5}},componentMeasurements:{probe:{value:5}}}
+  for (const [rotation, anchor] of [[0,'middle'],[90,'start'],[180,'middle'],[270,'end']]) {
+    for (const mirror of [false,true]) {
+      testPointDocument.layout.components.probe = {x:0,y:0,rotation,mirror}
+      const html = renderToStaticMarkup(React.createElement(SymbolLayer, {
+        document:testPointDocument, selected:[], frame:testPointFrame,
+      }))
+      const rows = html.match(/<text x="0" y="-\d+" text-anchor="([^"]+)"[^>]*><tspan x="0">Sense<\/tspan><tspan x="0" dy="([\d.]+)"[^>]*>5 V<\/tspan><\/text>/)
+      assert.equal(rows?.[1], anchor)
+      assert.ok(Number(rows?.[2]) > 0)
+      assert.equal((html.match(/>5 V</g) ?? []).length, 1)
+    }
+  }
+
   assert.deepEqual(formatProbeVoltage(-1.238,2),{magnitude:'1.24 V',negative:true})
   assert.deepEqual(formatProbeVoltage(1.238,2),{magnitude:'1.24 V',negative:false})
   assert.deepEqual(formatProbeVoltage(-0.001,2),{magnitude:'0.00 V',negative:false})

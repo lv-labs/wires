@@ -24,3 +24,7 @@ Historical proof manifests and the extracted patch snapshots live under
 The old source-export proof scripts were retired because they required commits
 from the former repository. This standalone toolchain uses the real build and
 portable recorded reference instead.
+
+The invalid-counter-flags case uses flag 16 in place of flag 4 now that flag 4
+enables the up/down input. The expected error and subsequent snapshot are the
+same as in the original transcript.

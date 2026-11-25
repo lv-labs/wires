@@ -59,12 +59,37 @@ export function Symbol({
   parameters = metadata.parameters,
   pose,
 }: SymbolProps) {
+  const waveform = parameters.waveform ?? metadata.parameters.waveform;
+  if (
+    typeof waveform === "object" &&
+    "kind" in waveform &&
+    waveform.kind === "dc"
+  ) {
+    const negative =
+      "voltage" in waveform &&
+      typeof waveform.voltage === "number" &&
+      waveform.voltage < 0;
+    return (
+      <>
+        <Lead from={metadata.pins.p} to={[0, -100]} />
+        {negative ? (
+          <polygon points="-30,-50 0,-100 30,-50" fill="currentColor" />
+        ) : (
+          <path
+            d="M -30 -50
+              L 0 -100, 30 -50"
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <Lead from={metadata.pins.p} to={[0, -50]} />
       <g transform="translate(0 -100)">
         <circle r={50} />
-        <WaveformGlyph waveform={parameters.waveform} pose={pose} />
+        <WaveformGlyph waveform={waveform} pose={pose} />
       </g>
     </>
   );

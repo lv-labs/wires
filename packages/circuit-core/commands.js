@@ -635,6 +635,7 @@
           const remainingProbes = new Set(d.probes.map(p => p.id));
           for (const p of d.probes) if (p.sourceProbeId && !remainingProbes.has(p.sourceProbeId)) delete p.sourceProbeId;
           if(d.layout.drawings)d.layout.drawings=d.layout.drawings.filter(item=>!selection.has(token('drawing',item.id)));
+          if(d.layout.propertySliders)d.layout.propertySliders=d.layout.propertySliders.filter(slider=>!cs.has(slider.componentId));
           d.electrical.components=d.electrical.components.filter(c=>!cs.has(c.id));d.electrical.junctions=d.electrical.junctions.filter(j=>!js.has(j.id));
           for(const id of cs)delete d.layout.components[id];for(const id of js)delete d.layout.junctions[id];
         });

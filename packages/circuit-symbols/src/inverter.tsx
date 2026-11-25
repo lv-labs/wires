@@ -2,13 +2,12 @@ import { Lead } from "../svg";
 
 export const kind = "inverter";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "U",
   name: "Inverter",
   pins: {
-    input: [-48, 0],
-    out: [48, 0],
+    input: [-150, 0],
+    out: [150, 0],
   },
   parameters: {
     highVoltage: 5,
@@ -19,15 +18,12 @@ export const metadata = {
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.input} to={[-24, 0]} />
-      <Lead from={metadata.pins.out} to={[28, 0]} />
-      <path
-        d="M -24 -24
-          V 24
-          L 20 0
-          Z"
-      />
-      <circle cx={24} r={4} />
+      <Lead from={metadata.pins.input} to={[-100, 0]} />
+      <Lead from={metadata.pins.out} to={[130, 0]} />
+      <polygon 
+        points="100,0 -100,100, -100,-100 " />
+
+      <circle cx={115} r={15} />
     </>
   );
 }

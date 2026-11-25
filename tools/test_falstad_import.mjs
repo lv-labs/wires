@@ -557,6 +557,305 @@ const placedRelay=core.editing.create(core.editing.empty());
 placedRelay.addComponent('relay',0,0);
 assert.equal(placedRelay.document.electrical.components[0].parameters.poleCount,1);
 
+const conveyorFiles=['cc2','cc2n','ccinductor','cciamp','ccvccs','ccdiff','ccint','ccitov'];
+for(const name of conveyorFiles){
+  const circuit=bundledCircuit(name+'.txt');
+  const editor=core.editing.create(circuit,()=>{},{wireSections:true});
+  editor.replace(JSON.parse(JSON.stringify(circuit)));
+  const reopened=editor.document;
+  assert.equal(adapter.compile(reopened).canonical,adapter.compile(circuit).canonical,name);
+  assert.deepEqual(geometry.scopeChannels(reopened),geometry.scopeChannels(circuit),name);
+  session.loadDocument(reopened);
+  assert.ok(session.step(100).time>0,name);
+}
+
+const near=(actual,expected,message)=>assert.ok(Math.abs(actual-expected)<1e-10,`${message}: ${actual} vs ${expected}`);
+for(const [name,gain] of [['cc2',1],['cc2n',-1]]){
+  const circuit=bundledCircuit(name+'.txt');
+  const part=circuit.electrical.components.find(c=>c.kind==='currentConveyor');
+  assert.equal(part.parameters.gain,gain);
+  session.loadDocument(circuit);
+  const reading=session.step(10);
+  const volts=reading.pinVoltages[part.id],amps=reading.pinCurrents[part.id];
+  near(volts.x,4.5,'conveyor X tracks the Y voltage');
+  near(volts.y,4.5,'conveyor Y leaves the input voltage intact');
+  near(volts.z,gain*.75,'conveyor Z load voltage has the correct polarity');
+  near(amps.x,-.0075,'conveyor X load current');
+  near(amps.y,0,'conveyor Y draws zero current');
+  near(amps.z,gain*amps.x,'conveyor Z transfers the X current');
+
+  const editor=core.editing.create(circuit);
+  editor.execute({type:'setParameters',componentId:part.id,parameters:{gain:-gain}});
+  session.updateProjection(JSON.parse(adapter.compile(editor.document).canonical),circuit.id);
+  const edited=session.step(1);
+  assert.ok(edited.time>reading.time);
+  near(edited.pinVoltages[part.id].z,-gain*.75,'editing gain reanalyzes the running circuit');
+}
+
+const inductorSimulator=bundledCircuit('ccinductor.txt');
+const inductorScopes=geometry.scopeChannels(inductorSimulator);
+assert.deepEqual(inductorScopes.unresolved,[]);
+assert.deepEqual(inductorScopes.channels.map(channel=>[channel.kind,channel.componentId??channel.positive.componentId]),[
+  ['voltage','c4'],['current','c4'],['voltage','c6'],['current','c6'],
+]);
+session.loadDocument(inductorSimulator);
+const inductorDescriptors=core.signals.create().setChannels(inductorScopes.channels);
+// Reference samples from the pinned Falstad app with the imported initial
+// conditions (1 mV across each capacitor and zero inductor current).
+const inductorTransient=session.step(400,inductorDescriptors);
+near(inductorTransient.pinVoltages.c2.x,-1.7977822085815218,'inductor simulator X voltage at 2 ms');
+near(inductorTransient.pinVoltages.c3.x,1.5043693685232813,'inductor simulator feedback voltage at 2 ms');
+const inductorScopeFrame=session.step(4600,inductorDescriptors);
+const [simulatedV,simulatedI,inductorV,inductorI]=inductorScopes.channels.map(channel=>inductorScopeFrame.sampleBatch.values[channel.id].at(-1));
+near(simulatedV,inductorV,'inductor simulator uses the same drive as the physical inductor');
+near(simulatedI,inductorI,'simulated inductor current matches the physical inductor after one drive cycle');
+
+const currentIntegrator=bundledCircuit('ccint.txt');
+const integratorScopes=geometry.scopeChannels(currentIntegrator);
+assert.deepEqual(integratorScopes.unresolved,[]);
+assert.deepEqual(integratorScopes.channels.map(channel=>[channel.kind,channel.componentId]),[['current','c4']]);
+session.loadDocument(currentIntegrator);
+const integratorDescriptors=core.signals.create().setChannels(integratorScopes.channels);
+const integrated=session.step(400,integratorDescriptors);
+const outputVoltage=integrated.pinVoltages.c2.z;
+near(outputVoltage,.9986499999999969,'integrator output voltage at 2 ms');
+near(integrated.sampleBatch.values[integratorScopes.channels[0].id].at(-1),outputVoltage/100,'integrator scope measures current through the 100 Ω output load');
+near(session.step(2000).pinVoltages.c2.z,.2561500000000003,'integrator output voltage at 12 ms after the drive reverses');
+
+const conveyorXml=parse('<cir><CC2Neg x="64 96 128 96" f="5121" ga="-1.5"/></cir>');
+const conveyorText=parse('$ 0 .000005 10 50 5\n179 64 96 128 96 5121 -1.5');
+assert.deepEqual(conveyorXml.electrical,conveyorText.electrical);
+assert.deepEqual(conveyorXml.layout,conveyorText.layout);
+assert.equal(conveyorXml.electrical.components[0].parameters.gain,-1.5);
+assert.equal(falstad.importText('179 64 96 128 96 0 Infinity').document,null);
+const placedConveyors=core.editing.create(core.editing.empty());
+placedConveyors.addComponent('currentConveyor',0,0);
+placedConveyors.addComponent('negativeCurrentConveyor',400,0);
+assert.deepEqual(placedConveyors.document.electrical.components.map(c=>[c.kind,c.parameters.gain]),[
+  ['currentConveyor',1],['currentConveyor',-1],
+]);
+
+const controlledFiles=['currentadder','diff','fullrectifier','integrator','multiplier','opamp','opamprail','ramp','resistor','varicap','varinduct','varyresistor'];
+for(const name of controlledFiles){
+  const circuit=bundledCircuit('cs-'+name+'.txt');
+  const editor=core.editing.create(circuit,()=>{},{wireSections:true});
+  editor.replace(JSON.parse(JSON.stringify(circuit)));
+  const reopened=editor.document;
+  assert.equal(adapter.compile(reopened).canonical,adapter.compile(circuit).canonical,name);
+  assert.deepEqual(reopened.layout.propertySliders,circuit.layout.propertySliders,name);
+  assert.deepEqual(reopened.layout.scopes,circuit.layout.scopes,name);
+  session.loadDocument(reopened);
+  const {channels,unresolved}=geometry.scopeChannels(reopened);
+  assert.deepEqual(unresolved,[],name);
+  assert.ok(session.step(1000,core.signals.create().setChannels(channels)).time>0,name);
+}
+const sourceSupply='R 64 64 32 64 0 0 40 5 0 0 .5';
+const sourceLoad='r 160 64 160 96 0 100\ng 160 96 160 128 0';
+const currentDrive='R 0 64 -32 64 0 0 40 5 0 0 .5\nr 0 64 64 64 0 1000';
+for(const [code,kind,expression,drive,expected] of [
+  [212,'vcvs','2*a',sourceSupply,10],
+  [213,'vccs','.002*a',sourceSupply,1],
+  [214,'ccvs','100*a',currentDrive,.5],
+  [215,'cccs','2*a',currentDrive,1],
+]){
+  const circuit=parse(`${code} 64 64 128 64 0 2 ${expression}\n${drive}\ng 64 96 64 128 0\n${sourceLoad}`);
+  const part=circuit.electrical.components[0];
+  assert.equal(part.kind,kind);
+  session.loadDocument(circuit);
+  const solved=session.step(10);
+  near(solved.pinVoltages[part.id].outPlus,expected,kind+' output polarity and gain');
+  near(solved.pinVoltages[part.id].outMinus,0,kind+' negative output terminal');
+  near(solved.pinCurrents[part.id].outPlus,-expected/100,kind+' load current');
+
+  const editor=core.editing.create(circuit);
+  editor.execute({type:'setParameters',componentId:part.id,parameters:{expression:'-('+expression+')'}});
+  session.updateProjection(JSON.parse(adapter.compile(editor.document).canonical),circuit.id);
+  const edited=session.step(10);
+  assert.ok(edited.time>solved.time);
+  near(edited.pinVoltages[part.id].outPlus,-expected,kind+' live expression edit');
+}
+const rotatedSource=parse('<cir><CCCS x="64 64 128 64" f="5121" ic="4" ex="a + 2*b"/></cir>');
+const rotatedLegacy=parse(String.raw`$ 0 .000005 10 50 5
+215 64 64 128 64 5121 4 a\s\p\s2*b`);
+assert.deepEqual(rotatedSource.electrical,rotatedLegacy.electrical);
+assert.deepEqual(rotatedSource.layout,rotatedLegacy.layout);
+for(const [type,count,expr] of [[214,3,'a'],[212,2,'a+'],[212,0,'pwl(t,0,0)'],[212,1,'1e999']])
+  assert.equal(falstad.importText(`${type} 64 64 128 64 0 ${count} ${expr}`).document,null);
+
+const controlledReference=[
+  ['currentadder',20.000000000000004],
+  ['diff',7.999999999996454],
+  ['integrator',-1.495000000000001],
+  ['opamprail',9.999999999999998],
+  ['ramp',.24974999999999403],
+  ['varicap',2.141998798518058],
+  ['varinduct',3.638937665487219],
+];
+for(const [name,expected] of controlledReference){
+  const circuit=bundledCircuit('cs-'+name+'.txt');
+  const part=circuit.electrical.components.filter(c=>core.catalog.controlledSourceKind(c.kind)).at(-1);
+  session.loadDocument(circuit);
+  near(session.step(1000).pinVoltages[part.id].outPlus,expected,name+' output against pinned Falstad at 5 ms');
+}
+const currentAdder=bundledCircuit('cs-currentadder.txt');
+const adderSliders=currentAdder.layout.propertySliders;
+assert.deepEqual(adderSliders.map(({field,label,min,max})=>[field,label,min,max]),[
+  ['current','Current 1',.001,.051000000000000004],
+  ['current','Current 2',.001,.101],
+]);
+const adderEditor=core.editing.create(currentAdder);
+const outputSource=currentAdder.electrical.components.find(c=>c.kind==='vccs');
+session.loadDocument(currentAdder);
+const adderBefore=session.step(10);
+adderEditor.execute({type:'setParameters',componentId:adderSliders[0].componentId,parameters:{current:.025}});
+session.updateProjection(JSON.parse(adapter.compile(adderEditor.document).canonical),currentAdder.id);
+const adderAfter=session.step(10);
+assert.ok(adderAfter.time>adderBefore.time);
+near(adderAfter.pinVoltages[outputSource.id].outPlus,30,'adjusting the imported current control updates the sum');
+assert.equal(bundledCircuit('cs-varicap.txt').layout.propertySliders[0].field,'waveform.voltage');
+assert.equal(bundledCircuit('cs-varinduct.txt').layout.propertySliders[0].field,'current');
+
+// The pinned app's counter outputs at representative sample steps, including
+// the saved ring positions and the traffic-light controller's slow clock.
+for(const [name,checkpoints] of [
+  ['ringcascade',[[1,[['Q7'],['Q0']]],[3000,[['Q9'],['Q1']]]]],
+  ['ledflasher',[[1,[['Q8']]],[3000,[['Q3']]]]],
+  ['traffic',[[100,[['Q1']]],[3000,[['Q5']]]]],
+  ['graycode',[[100,[['Q0']]],[3000,[['Q1','Q0']]]]],
+]){
+  const circuit=bundledCircuit(name+'.txt');
+  const editor=core.editing.create(circuit,()=>{},{wireSections:true});
+  editor.replace(JSON.parse(JSON.stringify(circuit)));
+  const reopened=editor.document;
+  assert.equal(adapter.compile(reopened).canonical,adapter.compile(circuit).canonical,name);
+  assert.deepEqual(reopened.layout.scopes,circuit.layout.scopes,name);
+  session.loadDocument(reopened);
+  const counters=reopened.electrical.components.filter(c=>core.catalog.counterKind(c.kind));
+  let previous=0;
+  for(const [step,expected] of checkpoints){
+    const frame=session.step(step-previous);
+    const high=counters.map(c=>Object.entries(frame.pinVoltages[c.id])
+      .filter(([pin,voltage])=>pin.startsWith('Q')&&voltage>2.5).map(([pin])=>pin));
+    assert.deepEqual(high,expected,name+' sampled outputs');
+    previous=step;
+  }
+}
+const grayCode=bundledCircuit('graycode.txt');
+const {channels:grayTraces,unresolved:grayUnresolved}=geometry.scopeChannels(grayCode);
+assert.deepEqual(grayUnresolved,[]);
+assert.equal(grayTraces.length,4);
+session.loadDocument(grayCode);
+const grayDescriptors=core.signals.create().setChannels(grayTraces);
+for(const [steps,expected] of [[100,[0,0,0,5]],[1000,[0,0,5,5]],[1000,[0,0,5,0]]]){
+  const sample=session.step(steps,grayDescriptors).sampleBatch;
+  assert.deepEqual(grayTraces.map(trace=>sample.values[trace.id].at(-1)),expected);
+}
+const lsbFirstCounter=parse('<cir><ctr x="64 96 128 96" f="12" bi="6" bo="1" hv="3.3" in="true" mo="49" v2="3.3" v7="3.3"/></cir>');
+const lsbPart=lsbFirstCounter.electrical.components[0];
+assert.equal(lsbPart.parameters.initialValue,33);
+assert.deepEqual([lsbPart.parameters.upDown,lsbPart.parameters.negativeEdge,lsbPart.parameters.lsbFirst],[true,true,true]);
+const lsbPins=core.catalog.componentPins(lsbPart);
+assert.ok(lsbPins.Q0[1]<lsbPins.Q5[1]);
+const parallelCounter=parse('<cir><ctr2 x="64 96 128 96" bi="3" mo="4" v1="5" v2="5"/></cir>');
+assert.equal(parallelCounter.electrical.components[0].parameters.initialValue,3);
+const savedRing=parse('<cir><RingCounter x="64 96 128 96" f="5127" bi="4" hv="3.3" v3="3.3"/></cir>');
+const textRing=parse('$ 0 .000005 10 50 5\n163 64 96 128 96 13319 4 3.3 0 3.3 0 0');
+assert.deepEqual(savedRing.electrical,textRing.electrical);
+assert.deepEqual(savedRing.layout,textRing.layout);
+const busCounter=falstad.importText('<cir><ctr2 x="64 96 128 96" bi="4" bo="2"/></cir>');
+assert.equal(busCounter.document,null);
+assert.match(busCounter.diagnostics[0].message,/Bus counter pins/);
+
+for(const [name,steps,value,traceCount] of [
+  ['counter8',1000,181,8],['flashadc',2000,4,4],
+]){
+  const circuit=bundledCircuit(name+'.txt');
+  const editor=core.editing.create(circuit,()=>{},{wireSections:true});
+  editor.replace(JSON.parse(JSON.stringify(circuit)));
+  const reopened=editor.document;
+  assert.equal(adapter.compile(reopened).canonical,adapter.compile(circuit).canonical,name);
+  assert.deepEqual(reopened.layout.scopes,circuit.layout.scopes,name);
+  const {channels,unresolved}=geometry.scopeChannels(reopened);
+  assert.equal(channels.length,traceCount);
+  assert.deepEqual(unresolved,[]);
+  session.loadDocument(reopened);
+  const display=reopened.electrical.components.find(c=>c.kind==='decimalDisplay');
+  const frame=session.step(steps,core.signals.create().setChannels(channels));
+  assert.deepEqual(frame.componentMeasurements[display.id],{value,text:String(value)},name);
+}
+
+const decoder=bundledCircuit('7segdecoder.txt');
+const decoderInputs=decoder.electrical.components.filter(c=>c.kind==='logicInput');
+const decoderDisplay=decoder.electrical.components.find(c=>c.kind==='sevenSegment');
+const digitSegments=['abcdef','bc','abdeg','abcdg','bcfg','acdfg','acdefg','abc','abcdefg','abcdfg'];
+session.loadDocument(decoder);
+for(const [digit,expected] of digitSegments.entries()){
+  for(const [bit,component] of decoderInputs.entries())component.parameters.state=(digit>>bit)&1;
+  session.updateProjection(JSON.parse(adapter.compile(decoder).canonical),decoder.id);
+  const frame=session.step(40);
+  const segments=frame.componentMeasurements[decoderDisplay.id].segments;
+  assert.equal(segments.map((level,i)=>level===1?String.fromCharCode(97+i):'').join(''),expected,`decoder digit ${digit}`);
+}
+
+const displayWord=0xA5;
+const displayRails=Array.from({length:8},(_,bit)=>
+  `<R x="192 ${96+bit*32} 160 ${96+bit*32}" maxv="${displayWord>>bit&1?2.2:1.1}"/>`
+).join('');
+const wideDisplay=parse(`<cir><dd x="192 96 256 96" bc="8" bo="1" hv="3.3" dm="1"/>${displayRails}</cir>`);
+const wideDisplayId=wideDisplay.electrical.components[0].id;
+session.loadDocument(wideDisplay);
+const wideFrame=session.step(5);
+assert.deepEqual(wideFrame.componentMeasurements[wideDisplayId],{value:displayWord,text:'A5'});
+const wideEditor=core.editing.create(wideDisplay);
+wideEditor.execute({type:'setParameters',componentId:wideDisplayId,parameters:{bitCount:4,mode:2}});
+session.updateProjection(JSON.parse(adapter.compile(wideEditor.document).canonical),wideDisplay.id);
+assert.deepEqual(session.step(5).componentMeasurements[wideDisplayId],{value:5,text:'5'});
+assert.match(falstad.importText('<cir><dd x="0 0 96 0" bo="2"/></cir>').diagnostics[0].message,/Bus display pins/);
+
+const matrixText=`$ 1 0.000005 120 50 5
+405 96 64 160 64 0 3 2
+R 0 64 -32 64 0 0 40 5 0 0 .5
+r 0 64 96 64 0 1000
+g 96 96 80 96 0
+g 128 128 128 160 0
+g 160 128 160 160 0
+g 192 128 192 160 0`;
+const matrix=parse(matrixText),matrixId=matrix.electrical.components[0].id;
+const xmlMatrix=parse('<cir f="1"><LEDArray x="96 64 160 64" sx="3" sy="2"/></cir>');
+assert.deepEqual(xmlMatrix.electrical.components[0].parameters,{columns:3,rows:2});
+session.loadDocument(matrix);
+const matrixFrame=session.step(20),matrixCurrents=matrixFrame.componentMeasurements[matrixId].currents;
+assert.equal(matrixCurrents.length,6);
+assert.ok(matrixCurrents.slice(0,3).every(current=>current>.0005));
+assert.ok(matrixCurrents.slice(3).every(current=>Math.abs(current)<1e-12));
+const matrixEditor=core.editing.create(matrix);
+matrixEditor.execute({type:'setParameters',componentId:matrixId,parameters:{columns:2,rows:3}});
+session.updateProjection(JSON.parse(adapter.compile(matrixEditor.document).canonical),matrix.id);
+const resizedMatrix=session.step(20);
+assert.ok(resizedMatrix.time>matrixFrame.time);
+assert.deepEqual(Object.keys(resizedMatrix.pinVoltages[matrixId]),['C0','C1','R0','R1','R2']);
+assert.ok(resizedMatrix.componentMeasurements[matrixId].currents.slice(2).every(current=>Math.abs(current)<1e-8));
+
+for(const direction of [1,-1]){
+  const rail=(x,y)=>`<R x="${x} ${y} ${x-32} ${y}" maxv="5"/>`;
+  const ground=(x,y)=>`<g x="${x} ${y} ${x} ${y+32}"/>`;
+  const display=parse(`<cir><ssd x="96 64 160 64" ba="7" di="${direction}"/>
+    <r x="0 64 96 64" r="1000"/>
+    ${direction===1?rail(0,64)+ground(288,160):ground(0,64)+rail(288,160)}</cir>`);
+  const id=display.electrical.components[0].id;
+  session.loadDocument(display);
+  const frame=session.step(20);
+  assert.ok(frame.componentMeasurements[id].segments[0]>.7,'the segment lights in either forward orientation');
+  assert.ok(direction*frame.pinCurrents[id].a>0,'terminal current has the configured polarity');
+  const editor=core.editing.create(display);
+  editor.execute({type:'setParameters',componentId:id,parameters:{segments:16,extra:2}});
+  session.updateProjection(JSON.parse(adapter.compile(editor.document).canonical),display.id);
+  const resized=session.step(20);
+  assert.ok(resized.time>frame.time);
+  assert.equal(resized.componentMeasurements[id].segments.length,17);
+  near(resized.componentMeasurements[id].segments[0],frame.componentMeasurements[id].segments[0],'adding segments retains forward illumination');
+}
+
 const scrCircuit=bundledCircuit('scr.txt');
 session.loadDocument(JSON.parse(JSON.stringify(scrCircuit)));
 session.setSwitch('c4',true);
@@ -839,7 +1138,7 @@ for(const text of [
   '<cir><r x="0 0 96 0"></cir>', '<cir><r x="0 0 96 0"/></cir><cir/>',
   '<!DOCTYPE cir SYSTEM "file:///etc/passwd"><cir/>', '<cir><r x="0 0 96 0" r="1" r="2"/></cir>',
   '<cir><r x="0 0 96 0" r="&unknown;"/></cir>', '<cir><r x="0 0 96 0" mystery="1"/></cir>',
-  '<cir><VCVS x="0 0 96 0" ex="a &gt; b"/></cir>', '<cir><v x="0 0 96 0" riseTime="1"/></cir>',
+  '<cir><VCVS x="0 0 96 0" ex="a &gt;"/></cir>', '<cir><v x="0 0 96 0" riseTime="1"/></cir>',
   '<cir><r x="0 0 96 0" f="4294967296"/></cir>', '<cir><r x="0 0 96 0" r="NaN"/></cir>',
   '<cir><a x="0 0 128 0" vd="NaN"/></cir>',
 ]) {
@@ -848,6 +1147,7 @@ for(const text of [
 }
 const xmlBad=falstad.importText('<cir>\n<r x="0 0 96 0" r="-1"/>\n</cir>');
 assert.equal(xmlBad.document,null);
+assert.equal(parse('<cir><VCVS x="0 0 96 0" ex="a &gt; b"/></cir>').electrical.components[0].parameters.expression,'a > b');
 console.log('XML import passed: legacy equivalence, real divider/amplifier readings, XML-specific defaults, diagnostics, entities and malformed input.');
 // User's actual current Ohm's Law export: WF_VAR is 7 in upstream VoltageElm.
 // Older bundled 172 records use 6; XML must use current constructor semantics.

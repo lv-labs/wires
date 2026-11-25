@@ -40,6 +40,25 @@ type Workspace = { source: string; draft: string }
 type Preview = { source: string; entry: Entry }
 type Failure = { source: string; message: string }
 const groups = libraryGroups(library.map((entry) => entry.kind))
+const bitDisplays = new Set(["decimalDisplay", "instructionDisplay"])
+
+function previewPins(entry: Entry, parameters?: Record<string, unknown>) {
+  const scale = entry.metadata.drawingScale ?? 1
+  const pins = Object.fromEntries(
+    Object.entries(entry.metadata.pins).map(([id, point]) => [
+      id,
+      point.map((value) => value * scale),
+    ])
+  )
+  return core.catalog.componentPins(
+    {
+      kind: entry.kind,
+      parameters: { ...entry.metadata.parameters, ...parameters },
+    },
+    { pins }
+  )
+}
+
 function Artwork({
   entry,
   rotation = 0,
@@ -58,6 +77,14 @@ function Artwork({
   glow?: boolean | number
 }) {
   const scale = entry.metadata.drawingScale ?? 1
+  const pinPositions = bitDisplays.has(entry.kind)
+    ? Object.fromEntries(
+        Object.entries(previewPins(entry, parameters)).map(([id, [x, y]]) => [
+          id,
+          [x / scale, y / scale] as const,
+        ])
+      )
+    : undefined
   return (
     <g
       transform={`rotate(${rotation}) scale(${mirror ? -1 : 1} 1)`}
@@ -69,6 +96,7 @@ function Artwork({
       <g transform={`scale(${scale})`} strokeWidth={6.25 / scale}>
         <entry.Symbol
           parameters={{ ...entry.metadata.parameters, ...parameters }}
+          pinPositions={pinPositions}
           pose={{ rotation, mirror }}
           current={current}
           highlighted={highlighted}
@@ -91,20 +119,7 @@ function PinMarkers({
   mirror: boolean
   zoom: number
 }) {
-  const scale = entry.metadata.drawingScale ?? 1
-  const pins = Object.fromEntries(
-    Object.entries(entry.metadata.pins).map(([id, point]) => [
-      id,
-      point.map((value) => value * scale),
-    ])
-  )
-  const positions = core.catalog.componentPins(
-    {
-      kind: entry.kind,
-      parameters: { ...entry.metadata.parameters, ...parameters },
-    },
-    { pins }
-  ) as Record<string, [number, number]>
+  const positions = previewPins(entry, parameters)
   return (
     <g transform={`rotate(${rotation}) scale(${mirror ? -1 : 1} 1)`}>
       {Object.entries(positions).map(([id, p]) => {
@@ -813,7 +828,23 @@ export default function App() {
                 .map(([key, value]) => (
                   <label key={key}>
                     {key}
-                    {typeof value === "boolean" ? (
+                    {key === "bitCount" && bitDisplays.has(entry.kind) ? (
+                      <NativeSelect
+                        value={String(parameters[key] ?? value)}
+                        onChange={(event) =>
+                          setParameters((p) => ({
+                            ...p,
+                            [key]: Number(event.target.value),
+                          }))
+                        }
+                      >
+                        {Array.from({ length: 16 }, (_, index) => index + 1).map((bits) => (
+                          <NativeSelectOption key={bits} value={String(bits)}>
+                            {bits}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                    ) : typeof value === "boolean" ? (
                       <Checkbox
                         checked={Boolean(parameters[key] ?? value)}
                         onCheckedChange={(checked) =>

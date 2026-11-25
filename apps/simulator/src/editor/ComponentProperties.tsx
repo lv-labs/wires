@@ -78,7 +78,10 @@ const labels: Record<string, string> = {
   invertReset: "Active-low reset",
   negativeEdge: "Falling-edge clock",
   edgeTriggered: "Edge-triggered register",
-  modulus: "Modulus · 0 = 16, or 1 to 16",
+  modulus: "Modulus · 0 uses the full count range",
+  lsbFirst: "Least significant bit first",
+  upDown: "Show up/down pin",
+  clockInhibit: "Show clock inhibit pin",
   inverted: "Invert control",
   onResistance: "On resistance · Ω (0 = ideal)",
   linkLabel: "Label for linking switches",
@@ -144,6 +147,10 @@ function choices(component: Component, key: string): string[] | undefined {
 }
 
 function optionValue(component: Component, key: string, index: number) {
+  if (component.kind === "sevenSegment") {
+    if (key === "segments") return String([7, 14, 16][index])
+    if (key === "diodeDirection") return String([0, 1, -1][index])
+  }
   if (key === "mode" && ["logicInput", "logicOutput"].includes(component.kind))
     return ["logic", "numeric", "ternary"][index]
   if (key === "boxStyle" && component.kind === "labeledNode")
@@ -274,7 +281,7 @@ export function ComponentProperties({
                       ...component.parameters,
                     }
                   : (diodeParameters ??
-                    (output
+                    (output || core.catalog.counterKind(component.kind)
                       ? {
                           ...core.catalog.definitions[component.kind].parameters,
                           ...component.parameters,

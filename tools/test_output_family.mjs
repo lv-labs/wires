@@ -15,7 +15,7 @@ for(const kind of outputFamilyKinds){
  const copy=structuredClone(d);M.pasteSelection(copy,M.copySelection(d,new Set([M.token('component','part')])));M.validate(copy);
  session.loadDocument(d);const f=session.step(10);session.reset();assert.deepEqual(session.step(10),f);
  const bad=structuredClone(d);bad.electrical.components[0].parameters.extra=1;assert.throws(()=>M.validate(bad));assert.throws(()=>A.compile(bad));
- const missing=structuredClone(d),field=Object.keys(M.outputSpecs[kind].fields)[0];if(field){delete missing.electrical.components[0].parameters[field];assert.throws(()=>A.compile(missing));}
+ const missing=structuredClone(d),field=Object.keys(M.outputSpecs[kind].fields).find(key=>!M.outputSpecs[kind].fields[key].optional);if(field){delete missing.electrical.components[0].parameters[field];assert.throws(()=>A.compile(missing));}
 }
 // Graphics are inert, remain in saved documents and history, and do not create terminals or reset electrical identity.
 for(const kind of ['text','box','line']){
@@ -72,6 +72,33 @@ for(let value=0;value<16;value++){
  for(const mode of [0,1,2]){session.loadDocument(outputFamilyCircuit('decimalDisplay',{mode},value));const f=session.step(3);assert.equal(f.componentMeasurements.part.text,value.toString(mode===1?16:mode===2?8:10).toUpperCase());}
  session.loadDocument(outputFamilyCircuit('instructionDisplay',{lookup:'0=ZERO\n1-15=Word {a}'},value));assert.equal(session.step(3).componentMeasurements.part.text,value?'Word '+value:'ZERO');
 }
+for(const [bitCount,value] of [[1,1],[8,165],[16,0xC001]]){
+ for(const kind of ['decimalDisplay','instructionDisplay']){
+  const parameters=kind==='instructionDisplay'?{bitCount,lookup:'0x8000-0xFFFF=Wide {a}'}:{bitCount,mode:1,lsbFirst:true};
+  const d=outputFamilyCircuit(kind,parameters,value);
+  session.loadDocument(d);
+  const frame=session.step(3);
+  assert.equal(Object.keys(frame.pinVoltages.part).length,bitCount);
+  const expected=kind==='decimalDisplay'?value.toString(16).toUpperCase():value>=0x8000?'Wide '+value:String(value);
+  assert.equal(frame.componentMeasurements.part.text,expected);
+ }
+}
+{
+ const d=outputFamilyCircuit('instructionDisplay',{bitCount:8,lookup:'0x80-0xFF=Wide {a}'},165);
+ session.loadDocument(d);const initial=session.step(3);
+ const editor=M.create(d);
+ editor.execute({type:'setParameters',componentId:'part',parameters:{...d.electrical.components[0].parameters,bitCount:4}});
+ const resized=editor.document;
+ assert.equal(resized.electrical.wires.filter(w=>w.to.componentId==='part').length,4);
+ assert.equal(resized.electrical.wires.filter(w=>w.to.kind==='junction').length,4);
+ const compiled=A.compile(resized);
+ assert.equal(session.updateProjection(JSON.parse(compiled.canonical),d.id).appliedAtTime,initial.time);
+ const narrow=session.step(3);
+ assert.equal(narrow.componentMeasurements.part.text,'5');
+ const original=A.compile(d);
+ assert.equal(session.updateProjection(JSON.parse(original.canonical),d.id).appliedAtTime,narrow.time);
+ assert.equal(session.step(3).componentMeasurements.part.text,'Wide 165');
+}
 {
  session.loadDocument(outputFamilyCircuit('ledArray'));const f=session.step(10),currents=f.componentMeasurements.part.currents;assert.equal(currents.length,64);assert.ok(currents.slice(0,8).every(i=>i>0));assert.ok(currents.slice(8).every(i=>Math.abs(i)<1e-12));
  near(f.componentCurrents.row0,currents.slice(0,8).reduce((a,b)=>a-b,0),1e-8);
@@ -101,7 +128,7 @@ assert.deepEqual([...normalizedAudio([1,1,1])],[0,0,0]);
 for(const channels of [undefined,[{id:'v',positive:{componentId:'part',pinId:'in'},negative:null}]]){
  session.loadDocument(outputFamilyCircuit('stopTrigger',{threshold:2,delay:.0002}));const f=session.step(1000,channels);assert.equal(f.stopRequested,true);assert.ok(f.time>=.00021-1e-12&&f.time<.00023);if(channels){assert.ok(f.sampleBatch.times.length<1000);assert.equal(f.sampleBatch.values.v.length,f.sampleBatch.times.length);}assert.doesNotThrow(()=>session.snapshot());
 }
-for(const [kind,p] of [['variableVoltage',{voltage:6}],['variableVoltage',{minVoltage:5}],['lamp',{warmTime:0}],['lamp',{initialTemperature:100}],['labeledNode',{name:''}],['voltmeter',{resistance:-1}],['ohmmeter',{current:-1}],['ammeter',{mode:2}],['decimalDisplay',{mode:3}],['instructionDisplay',{lookup:'16=NO'}],['dataExport',{capacity:0}],['audioOutput',{sampleRate:9000}],['stopTrigger',{delay:-1}],['dcMotor',{inertia:0}],['threePhaseMotor',{mutualInductance:10}]]){const d=outputFamilyCircuit(kind,p);assert.throws(()=>M.validate(d));assert.throws(()=>A.compile(d));}
+for(const [kind,p] of [['variableVoltage',{voltage:6}],['variableVoltage',{minVoltage:5}],['lamp',{warmTime:0}],['lamp',{initialTemperature:100}],['labeledNode',{name:''}],['voltmeter',{resistance:-1}],['ohmmeter',{current:-1}],['ammeter',{mode:2}],['decimalDisplay',{mode:3}],['instructionDisplay',{lookup:'65536=NO'}],['instructionDisplay',{bitCount:17}],['dataExport',{capacity:0}],['audioOutput',{sampleRate:9000}],['stopTrigger',{delay:-1}],['dcMotor',{inertia:0}],['threePhaseMotor',{mutualInductance:10}]]){const d=outputFamilyCircuit(kind,p);assert.throws(()=>M.validate(d));assert.throws(()=>A.compile(d));}
 for(const kind of ['ammeter','wattmeter']){
  const d=outputFamilyCircuit(kind),pins=kind==='ammeter'?['a','b']:['currentIn','currentOut'];d.electrical.wires.push({id:'short',from:{kind:'pin',componentId:'part',pinId:pins[0]},to:{kind:'pin',componentId:'part',pinId:pins[1]}});assert.throws(()=>A.compile(d),/ideal.*loop/);
 }

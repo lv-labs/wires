@@ -1,4 +1,4 @@
-import { TerminalBox } from "../svg";
+import { Lead, UprightText } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "audioOutput";
@@ -35,5 +35,13 @@ export const output = {
 };
 
 export function Symbol({ pose }: SymbolProps) {
-  return <TerminalBox pin={metadata.pins.in} label="AUDIO" pose={pose} />;
+  return (
+    <>
+      <Lead from={metadata.pins.in} to={[-24, 0]} />
+      <rect x={-24} y={-16} width={48} height={32} />
+      <UprightText pose={pose} y={4} textAnchor="middle" fontSize={10}>
+        AUDIO
+      </UprightText>
+    </>
+  );
 }

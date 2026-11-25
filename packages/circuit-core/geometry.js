@@ -9,6 +9,8 @@
   const referenceKey = ref => ref.kind === 'pin' ? JSON.stringify(['pin', ref.componentId, ref.pinId]) : JSON.stringify(['junction', ref.junctionId]);
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const pinCenteredSources = new Set(['antennaSource','amSource','fmSource','noiseSource']);
+  const bitDisplays = new Set(['decimalDisplay','instructionDisplay']);
   function pin(document, ref) {
     if (ref.kind === 'junction') return document.layout.junctions[ref.junctionId];
     const component = document.electrical.components.find(c => c.id === ref.componentId);
@@ -140,8 +142,23 @@
     const drawingScale = definitions[component.kind].drawingScale || 1, sheetScale = grid / 16;
     const points = Object.keys(Catalog.componentPins(component)).map(pinId => pin(document, { kind: 'pin', componentId: component.id, pinId }));
     if(graphic(component.kind)){const b=graphicSize(component);for(const [x,y] of [[-b.width/2,-b.height/2],[b.width/2,-b.height/2],[-b.width/2,b.height/2],[b.width/2,b.height/2]]){const [rx,ry]=rotateOffset(x*(pose.mirror?-1:1),y,pose.rotation);points.push({x:pose.x+rx,y:pose.y+ry});}}
-    if(component.kind==='ledArray'||['decimalDisplay','instructionDisplay'].includes(component.kind)){const w=component.kind==='ledArray'?128*drawingScale:48*drawingScale,h=component.kind==='ledArray'?128*drawingScale:64*drawingScale;for(const [x,y] of [[-w,-h],[w,-h],[-w,h],[w,h]]){const [rx,ry]=rotateOffset(x,y,pose.rotation);points.push({x:pose.x+rx,y:pose.y+ry});}}
-    if(!graphic(component.kind))points.push({ x: pose.x - 24*sheetScale, y: pose.y - 24*sheetScale }, { x: pose.x + 24*sheetScale, y: pose.y + 24*sheetScale });
+    if(Catalog.displayChipKind(component.kind)){
+      const kind=component.kind;
+      const layout=Catalog.displayChipLayout(kind,component.parameters);
+      const body=bitDisplays.has(kind)?componentHitBox(component):{
+        x:kind==='ledArray'?50*layout.columns:25*layout.columns,
+        y:kind==='ledArray'?50*layout.rows:25*layout.rows,
+      };
+      for(const x of [-body.x,body.x])for(const y of [-body.y,body.y]){
+        const [rx,ry]=rotateOffset((x+(body.centerX??0))*(pose.mirror?-1:1),y,pose.rotation);
+        points.push({x:pose.x+rx,y:pose.y+ry});
+      }
+    }
+    if(pinCenteredSources.has(component.kind)){
+      const body=componentHitBox(component);
+      const [dx,dy]=rotateOffset(0,body.centerY,pose.rotation);
+      points.push({x:pose.x+dx-body.x,y:pose.y+dy-body.y},{x:pose.x+dx+body.x,y:pose.y+dy+body.y});
+    }else if(!graphic(component.kind))points.push({ x: pose.x - 24*sheetScale, y: pose.y - 24*sheetScale }, { x: pose.x + 24*sheetScale, y: pose.y + 24*sheetScale });
     return {
       x: Math.min(...points.map(p => p.x)) - 8*sheetScale, y: Math.min(...points.map(p => p.y)) - 8*sheetScale,
       right: Math.max(...points.map(p => p.x)) + 8*sheetScale, bottom: Math.max(...points.map(p => p.y)) + 8*sheetScale
@@ -178,6 +195,9 @@
     return inside;
   }
   function componentHitBox(c) {
+    if(bitDisplays.has(c.kind))return {x:112.5,y:Math.max(75,50*Catalog.displayChipLayout(c.kind,c.parameters).rows),centerX:37.5};
+    if(pinCenteredSources.has(c.kind))return {x:50,y:50,centerY:-100};
+    if(c.kind==='currentSource')return {x:50,y:50};
     const bodyScale = definitions[c.kind].drawingScale || 1;
     if(c.kind==='resistor')return {x:Math.max(70,34*bodyScale),y:Math.max(30,24*bodyScale)};
     const base = {x:(c.kind==='ground'?25:34)*bodyScale,y:(['dFlipFlop','jkFlipFlop','tFlipFlop','counter','latch','halfAdder','fullAdder'].includes(c.kind)?Math.max(...Object.values(Catalog.componentPins(c)).map(p=>Math.abs(p[1])))/bodyScale+16:c.kind==='pushSwitch'?40:c.kind==='tappedTransformer'?64:c.kind==='customTransformer'?80:c.kind==='dpdtSwitch'?56:['voltageSource','voltageRail','opamp','transformer'].includes(c.kind)?36:24)*bodyScale};
@@ -205,7 +225,7 @@
       const dx = point.x - pose.x, dy = point.y - pose.y, x = dx * Math.cos(r) - dy * Math.sin(r), y = dx * Math.sin(r) + dy * Math.cos(r);
       if(graphic(c.kind)){const b=graphicSize(c),ux=pose.mirror?-x:x;if(c.kind==='line'){if(distance({x:ux,y},closest({x:ux,y},{x:-b.width/2,y:-c.parameters.height/2},{x:b.width/2,y:c.parameters.height/2}))<8/scale)return {kind:'component',id:c.id};}else if(c.kind==='box'){if(Math.abs(ux)<=b.width/2+8/scale&&Math.abs(y)<=b.height/2+8/scale&&Math.min(Math.abs(Math.abs(ux)-b.width/2),Math.abs(Math.abs(y)-b.height/2))<8/scale)return {kind:'component',id:c.id};}else if(Math.abs(ux)<=b.width/2+6&&Math.abs(y)<=b.height/2+6)return {kind:'component',id:c.id};continue;}
       const b = componentHitBox(c);
-      if (Math.abs(x)<b.x && Math.abs(y)<b.y) return {kind:'component',id:c.id};
+      if (Math.abs((pose.mirror?-x:x)-(b.centerX??0))<b.x && Math.abs(y-(b.centerY??0))<b.y) return {kind:'component',id:c.id};
     }
     for (const wire of [...document.electrical.wires].reverse()) {
       const points = route(document, wire);

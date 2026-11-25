@@ -3,14 +3,13 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "nandGate";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "U",
   name: "NAND gate",
   pins: {
-    a: [-48, -16],
-    b: [-48, 16],
-    out: [48, 0],
+    a: [-150, -50],
+    b: [-150, 50],
+    out: [150, 0],
   },
   parameters: {
     highVoltage: 5,

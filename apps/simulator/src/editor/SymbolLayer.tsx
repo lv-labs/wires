@@ -12,6 +12,7 @@ export function SymbolBody({
   component,
   pose,
   current = 0,
+  reading,
   measured = {},
   running = false,
   highlighted = false,
@@ -20,6 +21,7 @@ export function SymbolBody({
   component: Component
   pose: NonNullable<SymbolProps["pose"]>
   current?: number
+  reading?: string
   ledGlow?: boolean | number
   highlighted?: boolean
   measured?: SymbolProps["measured"]
@@ -31,6 +33,15 @@ export function SymbolBody({
   const drawingScale =
     core.catalog.definitions[component.kind].drawingScale ?? 1
   const isGraphic = core.catalog.graphic(component.kind)
+  const pinPositions =
+    core.catalog.counterKind(component.kind) ||
+    core.catalog.displayChipKind(component.kind)
+    ? Object.fromEntries(
+        Object.entries(core.catalog.componentPins(component)).map(
+          ([pin, [x, y]]) => [pin, [x / drawingScale, y / drawingScale] as const]
+        )
+      )
+    : undefined
   return (
     <g
       transform={`scale(${drawingScale})`}
@@ -42,9 +53,11 @@ export function SymbolBody({
       }
     >
       <View
+        pinPositions={pinPositions}
         parameters={component.parameters}
         pose={pose}
         current={current}
+        reading={reading}
         measured={measured}
         running={running}
         highlighted={highlighted}
@@ -186,6 +199,7 @@ export const SymbolLayer = memo(function SymbolLayer({
                 component={displayComponent}
                 pose={pose}
                 current={current}
+                reading={component.kind === "testPoint" ? value : undefined}
                 measured={measured}
                 running={running}
                 highlighted={isSelected || hoveredLed === component.id}
@@ -197,11 +211,12 @@ export const SymbolLayer = memo(function SymbolLayer({
               displayComponent.parameters.showValues === true && (
                 <PotentiometerValues component={displayComponent} pose={pose} />
               )}
-            {!core.catalog.graphic(component.kind) && value && (
-              <SheetLabel pose={pose} kind={component.kind}>
-                {value}
-              </SheetLabel>
-            )}
+            {component.kind !== "testPoint" &&
+              !core.catalog.graphic(component.kind) && value && (
+                <SheetLabel pose={pose} kind={component.kind}>
+                  {value}
+                </SheetLabel>
+              )}
           </g>
         )
       })}

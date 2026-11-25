@@ -4,9 +4,11 @@ export type Pin = readonly [number, number];
 export type Pose = { rotation: number; mirror: boolean };
 export type Measurement = number | string | boolean | null | number[];
 export type SymbolProps = {
+  pinPositions?: Record<string, Pin>;
   parameters?: Record<string, unknown>;
   pose?: Pose;
   current?: number;
+  reading?: string;
   running?: boolean;
   highlighted?: boolean;
   glow?: boolean | number;
@@ -114,28 +116,8 @@ export function Meter({
       <Lead from={pins.a} to={[-50, 0]} />
       <Lead from={pins.b} to={[50, 0]} />
       <circle r={50} />
-      <UprightText pose={pose} y={16} textAnchor="middle" fontSize={64}>
+      <UprightText pose={pose} dy="0.35em" textAnchor="middle" fontSize={64}>
         {letter}
-      </UprightText>
-    </>
-  );
-}
-
-export function TerminalBox({
-  pin,
-  label,
-  pose,
-}: {
-  pin: Pin;
-  label: string;
-  pose?: Pose;
-}) {
-  return (
-    <>
-      <Lead from={pin} to={[-24, 0]} />
-      <rect x={-24} y={-16} width={48} height={32} />
-      <UprightText pose={pose} y={4} textAnchor="middle" fontSize={10}>
-        {label}
       </UprightText>
     </>
   );
@@ -203,16 +185,32 @@ export function Display({
   pose?: Pose;
 }) {
   const text = value.length > 8 ? value.slice(0, 8) + "…" : value;
+  const halfHeight = Math.max(
+    75,
+    ...Object.values(pins).map(([, y]) => Math.abs(y) + 50),
+  );
   return (
     <>
-      <rect x={-24} y={-64} width={72} height={128} />
-      <UprightText pose={pose} x={12} y={5} textAnchor="middle" fontSize={12}>
+      <rect x={-75} y={-halfHeight} width={225} height={2 * halfHeight} rx={12} />
+      <UprightText
+        pose={pose}
+        x={50}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={Math.min(36, 190 / Math.max(1, text.length))}
+      >
         {text}
       </UprightText>
       {Object.entries(pins).map(([name, pin], index) => (
         <g key={name}>
-          <Lead from={pin} to={[-24, pin[1]]} />
-          <UprightText pose={pose} x={-20} y={pin[1] + 4} fontSize={8}>
+          <Lead from={pin} to={[-75, pin[1]]} />
+          <UprightText
+            pose={pose}
+            x={-60}
+            y={pin[1]}
+            dominantBaseline="central"
+            fontSize={25}
+          >
             {index}
           </UprightText>
         </g>

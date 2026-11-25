@@ -3,17 +3,16 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "instructionDisplay";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "INS",
-  name: "Instruction display (4 bit)",
+  name: "Instruction display",
   pins: {
-    I0: [-48, 48],
-    I1: [-48, 16],
-    I2: [-48, -16],
-    I3: [-48, -48],
+    I0: [-150, 150],
+    I1: [-150, 50],
+    I2: [-150, -50],
+    I3: [-150, -150],
   },
   parameters: {
+    bitCount: 4,
     threshold: 2.5,
     lookup: "0=NOP\n1=LOAD\n2-15=OP {a}",
   },
@@ -22,6 +21,14 @@ export const metadata = {
 export const output = {
   type: "instruction",
   fields: {
+    bitCount: {
+      label: "Bits · 1 to 16",
+      type: "number",
+      min: 1,
+      max: 16,
+      integer: true,
+      optional: true,
+    },
     threshold: {
       label: "Logic threshold · V",
       type: "number",
@@ -35,10 +42,14 @@ export const output = {
   sign: null,
 };
 
-export function Symbol({ measured, pose }: SymbolProps) {
+export function Symbol({
+  measured,
+  pose,
+  pinPositions = metadata.pins,
+}: SymbolProps) {
   return (
     <Display
-      pins={metadata.pins}
+      pins={pinPositions}
       value={String(measured?.text ?? "—")}
       pose={pose}
     />

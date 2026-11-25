@@ -6,7 +6,7 @@ export const metadata = {
   // Original 16-unit artwork, scaled to the 50-unit sheet grid.
   drawingScale: 3.125,
   prefix: "LA",
-  name: "LED array (8 × 8)",
+  name: "LED array",
   pins: {
     C0: [-112, 160],
     C1: [-80, 160],
@@ -25,30 +25,57 @@ export const metadata = {
     R6: [-160, 80],
     R7: [-160, 112],
   },
-  parameters: {},
+  parameters: { columns: 8, rows: 8 },
 } as const;
 
 export const output = {
   type: "405",
-  fields: {},
+  fields: {
+    columns: {
+      label: "Columns · 2 to 16",
+      type: "number",
+      min: 2,
+      max: 16,
+      integer: true,
+      optional: true,
+    },
+    rows: {
+      label: "Rows · 2 to 16",
+      type: "number",
+      min: 2,
+      max: 16,
+      integer: true,
+      optional: true,
+    },
+  },
   sign: null,
 };
 
-export function Symbol({ measured, pose }: SymbolProps) {
+export function Symbol({
+  measured,
+  pose,
+  pinPositions = metadata.pins,
+}: SymbolProps) {
+  const columns = Object.keys(pinPositions).filter((name) =>
+    name.startsWith("C"),
+  ).length;
+  const rows = Object.keys(pinPositions).length - columns;
+  const w = 16 * columns,
+    h = 16 * rows;
   const currents = Array.isArray(measured?.currents) ? measured.currents : [];
   return (
     <>
-      <rect x={-128} y={-128} width={256} height={256} />
-      {Object.entries(metadata.pins).map(([name, pin]) => {
+      <rect x={-w} y={-h} width={2 * w} height={2 * h} />
+      {Object.entries(pinPositions).map(([name, pin]) => {
         const column = name.startsWith("C");
-        const position = -112 + 32 * Number(name.slice(1));
+        const position = column ? pin[0] : pin[1];
         return (
           <g key={name}>
-            <Lead from={pin} to={column ? [position, 128] : [-128, position]} />
+            <Lead from={pin} to={column ? [position, h] : [-w, position]} />
             <UprightText
               pose={pose}
-              x={column ? position + 5 : -152}
-              y={column ? 148 : position - 5}
+              x={column ? position + 5 : -w - 24}
+              y={column ? h + 20 : position - 5}
               fontSize={8}
             >
               {name}
@@ -56,7 +83,7 @@ export function Symbol({ measured, pose }: SymbolProps) {
           </g>
         );
       })}
-      {Array.from({ length: 64 }, (_, index) => {
+      {Array.from({ length: columns * rows }, (_, index) => {
         const brightness = Math.max(
           0.04,
           Math.min(1, (currents[index] ?? 0) / 0.01),
@@ -64,8 +91,8 @@ export function Symbol({ measured, pose }: SymbolProps) {
         return (
           <circle
             key={index}
-            cx={-112 + 32 * (index % 8)}
-            cy={-112 + 32 * Math.floor(index / 8)}
+            cx={16 - w + 32 * (index % columns)}
+            cy={16 - h + 32 * Math.floor(index / columns)}
             r={7}
             stroke="#607064"
             fill={`rgba(255,75,45,${brightness})`}

@@ -15,9 +15,9 @@ with real exports from maintained public releases and older user saves.
 
 ## Checkpoint
 
-The pinned menu has 367 entries. 291 open and pass the library's worker startup
-check, across 290 distinct files. Of those files, 184 open with scope panes.
-76 menu entries remain unavailable. The enabled entries also need verification
+The pinned menu has 367 entries. 319 open and pass the library's worker startup
+check, across 318 distinct files. Of those files, 202 open with scope panes.
+48 menu entries remain unavailable. The enabled entries also need verification
 of simulation behavior and saved settings. [Import coverage](FALSTAD-IMPORT.md)
 documents the supported formats and known limitations.
 
@@ -45,13 +45,34 @@ release, and edits to pole count with an energized coil. With matched starting
 conditions, the oscillator and flip-flop pin voltages matched the pinned
 Falstad app to within 2 × 10⁻¹⁵ V at the sampled points.
 
+Both second-generation current conveyors are available for placement and
+text/XML import. All eight formerly blocked conveyor examples pass worker
+startup. Three examples still report unsupported wire-current scope traces.
+
+VCVS, VCCS, CCVS and CCCS are available for placement and text/XML import.
+All twelve Controlled Sources examples pass worker startup. The current adder,
+variable capacitor and variable inductor restore their four XML slider
+assignments. The multiplier and full rectifier still warn about the saved
+maximum-scale scope option.
+
+Ring counters, binary up/down counters, and parallel-load counters with discrete
+pins support placement, editing and text/XML import. Cascading Ring Counters,
+LED Flasher, Traffic Light and Gray Code Counter pass worker startup. Bus
+counter pins remain a blocker for the TD4 examples.
+
+Decimal displays accept 1–16 discrete bits. Segment displays support 7, 14 and
+16 segments with logic, common-anode or common-cathode inputs. LED arrays accept
+2–16 rows and columns in text and XML. 7-Segment LED Decoder, 8-Bit Ripple Counter and
+Flash ADC pass worker startup. The LED Array example also uses an unsupported
+demultiplexer and custom logic model.
+
 ## Next batch
 
-Start with **second-generation current conveyors (CCII+ and CCII−)**. Eight
-pinned examples report record `179` as their first blocker. Verify X/Y voltage
-tracking and Z current polarity on both variants before enabling the conveyor
-examples. Use the inductor simulator and current integrator to check transient
-behavior and scope targets.
+Start with **multiplexers and demultiplexers**. The Parallel-In Serial-Out
+example is blocked by multiplexer record `184`, and the LED Array example
+uses demultiplexer record `185` and a custom logic model. Verify select bit
+order, inactive outputs and saved scope targets. Track the custom logic model
+requirement with the LED Array example.
 
 ## Work in order
 

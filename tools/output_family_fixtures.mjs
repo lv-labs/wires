@@ -17,7 +17,7 @@ export function outputFamilyCircuit(kind,parameters={},voltage=5){
  }else if(kind==='wattmeter'){
   add('vin','voltageRail',{waveform:{kind:'dc',voltage}});wire('vin','p','part','currentIn');load('load','part','currentOut');wire('part','returnIn','g','g');
  }else if(['decimalDisplay','instructionDisplay'].includes(kind)){
-  for(let bit=0;bit<4;bit++){add('bit'+bit,'voltageRail',{waveform:{kind:'dc',voltage:((voltage>>bit)&1)*5}});wire('bit'+bit,'p','part','I'+bit);}
+  for(let bit=0;bit<(parameters.bitCount??4);bit++){add('bit'+bit,'voltageRail',{waveform:{kind:'dc',voltage:((voltage>>bit)&1)*5}});wire('bit'+bit,'p','part','I'+bit);}
  }else if(kind==='ledArray'){
   for(let i=0;i<8;i++){add('row'+i,'voltageRail',{waveform:{kind:'dc',voltage:i===0?voltage:0}});add('limit'+i,'resistor',{resistance:1000});wire('row'+i,'p','limit'+i,'a');wire('limit'+i,'b','part','R'+i);wire('part','C'+i,'g','g');}
  }else if(kind==='threePhaseMotor'){

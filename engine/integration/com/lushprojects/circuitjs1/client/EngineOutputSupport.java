@@ -14,14 +14,14 @@ final class EngineOutputSupport {
     static CircuitElm construct(String[] f, double dt) {
         String type=f[0];
         int count=type.equals("172")?13:type.equals("181")?11:type.equals("207")?7:type.equals("p")?9:
-            type.equals("216")||type.equals("370")||type.equals("420")||type.equals("368")||type.equals("419")||type.equals("405")||type.equals("instruction")?8:
+            type.equals("216")||type.equals("370")||type.equals("420")||type.equals("368")||type.equals("instruction")?8:
             type.equals("210")?7:type.equals("211")||type.equals("408")?9:type.equals("415")?14:type.equals("427")?13:0;
         if(count==0)return null;
-        require(f.length==count,"Invalid output/source field count");
+        require(f.length==count||(type.equals("instruction")&&f.length==count+1),"Invalid output/source field count");
         int x=Integer.parseInt(f[1]),y=Integer.parseInt(f[2]),x2=Integer.parseInt(f[3]),y2=Integer.parseInt(f[4]),flags=Integer.parseInt(f[5]);
         int allowed=type.equals("p")||type.equals("370")?3:type.equals("207")?4:type.equals("368")?1:0;
         require(flags==allowed,"Unsupported output/source flags");
-        if(type.equals("420")||type.equals("419")||type.equals("405")||type.equals("427")||type.equals("instruction"))require(y==32&&y2==32&&x2-x==64,"Invalid output chip geometry");
+        if(type.equals("420")||type.equals("427")||type.equals("instruction"))require(y==32&&y2==32&&x2-x==64,"Invalid output chip geometry");
         String args="";for(int i=6;i<f.length;i++)args+=f[i]+" ";
         StringTokenizer st=new StringTokenizer(args);
         if(type.equals("172")) {
@@ -37,9 +37,13 @@ final class EngineOutputSupport {
         if(type.equals("370")){integer(f,6,0,1);require(f[7].equals("0"),"Invalid ammeter scale");return new AmmeterElm(x,y,x2,y2,3,st);}
         if(type.equals("420")){require(f[6].equals("32"),"Invalid wattmeter width");integer(f,7,0,1);return new WattmeterElm(x,y,x2,y2,0,st);}
         if(type.equals("368")){integer(f,6,0,5);String label=decode(f[7]);require(label.length()<=80,"Test-point label too long");return new TestPointElm(x,y,x2,y2,1,new StringTokenizer(f[6]+" "+CustomLogicModel.escape(label)));}
-        if(type.equals("419")){require(f[6].equals("4"),"Display requires four bits");integer(f,7,0,2);return new DecimalDisplayElm(x,y,x2,y2,0,st);}
-        if(type.equals("405")){require(f[6].equals("8")&&f[7].equals("8"),"LED array requires 8 by 8 pins");return new LEDArrayElm(x,y,x2,y2,0,st);}
-        if(type.equals("instruction")){double threshold=number(f,6);String lookup=decode(f[7]);require(lookup.length()<=4096,"Lookup too long");return new EngineInstructionDisplay(x,y,x2,y2,threshold,lookup);}
+        if(type.equals("instruction")){
+            double threshold=number(f,6);
+            String lookup=decode(f[7]);
+            require(lookup.length()<=4096,"Lookup too long");
+            int bits=f.length==9?integer(f,8,1,16):4;
+            return new EngineInstructionDisplay(x,y,x2,y2,threshold,lookup,bits);
+        }
         if(type.equals("210")){integer(f,6,1,100000);return new DataRecorderElm(x,y,x2,y2,0,st);}
         if(type.equals("211")){
             double duration=number(f,6);int rate=integer(f,7,8000,48000);
@@ -56,8 +60,8 @@ final class EngineOutputSupport {
     }
     // Only the post geometry changes: the original display's lookup/evaluation is reused.
     static final class EngineInstructionDisplay extends InstructionDisplayElm {
-        EngineInstructionDisplay(int x,int y,int x2,int y2,double threshold,String lookup){super(x,y);this.x2=x2;this.y2=y2;this.threshold=threshold;lookupText=lookup;busWidth=4;parseEntries(null);allocNodes();}
-        Point getPost(int n){return new Point(x,y+32*(3-n));}
+        EngineInstructionDisplay(int x,int y,int x2,int y2,double threshold,String lookup,int bits){super(x,y);this.x2=x2;this.y2=y2;this.threshold=threshold;lookupText=lookup;busWidth=bits;parseEntries(null);allocNodes();}
+        Point getPost(int n){return new Point(x,y+32*(busWidth-1-n));}
         int getPostWidth(int n){return 1;}
     }
     static void initialize(CircuitElm elm){if(elm instanceof AudioOutputElm){AudioOutputElm e=(AudioOutputElm)elm;e.dataStart=CircuitElm.sim.t;e.nextDataSample=e.dataStart+e.sampleStep;e.dataSampleCount=0;e.dataSample=0;}}
@@ -77,7 +81,14 @@ final class EngineOutputSupport {
         else if(elm instanceof OhmMeterElm){put(result,"value",elm.getCurrent()==0?Double.NaN:elm.getVoltageDiff()/elm.getCurrent());}
         else if(elm instanceof AmmeterElm){AmmeterElm e=(AmmeterElm)elm;put(result,"value",e.meter==0?e.current:e.rmsI);}
         else if(elm instanceof WattmeterElm){WattmeterElm e=(WattmeterElm)elm;put(result,"value",e.meter==0?e.getPower():e.avgPower);put(result,"voltage",e.getVoltageDiff());put(result,"current",e.getCurrent());}
-        else if(elm instanceof DecimalDisplayElm){DecimalDisplayElm e=(DecimalDisplayElm)elm;int v=0;for(int i=0;i<4;i++)if(e.pins[i].value)v|=1<<i;put(result,"value",v);text(result,"text",Integer.toString(v,e.displayMode==1?16:e.displayMode==2?8:10).toUpperCase());}
+        else if(elm instanceof DecimalDisplayElm){
+            DecimalDisplayElm display=(DecimalDisplayElm)elm;
+            int value=0;
+            for(int i=0;i<display.bitCount;i++)if(display.pins[i].value)value|=1<<i;
+            put(result,"value",value);
+            text(result,"text",Integer.toString(value,display.displayMode==1?16:display.displayMode==2?8:10).toUpperCase());
+        }
+        else if(elm instanceof SevenSegElm)array(result,"segments",EngineDisplaySupport.segmentLevels((SevenSegElm)elm));
         else if(elm instanceof InstructionDisplayElm)text(result,"text",((InstructionDisplayElm)elm).getDisplayText());
         else if(elm instanceof LEDArrayElm)array(result,"currents",((LEDArrayElm)elm).currents);
         else if(elm instanceof DataRecorderElm){DataRecorderElm e=(DataRecorderElm)elm;put(result,"samples",e.dataFull?e.dataCount:e.dataPtr);}

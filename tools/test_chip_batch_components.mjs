@@ -58,6 +58,69 @@ for(const invertReset of [false,true]){
  assert.equal(word(session.step(3),'Q'),invertReset?0:9);
  session.loadDocument(chipBatchCircuit('counter',{invertReset},{clock:square(1000),reset:invertReset?0:5}));assert.equal(word(session.step(400),'Q'),0);
 }
+
+function editWhileRunning(document,id,parameters){
+ const component=document.electrical.components.find(c=>c.id===id);
+ Object.assign(component.parameters,parameters);
+ const compiled=A.compile(document);
+ session.updateProjection(JSON.parse(compiled.canonical),document.id);
+ return session.step(4);
+}
+function input(document,pin,voltage){
+ return editWhileRunning(document,'in'+pin,{waveform:{kind:'dc',voltage}});
+}
+function pulse(document){
+ input(document,'clock',0);
+ return input(document,'clock',5);
+}
+const ring=chipBatchCircuit('ringCounter',{bits:4,initialValue:4},{clock:0});
+session.loadDocument(ring);
+assert.equal(word(session.step(4),'Q'),4,'saved one-hot state');
+assert.equal(word(pulse(ring),'Q'),8,'advance one stage');
+assert.equal(word(pulse(ring),'Q'),1,'wrap to Q0');
+input(ring,'inhibit',5);
+assert.equal(word(pulse(ring),'Q'),1,'inhibit blocks the clock');
+input(ring,'inhibit',0);
+assert.equal(word(pulse(ring),'Q'),2,'the next rising edge resumes counting');
+const resizedRing=structuredClone(ring);
+const editor=M.create(resizedRing);
+editor.execute({type:'setParameters',componentId:'part',parameters:{bits:6}});
+const resized=A.compile(editor.document);
+session.updateProjection(JSON.parse(resized.canonical),editor.document.id);
+assert.equal(word(session.step(4),'Q'),2,'adding stages preserves the current stage');
+assert.equal(word(input(editor.document,'reset',0),'Q'),1,'ring reset selects Q0');
+
+const binary=chipBatchCircuit('counter',{bits:6,upDown:true,initialValue:7,modulus:10,invertReset:false},{clock:0,direction:5});
+session.loadDocument(binary);
+assert.equal(word(pulse(binary),'Q'),6,'high direction input counts down');
+input(binary,'direction',0);
+assert.equal(word(pulse(binary),'Q'),7,'low direction input counts up');
+assert.equal(word(pulse(binary),'Q'),8);
+assert.equal(word(pulse(binary),'Q'),9);
+assert.equal(word(pulse(binary),'Q'),0,'custom modulus wraps');
+const wideCounter=chipBatchCircuit('counter',{bits:6,upDown:true,lsbFirst:true,invertReset:false},{direction:5});
+session.loadDocument(wideCounter);
+const wideOutputs=pulse(wideCounter).pinVoltages.part;
+for(let bit=0;bit<6;bit++)near(wideOutputs['Q'+bit],5);
+
+const loadCounter=chipBatchCircuit('loadCounter',{bits:3,modulus:4,initialValue:2},{
+ clock:0,enableP:5,enableT:5,load:5,I1:5,I0:5,
+});
+session.loadDocument(loadCounter);
+assert.equal(word(session.step(4),'Q'),2,'parallel-load counter restores its saved state');
+let loaded=pulse(loadCounter);
+assert.equal(word(loaded,'Q'),3);
+near(loaded.pinVoltages.part.carry,5);
+input(loadCounter,'enableP',0);
+assert.equal(word(pulse(loadCounter),'Q'),3,'enable pin blocks counting');
+input(loadCounter,'enableT',0);
+near(session.step(2).pinVoltages.part.carry,0);
+input(loadCounter,'I1',0);
+input(loadCounter,'load',0);
+loaded=pulse(loadCounter);
+assert.equal(word(loaded,'Q'),1,'parallel load takes priority on the rising edge');
+assert.equal(word(input(loadCounter,'clear',0),'Q'),0,'clear acts asynchronously');
+
 // Latch/register: sample last solved inputs on each step, transparent or rising load.
 for(const edgeTriggered of [false,true])for(const initialValue of [0,9,15]){
  const inputs={load:square(1000)};for(let bit=0;bit<4;bit++)inputs['I'+bit]=square(137+bit*101);
@@ -74,7 +137,7 @@ for(const [kind,p] of [['counter',{initialValue:16}],['counter',{modulus:17}],['
  const d=chipBatchCircuit(kind,p);assert.throws(()=>M.validate(d));assert.throws(()=>A.compile(d));
 }
 session.loadDocument(chipBatchCircuit('halfAdder'));const prior=engine.snapshot();
-for(const record of ['164 0 32 64 32 0 3 0 0 0 0 true 0','164 0 32 64 32 0 4 0 0 0 0 true 17','164 0 32 64 32 0 4 0 0 0 0 nope 0','164 0 32 64 32 4 4 0 0 0 0 true 0','168 0 32 64 32 0 4 0 0 0 0','168 0 32 64 32 2 4 0 0 2 0','195 0 32 64 32 1','195 0 32 64 32 8192 0','196 0 32 64 32 0 4','196 0 32 64 32 2 5']){
+for(const record of ['164 0 32 64 32 0 3 0 0 0 0 true 0','164 0 32 64 32 0 4 0 0 0 0 true 17','164 0 32 64 32 0 4 0 0 0 0 nope 0','164 0 32 64 32 16 4 0 0 0 0 true 0','168 0 32 64 32 0 4 0 0 0 0','168 0 32 64 32 2 4 0 0 2 0','195 0 32 64 32 1','195 0 32 64 32 8192 0','196 0 32 64 32 0 4','196 0 32 64 32 2 5']){
  assert.throws(()=>engine.load(record,1e-5));assert.deepEqual(engine.snapshot(),prior);
 }
 console.log('Chip batch checks passed: counter edges/reset/modulus, latch/register timing/state, half/full-adder truth tables, post mapping, custom voltage, history/copy/geometry, topology and loader guards.');

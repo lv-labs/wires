@@ -90,8 +90,8 @@ export function SelectionHitboxes({
                 />
               ) : (
                 <rect
-                  x={size ? -size.width / 2 - 6 : -body.x}
-                  y={size ? -size.height / 2 - 6 : -body.y}
+                  x={size ? -size.width / 2 - 6 : (body.centerX ?? 0) - body.x}
+                  y={size ? -size.height / 2 - 6 : (body.centerY ?? 0) - body.y}
                   width={size ? size.width + 12 : body.x * 2}
                   height={size ? size.height + 12 : body.y * 2}
                 />

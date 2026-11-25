@@ -3,14 +3,13 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "analogSwitch";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
+
   prefix: "S",
   name: "Analog switch (SPST)",
   pins: {
-    a: [-48, 0],
-    b: [48, 0],
-    control: [0, -32],
+    a: [-100, 0],
+    b: [100, 0],
+    control: [0, -100],
   },
   parameters: {
     onResistance: 20,
@@ -30,18 +29,18 @@ export function Symbol({ pose, parameters = metadata.parameters, measured }: Sym
 
   return (
     <>
-      <Lead from={metadata.pins.a} to={[-20, 0]} />
-      <Lead from={metadata.pins.b} to={[20, 0]} />
-      <Lead from={metadata.pins.control} to={[0, -20]} />
-      <Lead from={[-20, 0]} to={closed ? [20, 0] : [18, -12]} />
+      <Lead from={metadata.pins.a} to={[-50, 0]} />
+      <Lead from={metadata.pins.b} to={[50, 0]} />
+      <Lead from={metadata.pins.control} to={[0, -90]} />
+      <Lead from={[-50, 0]} to={closed ? [50, 0] : [50, -35]} />
       <path
-        d="M 0 -20
-          V -4"
-        strokeDasharray="3 3"
+        d="M 0 -90
+        V -20"
+        strokeDasharray="5 15"
       />
-      <UprightText pose={pose} x={7} y={-22} fontSize={9}>
-        C
-      </UprightText>
+      <circle cx={-50} r={10} fill="white"/>
+      <circle cx={50} r={10} fill="white"/>
+
     </>
   );
 }

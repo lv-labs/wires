@@ -219,10 +219,19 @@ export function CircuitEditor({
       return {}
     }
   })
-  const propertySliders = propertySlidersByDocument[editor.document.id] ?? []
+  const savedPropertySliders = editor.document.layout.propertySliders
+  const propertySliders =
+    savedPropertySliders ?? propertySlidersByDocument[editor.document.id] ?? []
   function updatePropertySliders(
     update: PropertySlider[] | ((current: PropertySlider[]) => PropertySlider[])
   ) {
+    if (savedPropertySliders) {
+      editor.session.transaction("Edit property sliders", (draft) => {
+        draft.layout.propertySliders =
+          typeof update === "function" ? update(savedPropertySliders) : update
+      })
+      return
+    }
     setPropertySlidersByDocument((current) => {
       const sliders =
         typeof update === "function"

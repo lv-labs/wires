@@ -1,14 +1,12 @@
 import { Lead } from "../svg";
 export const kind = "scr";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   name: "SCR",
   prefix: "D",
   pins: {
-    anode: [-48, 0],
-    cathode: [48, 0],
-    gate: [16, 32],
+    anode: [-150, 0],
+    cathode: [150, 0],
+    gate: [100, 150],
   },
   parameters: {
     triggerCurrent: 0.01,
@@ -37,20 +35,22 @@ export const output = {
   },
   sign: null,
 };
+// Artwork adapted from KiCad Device:Q_SCR_AKG (CC BY-SA 4.0).
 export function Symbol() {
   return (
     <>
-      <Lead from={metadata.pins.anode} to={[-16, 0]} />
-      <Lead from={metadata.pins.cathode} to={[16, 0]} />
-      <Lead from={metadata.pins.gate} to={[6, 11]} />
-
+      <Lead from={metadata.pins.anode} to={[-50, 0]} />
+      <Lead from={metadata.pins.cathode} to={[50, 0]} />
+      <Lead from={metadata.pins.gate} to={[100, 50]} />
+      <path d="M 100 50 L 50 25" />
       <path
-        d="M -16 -16
-          V 16
-          L 16 0
+        d="M -50 -50
+          V 50
+          L 50 0
           Z
-          M 16 -16
-          V 16"
+          M 50 -50
+          V 50"
+        strokeWidth={8}
       />
     </>
   );

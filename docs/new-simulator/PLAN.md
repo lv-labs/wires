@@ -15,11 +15,14 @@ with real exports from maintained public releases and older user saves.
 
 ## Checkpoint
 
-The pinned menu has 367 entries. 319 open and pass the library's worker startup
-check, across 318 distinct files. Of those files, 202 open with scope panes.
-48 menu entries remain unavailable. The enabled entries also need verification
-of simulation behavior and saved settings. [Import coverage](FALSTAD-IMPORT.md)
-documents the supported formats and known limitations.
+The pinned Circuits menu has 367 entries. 336 open and pass the library's
+worker startup check, across 335 distinct files. 31 example entries remain
+unavailable. The component menu has eight unavailable entries, excluding drag
+commands. External Audio Input, Data Input and JavaScript Voltage, along with
+the three subcircuit entries, are deferred. Bus Input and Bus Splitter require
+grouped wire support. The enabled examples also need verification of simulation behavior
+and saved settings. [Import coverage](FALSTAD-IMPORT.md) documents the supported
+formats and known limitations.
 
 The source inventory found 141 component menu classes. The property audit
 parsed 137 of them and found 50 with no matching Wires dump type. The four
@@ -63,16 +66,39 @@ counter pins remain a blocker for the TD4 examples.
 Decimal displays accept 1–16 discrete bits. Segment displays support 7, 14 and
 16 segments with logic, common-anode or common-cathode inputs. LED arrays accept
 2–16 rows and columns in text and XML. 7-Segment LED Decoder, 8-Bit Ripple Counter and
-Flash ADC pass worker startup. The LED Array example also uses an unsupported
-demultiplexer and custom logic model.
+Flash ADC pass worker startup.
+
+Multiplexers, demultiplexers, ADCs, DACs and segment decoders now support
+individual pins. The native models also cover the analog multiplexer, phase
+comparator, VCO, monostable, both shift registers, sequence generator, delay
+buffer, tristate buffer, gyrator, crossover switch and crystal. Capacitors now
+accept series resistance, including in both crystal oscillator examples. The
+regression suite checks pin order, select and strobe behavior, converted
+voltages, logical blanking, clock edges and delay, switch positions, and
+text/XML import. Changing pulse, sequence or shift-register settings restarts
+that element while keeping the rest of the circuit running.
+
+Routed wires avoid component bodies when a clear route is available. Separate
+relay coils, contacts, time-delay relays, and motor protection switches are
+editable and use the native relay state models. Label links survive edits to
+the running circuit. The native analog parts now include NPN and PNP
+Darlington pairs, the unijunction transistor, transistor-level op amps, the
+ground/Hi-Z comparator, OTA, and optocoupler. The unijunction model runs at a
+fixed timestep in Wires. Its bundled oscillator still requests adaptive
+timestepping.
+
+Custom logic imports inline Falstad model definitions and evaluates the same
+pin patterns and output rules. Its LED Array example now runs. SRAM, ROM, and
+the bidirectional transceiver support individual pins. SRAM can preserve
+writes on reset or restore the document's initial contents.
 
 ## Next batch
 
-Start with **multiplexers and demultiplexers**. The Parallel-In Serial-Out
-example is blocked by multiplexer record `184`, and the LED Array example
-uses demultiplexer record `185` and a custom logic model. Verify select bit
-order, inactive outputs and saved scope targets. Track the custom logic model
-requirement with the LED Array example.
+Add a width-aware bus representation across the document, editor, importer and
+worker. Implement bus input and splitter alongside it, then enable bus modes
+on multiplexers, converters, counters, decoders and tristate buffers. Use the
+TD4 examples to verify bit order and mixed single-pin and bus connections.
+Those examples also need ROM bus mode and instruction-model support.
 
 ## Work in order
 

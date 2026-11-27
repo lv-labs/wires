@@ -274,6 +274,7 @@ export const core = implementation as {
       component: Component
     ): { x: number; y: number; right: number; bottom: number }
     graphicSize(component: Component): { width: number; height: number }
+    routedWireLeg(document: CircuitDocument, start: Point, end: Point): Point[] | null
     componentHitBox(component: Component): Point & { centerX?: number; centerY?: number }
     probePoint(
       d: CircuitDocument,
@@ -393,6 +394,7 @@ export const core = implementation as {
     gateKind(kind: string): boolean
     counterKind(kind: string): boolean
     displayChipKind(kind: string): boolean
+    discreteChipKind(kind: string): boolean
     mosfetKind(kind: string): boolean
     mosfetOptions: Record<string, boolean>
     transistorModels: string[]

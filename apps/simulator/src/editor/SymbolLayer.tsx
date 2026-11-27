@@ -35,7 +35,10 @@ export function SymbolBody({
   const isGraphic = core.catalog.graphic(component.kind)
   const pinPositions =
     core.catalog.counterKind(component.kind) ||
-    core.catalog.displayChipKind(component.kind)
+    core.catalog.displayChipKind(component.kind) ||
+    core.catalog.discreteChipKind(component.kind) ||
+    ["opampReal", "comparator"].includes(component.kind) ||
+    core.catalog.gateKind(component.kind)
     ? Object.fromEntries(
         Object.entries(core.catalog.componentPins(component)).map(
           ([pin, [x, y]]) => [pin, [x / drawingScale, y / drawingScale] as const]

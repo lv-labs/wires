@@ -1,13 +1,13 @@
 import {editing as CircuitEditorModel, catalog} from '../packages/circuit-core/index.mjs';
 export const chipBatchKinds=['counter','latch','halfAdder','fullAdder'];
 export const chipOutputs={counter:['Q3','Q2','Q1','Q0'],latch:['O0','O1','O2','O3'],halfAdder:['sum','carry'],fullAdder:['S0','S1','S2','S3','carryOut']};
-export function chipBatchCircuit(kind,parameters={},levels={}){
+export function chipBatchCircuit(kind,parameters={},levels={},outputs=chipOutputs[kind]){
   const M=CircuitEditorModel,d=M.empty();d.id='chip-'+kind;
   const add=(id,kind,parameters)=>{d.electrical.components.push({id,kind,modelVersion:1,reference:id,parameters});d.layout.components[id]={x:d.electrical.components.length*256,y:0,rotation:0,mirror:false};};
   const wire=(from,fromPin,to,toPin)=>{const id='w'+d.electrical.wires.length;d.electrical.wires.push({id,from:{kind:'pin',componentId:from,pinId:fromPin},to:{kind:'pin',componentId:to,pinId:toPin}});d.layout.wires[id]={bends:[]};};
   add('part',kind,{...structuredClone(M.definitions[kind].parameters),...parameters});add('g','ground',{});
   for(const pin of Object.keys(catalog.componentPins(d.electrical.components[0]))){
-    if(catalog.counterKind(kind)?pin.startsWith('Q')||pin==='carry':chipOutputs[kind].includes(pin)){
+    if(catalog.counterKind(kind)?pin.startsWith('Q')||pin==='carry':outputs.includes(pin)){
       add('out'+pin,'resistor',{resistance:1000});wire('part',pin,'out'+pin,'a');wire('out'+pin,'b','g','g');
     }else{
       const value=levels[pin]??(pin==='clear'||pin==='reset'&&d.electrical.components[0].parameters.invertReset?5:0);

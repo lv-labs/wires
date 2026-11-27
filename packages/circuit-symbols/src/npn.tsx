@@ -3,7 +3,7 @@ import { Lead } from "../svg";
 
 export const kind = "npn";
 export const metadata = {
-
+  drawingScale: 0.5,
   prefix: "Q",
   name: "NPN transistor",
   pins: {

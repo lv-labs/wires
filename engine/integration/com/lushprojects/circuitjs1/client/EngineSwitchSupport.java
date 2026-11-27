@@ -4,10 +4,10 @@ package com.lushprojects.circuitjs1.client;
 final class EngineSwitchSupport {
     static CircuitElm construct(String[] f,int x,int y,int x2,int y2,int flags){
         String type=f[0];
-        boolean spst=type.equals("s"),spdt=type.equals("S"),dpdt=type.equals("429"),mbb=type.equals("416");
-        if(!(spst||spdt||dpdt||mbb))return null;
+        boolean spst=type.equals("s"),spdt=type.equals("S"),dpdt=type.equals("429"),mbb=type.equals("416"),cross=type.equals("430");
+        if(!(spst||spdt||dpdt||mbb||cross))return null;
         if(f.length==(spst?8:spdt?10:9))return null;
-        EngineOutputSupport.require(f.length==(spst?10:spdt?12:11)&&flags>=0&&flags<=3,"Invalid switch format");
+        EngineOutputSupport.require(f.length==(spst||cross?10:spdt?12:11)&&flags>=0&&flags<=3,"Invalid switch format");
         EngineOutputSupport.require(f[7].equals("true")||f[7].equals("false"),"Invalid momentary state");
         double resistance=EngineOutputSupport.number(f,8);
         EngineOutputSupport.require(resistance>=0&&(resistance==0||EngineOutputSupport.finite(1/resistance)),"Invalid switch resistance");
@@ -25,7 +25,7 @@ final class EngineSwitchSupport {
         if(mbb)args+=" "+group;
         StringTokenizer tokens=new StringTokenizer(args);
         SwitchElm elm=spst?new SwitchElm(x,y,x2,y2,flags,tokens):spdt?new Switch2Elm(x,y,x2,y2,flags,tokens):
-            dpdt?new DPDTSwitchElm(x,y,x2,y2,flags,tokens):new MBBSwitchElm(x,y,x2,y2,flags,tokens);
+            dpdt?new DPDTSwitchElm(x,y,x2,y2,flags,tokens):cross?new CrossSwitchElm(x,y,x2,y2,flags,tokens):new MBBSwitchElm(x,y,x2,y2,flags,tokens);
         elm.resistance=resistance;
         elm.allocNodes();
         return elm;

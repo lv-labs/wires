@@ -66,13 +66,14 @@
       if (c.kind === 'output') assert(typeof v.showVoltage === 'boolean', 'Invalid output marker');
       if (c.kind === 'logicOutput') assert(Number.isFinite(v.threshold) && ['logic', 'numeric', 'ternary'].includes(v.mode) && typeof v.pulldown === 'boolean', 'Invalid logic output parameters');
       if (c.kind === 'logicInput') assert(['logic', 'numeric', 'ternary'].includes(v.mode) && Number.isInteger(v.state) && v.state >= 0 && v.state <= (v.mode === 'ternary' ? 2 : 1) && Number.isFinite(v.highVoltage) && Number.isFinite(v.lowVoltage) && Number.isFinite(v.highVoltage - v.lowVoltage) && (v.momentary===undefined||typeof v.momentary==='boolean'), 'Invalid logic input state or voltage');
+      if(Catalog.discreteChipKind(c.kind))Catalog.validateDiscreteChip(c.kind,v);
       if(Catalog.counterKind(c.kind))Catalog.validateCounterParameters(c.kind,v);
       if(['latch','halfAdder','fullAdder'].includes(c.kind))assert(Number.isFinite(v.highVoltage)&&v.highVoltage>0,'Invalid chip logic voltage');
       if(c.kind==='latch')assert(Number.isInteger(v.initialValue)&&v.initialValue>=0&&v.initialValue<=15,'Initial value must be 0 to 15');
       if(c.kind==='latch')assert(typeof v.edgeTriggered==='boolean','Invalid latch mode');
       if (['dFlipFlop', 'jkFlipFlop', 'tFlipFlop'].includes(c.kind)) assert(Number.isFinite(v.highVoltage) && v.highVoltage > 0 && typeof v.initialState === 'boolean' && (c.kind !== 'jkFlipFlop' || typeof v.positiveEdge === 'boolean'), 'Invalid flip-flop parameters');
       if (c.kind === 'polarizedCapacitor') assert(Number.isFinite(v.maxReverseVoltage) && v.maxReverseVoltage >= 0, 'Maximum reverse voltage must be nonnegative');
-      if (['capacitor', 'polarizedCapacitor'].includes(c.kind)) assert(Number.isFinite(v.capacitance) && v.capacitance > 0 && Number.isFinite(v.initialVoltage) && ['backwardEuler', 'trapezoidal'].includes(v.integration), 'Invalid capacitor parameters');
+      if (['capacitor', 'polarizedCapacitor'].includes(c.kind)) assert(Number.isFinite(v.capacitance) && v.capacitance > 0 && Number.isFinite(v.initialVoltage) && ['backwardEuler', 'trapezoidal'].includes(v.integration) && (!Object.hasOwn(v,'seriesResistance') || Number.isFinite(v.seriesResistance) && v.seriesResistance>=0 && (v.seriesResistance===0 || Number.isFinite(1/v.seriesResistance))), 'Invalid capacitor parameters');
       if (c.kind === 'voltageSource' || c.kind === 'voltageRail') assert(validWaveform(v.waveform), 'Expected finite source values, nonnegative amplitude, positive AC frequency and duty cycle between 0 and 100%.');
       if (c.kind === 'opamp') assert(Number.isFinite(v.gain) && v.gain > 0 && Number.isFinite(v.minOutput) && Number.isFinite(v.maxOutput) && v.minOutput < v.maxOutput && Number.isFinite(v.maxOutput - v.minOutput), 'Invalid op-amp gain or output limits');
       if (c.kind === 'switch') assert(typeof v.closed === 'boolean', 'Invalid switch state');

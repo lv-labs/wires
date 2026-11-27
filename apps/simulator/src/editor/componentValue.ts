@@ -122,6 +122,7 @@ export function componentValue(
     return `1:${p.ratio} · ${format(p.inductance, "H")}`
   if (c.kind === "spdtSwitch") return spdtPositionLabels(p)[p.position] ?? "—"
   if (c.kind === "dpdtSwitch") return p.position === 0 ? "A" : "B"
+  if (c.kind === "crossSwitch") return p.position === 0 ? "Straight" : "Crossed"
   if (["diode", "led", "zener"].includes(c.kind) && p.model) {
     const model = core.catalog.resolveDiodeModel(p.model)
     const name =
@@ -179,6 +180,7 @@ export function sheetValue(
       "pushSwitch",
       "spdtSwitch",
       "dpdtSwitch",
+      "crossSwitch",
       "mbbSwitch",
       "logicInput",
       "logicOutput",
@@ -196,6 +198,10 @@ export function sheetValue(
   if (c.kind === "output")
     return p.showVoltage ? format(Number(live?.pinVoltages?.in), "V") : ""
   if (c.kind === "voltmeter" && p.showVoltage === false) return ""
+  if (["relayCoil", "relayContact", "motorProtectionSwitch"].includes(c.kind))
+    return String(p.label)
+  if (c.kind === "crystal")
+    return p.showFrequency ? format(1 / (2 * Math.PI * Math.sqrt(p.inductance * p.seriesCapacitance)), "Hz") : ""
   if (c.kind === "potentiometer") return format(p.resistance, "Ω")
   if (c.kind === "voltageSource" || c.kind === "voltageRail") {
     const w = p.waveform

@@ -169,6 +169,9 @@
     }
     if(value!==VOLTAGE)return null;
     if(record.type==='a')return voltage('out','plus');
+    if(record.type==='188')return voltage('Q');
+    if(record.type==='422')return voltage('input');
+    if(record.type==='Gyrator')return voltage('port1Plus','port2Plus');
     if(record.type==='f'||record.type==='j')return voltage('drain','source');
     if(record.type==='173')return voltage('plate','cathode');
     const [a,b]=record.pins;

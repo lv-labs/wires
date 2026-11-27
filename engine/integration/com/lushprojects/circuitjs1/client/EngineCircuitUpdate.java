@@ -5,6 +5,9 @@ final class EngineCircuitUpdate {
     static void configure(CircuitElm old, CircuitElm fresh) {
         old.flags=fresh.flags;
         EngineSourceSupport.configure(old,fresh);
+        EngineBuildingBlockSupport.configure(old,fresh);
+        EngineLinkedRelaySupport.configure(old,fresh);
+        EngineAnalogCompositeSupport.configure(old,fresh);
         EnginePassiveSupport.configure(old,fresh);
         EngineSemiconductorSupport.configure(old,fresh);
         if(old instanceof VoltageElm && !(old instanceof VarRailElm)){
@@ -12,7 +15,17 @@ final class EngineCircuitUpdate {
             if(a.frequency!=b.frequency)a.freqTimeZero=b.frequency==0?0:CircuitElm.sim.t-a.frequency*(CircuitElm.sim.t-a.freqTimeZero)/b.frequency;
         }
         if(old instanceof ResistorElm){ResistorElm a=(ResistorElm)old,b=(ResistorElm)fresh;a.resistance=b.resistance;}
-        if(old instanceof CapacitorElm){CapacitorElm a=(CapacitorElm)old,b=(CapacitorElm)fresh;a.capacitance=b.capacitance;a.initialVoltage=b.initialVoltage;}
+        if(old instanceof CapacitorElm){
+            CapacitorElm a=(CapacitorElm)old,b=(CapacitorElm)fresh;
+            a.capacitance=b.capacitance;
+            a.initialVoltage=b.initialVoltage;
+            if(a.seriesResistance!=b.seriesResistance){
+                double[] previous=a.volts;
+                a.seriesResistance=b.seriesResistance;
+                a.allocNodes();
+                if(a.volts!=previous)System.arraycopy(previous,0,a.volts,0,Math.min(previous.length,a.volts.length));
+            }
+        }
         if(old instanceof PolarCapacitorElm){PolarCapacitorElm a=(PolarCapacitorElm)old,b=(PolarCapacitorElm)fresh;a.maxNegativeVoltage=b.maxNegativeVoltage;}
         if(old instanceof VoltageElm){VoltageElm a=(VoltageElm)old,b=(VoltageElm)fresh;a.waveform=b.waveform;a.frequency=b.frequency;a.maxVoltage=b.maxVoltage;a.bias=b.bias;a.phaseShift=b.phaseShift;a.dutyCycle=b.dutyCycle;a.riseTime=b.riseTime;}
         if(old instanceof VarRailElm){VarRailElm a=(VarRailElm)old,b=(VarRailElm)fresh;a.sliderText=b.sliderText;}
@@ -32,6 +45,7 @@ final class EngineCircuitUpdate {
         if(old instanceof GateElm){GateElm a=(GateElm)old,b=(GateElm)fresh;a.highVoltage=b.highVoltage;a.propagationDelay=b.propagationDelay;if(a.inputCount!=b.inputCount){a.inputCount=b.inputCount;a.allocNodes();a.setupVolts();}}
         if(old instanceof InverterElm){InverterElm a=(InverterElm)old,b=(InverterElm)fresh;a.slewRate=b.slewRate;a.highVoltage=b.highVoltage;}
         if(old instanceof ChipElm){ChipElm a=(ChipElm)old,b=(ChipElm)fresh;a.highVoltage=b.highVoltage;}
+        EngineDiscreteChipSupport.configure(old,fresh);
         if(old instanceof RelayElm)EngineRelaySupport.configure((RelayElm)old,(RelayElm)fresh);
         if(old instanceof CC2Elm)((CC2Elm)old).gain=((CC2Elm)fresh).gain;
         if(old instanceof VCCSElm)EngineControlledSourceSupport.configure((VCCSElm)old,(VCCSElm)fresh);

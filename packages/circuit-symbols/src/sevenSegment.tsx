@@ -6,13 +6,13 @@ export const metadata = {
   name: "Segment display",
   prefix: "DISP",
   pins: {
-    a: [-125, -75],
-    b: [-125, -25],
-    c: [-125, 25],
-    d: [-125, 75],
-    e: [-25, 125],
-    f: [25, 125],
-    g: [75, 125],
+    a: [-250, -150],
+    b: [-250, -50],
+    c: [-250, 50],
+    d: [-250, 150],
+    e: [-50, 250],
+    f: [50, 250],
+    g: [150, 250],
   },
   parameters: { segments: 7, extra: 0, diodeDirection: 0, highVoltage: 5 },
 } as const;
@@ -79,17 +79,17 @@ export function Symbol({
     extra = Number(parameters.extra);
   const count = Object.keys(pinPositions).length;
   const rows = Math.ceil(base / 2) + (count > 2 * Math.ceil(base / 2) ? 1 : 0);
-  const w = count === 7 ? 100 : 125,
-    h = rows * 25;
+  const w = count === 7 ? 200 : 250,
+    h = rows * 50;
   const segments =
     base === 7 ? segments7 : base === 14 ? segments14 : segments16;
   const levels = Array.isArray(measured?.segments) ? measured.segments : [];
   const color = (i: number) => `rgba(255,56,36,${levels[i] ?? 0.12})`;
-  const length = Math.min(h - 35, 74),
+  const length = Math.min(h - 70, 148),
     width = length * 0.65;
   return (
     <>
-      <rect x={-w} y={-h} width={2 * w} height={2 * h} rx={4} />
+      <rect x={-w} y={-h} width={2 * w} height={2 * h} rx={12} />
       {Object.entries(pinPositions).map(([pin, point]) => {
         const [x, y] = point;
         const bottom = y > h;
@@ -99,9 +99,9 @@ export function Symbol({
             <Lead from={point} to={end} />
             <UprightText
               pose={pose}
-              x={bottom ? x : end[0] - Math.sign(x) * 13}
-              y={bottom ? h - 12 : y}
-              fontSize={14}
+              x={bottom ? x : end[0] - Math.sign(x) * 26}
+              y={bottom ? h - 24 : y}
+              fontSize={32}
               textAnchor="middle"
               dominantBaseline="central"
             >
@@ -122,16 +122,16 @@ export function Symbol({
           x2={(x2 - 1) * width}
           y2={(y2 - 1) * length}
           stroke={color(index)}
-          strokeWidth={7}
+          strokeWidth={12}
         />
       ))}
       {extra !== 0 &&
         (extra === 1 ? [length] : [-length / 2, length / 2]).map((y) => (
           <circle
             key={y}
-            cx={width + 14}
+            cx={width + 28}
             cy={y}
-            r={4}
+            r={7}
             stroke="none"
             fill={color(base)}
           />

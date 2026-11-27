@@ -54,9 +54,11 @@ export function UprightText({
   y = 0,
   fontSize,
   style,
+  overline = false,
   ...props
 }: Omit<SVGProps<SVGTextElement>, "x" | "y"> & {
   pose?: Pose;
+  overline?: boolean;
   x?: number;
   y?: number;
 }) {
@@ -68,10 +70,15 @@ export function UprightText({
         stroke="none"
         fill="currentColor"
         fontSize={fontSize}
+        textDecoration={overline ? "overline" : undefined}
         style={
-          typeof fontSize === "number"
+          typeof fontSize === "number" || overline
             ? {
-                fontSize: `calc(${fontSize}px * var(--symbol-text-scale, 1))`,
+                fontSize:
+                  typeof fontSize === "number"
+                    ? `calc(${fontSize}px * var(--symbol-text-scale, 1))`
+                    : undefined,
+                textDecorationThickness: overline ? "0.1em" : undefined,
                 ...style,
               }
             : style
@@ -125,52 +132,67 @@ export function Meter({
 
 export function Gate({
   pins,
-  label,
-  pose,
+  shape,
+  invertedOutput = false,
   parameters = {},
 }: {
-  pins: { a: Pin; b: Pin; out: Pin };
-  label: string;
-  pose?: Pose;
+  pins: Record<string, Pin>;
+  shape: "and" | "or" | "xor";
+  invertedOutput?: boolean;
   parameters?: Record<string, unknown>;
 }) {
-  const count = Number(parameters.inputCount ?? 2);
-  let offset = -Math.floor(count / 2);
-  const inputs: Pin[] =
-    count === 2
-      ? [pins.a, pins.b]
-      : Array.from({ length: count }, () => {
-          if (offset === 0 && count % 2 === 0) offset++;
-          return [-48, 16 * offset++];
-        });
-  const height = Math.max(28, ...inputs.map((pin) => Math.abs(pin[1]) + 12));
+  const { out, ...inputs } = pins;
+  const inputPins = Object.entries(inputs);
+  const halfHeight = Math.max(
+    100,
+    ...inputPins.map(([, [, y]]) => Math.abs(y) + 50),
+  );
+  const curvedInput = shape !== "and";
+  const extraCurveOffset = shape === "xor" ? 15 : 0;
+  const bubbleRadius = 15;
+
   return (
     <>
-      {inputs.map((pin, index) => (
-        <g key={index}>
-          <Lead from={pin} to={[parameters.invertInputs ? -32 : -24, pin[1]]} />
-          {parameters.invertInputs === true && (
-            <circle cx={-28} cy={pin[1]} r={4} />
-          )}
-        </g>
-      ))}
-      <Lead from={pins.out} to={[24, 0]} />
-      <rect x={-24} y={-height} width={48} height={height * 2} />
-      {parameters.schmittInputs === true && (
+      {inputPins.map(([id, pin]) => {
+        const y = pin[1];
+        // Match the quadratic input curve at this lead's height.
+        const edge = curvedInput ? -65 - 35 * (y / halfHeight) ** 2 : -100;
+        const contact = edge - extraCurveOffset;
+        const inverted = parameters.invertInputs === true;
+        return (
+          <g key={id}>
+            <Lead
+              from={pin}
+              to={[contact - (inverted ? 2 * bubbleRadius : 0), y]}
+            />
+            {inverted && (
+              <circle cx={contact - bubbleRadius} cy={y} r={bubbleRadius} />
+            )}
+          </g>
+        );
+      })}
+      <Lead from={out} to={[invertedOutput ? 130 : 100, 0]} />
+      {curvedInput ? (
         <path
-          d="M -20 -8
-            H -16
-            V -16
-            H -12
-            M -20 -16
-            H -18
-            V -8
-            H -12"
+          d={`M -100 ${-halfHeight}
+            C 0 ${-halfHeight} 60 ${-halfHeight * 0.5} 100 0
+            C 60 ${halfHeight * 0.5} 0 ${halfHeight} -100 ${halfHeight}
+            Q -30 0 -100 ${-halfHeight} Z`}
+        />
+      ) : (
+        <path
+          d={`M -100 ${-halfHeight} H 0
+            A 100 ${halfHeight} 0 0 1 0 ${halfHeight}
+            H -100 Z`}
         />
       )}
-      <UprightText pose={pose} y={4} textAnchor="middle" fontSize={11}>
-        {label}
-      </UprightText>
+      {shape === "xor" && (
+        <path d={`M -115 ${-halfHeight} Q -45 0 -115 ${halfHeight}`} />
+      )}
+      {invertedOutput && <circle cx={115} cy={0} r={bubbleRadius} />}
+      {parameters.schmittInputs === true && (
+        <path d="M -45 20 H -10 V -20 H 25 M -30 20 V -20 H 5" strokeWidth={5} />
+      )}
     </>
   );
 }
@@ -219,34 +241,61 @@ export function Display({
   );
 }
 
+export function ClockTriangle({
+  at: [x, y],
+  direction = 1,
+}: {
+  at: Pin;
+  direction?: 1 | -1;
+}) {
+  return <path d={`M ${x} ${y - 16} L ${x + direction * 24} ${y} L ${x} ${y + 16}`} />;
+}
+
 export function Chip({
   pins,
   labels = {},
+  overlined = [],
+  bubbles = [],
+  clocks = [],
   pose,
 }: {
   pins: Record<string, Pin>;
   labels?: Record<string, string>;
+  overlined?: readonly string[];
+  bubbles?: readonly string[];
+  clocks?: readonly string[];
   pose?: Pose;
 }) {
   const halfHeight =
-    Math.max(...Object.values(pins).map(([, y]) => Math.abs(y))) + 16;
+    Math.max(...Object.values(pins).map(([, y]) => Math.abs(y))) + 75;
   return (
     <>
-      <rect x={-24} y={-halfHeight} width={48} height={halfHeight * 2} />
+      <rect x={-125} y={-halfHeight} width={250} height={halfHeight * 2} rx={12} />
       {Object.entries(pins).map(([name, pin]) => {
         const left = pin[0] < 0;
+        const direction = left ? -1 : 1;
+        const edge = direction * 125;
+        const bubble = bubbles.includes(name);
+        const radius = 8;
         return (
           <g key={name}>
-            <Lead from={pin} to={[left ? -24 : 24, pin[1]]} />
-            <UprightText
-              pose={pose}
-              x={left ? -20 : 20}
-              y={pin[1] + 4}
-              textAnchor={left ? "start" : "end"}
-              fontSize={10}
-            >
-              {labels[name] ?? name}
-            </UprightText>
+            <Lead from={pin} to={[edge + (bubble ? direction * 2 * radius : 0), pin[1]]} />
+            {bubble && <circle cx={edge + direction * radius} cy={pin[1]} r={radius} />}
+            {clocks.includes(name) ? (
+              <ClockTriangle at={[edge, pin[1]]} direction={left ? 1 : -1} />
+            ) : (
+              <UprightText
+                pose={pose}
+                x={left ? -110 : 110}
+                y={pin[1]}
+                dominantBaseline="central"
+                textAnchor={left ? "start" : "end"}
+                fontSize={32}
+                overline={overlined.includes(name)}
+              >
+                {labels[name] ?? name}
+              </UprightText>
+            )}
           </g>
         );
       })}

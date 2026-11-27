@@ -14,6 +14,8 @@
     a:'opamp',S:'spdtSwitch',t:'npn',f:'nmos',j:'njfet',p:'voltmeter',I:'inverter',n:'noiseSource',A:'antennaSource',T:'transformer',m:'memristor',
     '150':'andGate','151':'nandGate','152':'orGate','153':'norGate','154':'xorGate','431':'xnorGate',
     '155':'dFlipFlop','156':'jkFlipFlop','193':'tFlipFlop','165':'timer555',
+    Gyrator:'gyrator','400':'npnDarlington','401':'comparator','402':'ota','407':'optocoupler','409':'opampReal','417':'unijunction','208':'customLogic','413':'sram','436':'rom',BusTransceiver:'busTransceiver','414':'timeDelayRelay','425':'relayCoil','426':'relayContact','428':'motorProtectionSwitch','412':'crystal','430':'crossSwitch','180':'tristateBuffer','422':'delayBuffer',
+    '158':'voltageControlledOscillator','194':'monostable','432':'analogMultiplexer','161':'phaseComparator','166':'dac','167':'adc','184':'multiplexer','185':'demultiplexer','186':'pisoShift','188':'sequenceGenerator','189':'sipoShift','197':'sevenSegmentDecoder',
     '163':'ringCounter','164':'counter','421':'loadCounter',
     '159':'analogSwitch','160':'analogSpdtSwitch','182':'schmittTrigger','183':'invertingSchmittTrigger',
     '169':'tappedTransformer','170':'sweepSource','171':'transmissionLine','172':'variableVoltage','173':'triode','174':'potentiometer',
@@ -24,7 +26,7 @@
   };
   const quarterTurn=angle=>((Math.round(angle/(Math.PI/2))*90)%360+360)%360;
   const midpoint=(a,b)=>({x:a.x+(b.x-a.x)/2,y:a.y+(b.y-a.y)/2});
-  const sidePins={a:'minus',S:'a',t:'collector',f:'source',j:'source','159':'control','160':'a','173':'plate','174':'wiper','177':'gate','206':'gate'};
+  const sidePins={'180':'enable',a:'minus',S:'a',t:'collector',f:'source',j:'source','159':'control','160':'a','173':'plate','174':'wiper','177':'gate','206':'gate'};
   const drawingKinds={x:'text',b:'box','423':'line'};
   const textEscapes={n:'\n',r:'\r',s:' ',p:'+',q:'=',h:'#',a:'&'};
   const unescapeText=text=>text==='\\0'?'':text.replace(/\\(.)/gs,(_,key)=>textEscapes[key]??key);
@@ -107,15 +109,22 @@
 
   function symbolLayout(record,component) {
     const {type,pins,x1,y1,x2,y2}=record;
-    const start={x:x1,y:y1},end=['174','177','206'].includes(type)?record.posts[1]:{x:x2,y:y2};
+    const start={x:x1,y:y1},end=['174','177','206','Gyrator'].includes(type)?record.posts[1]:{x:x2,y:y2};
     const offsets=Catalog.componentPins(component),first=offsets[type==='173'?'grid':pins[0]];
     const dx=end.x-start.x,dy=end.y-start.y;
     if(Object.hasOwn(flipFlopPosts,type))return chipLayout(record,offsets,2,3,flipFlopPosts[type]);
+    if(Catalog.discreteChipKind(component.kind)){
+      const native=Catalog.discreteChipLayout(component.kind,component.parameters);
+      const {columns,rows,pins}=native,anchor=Catalog.discreteChipAnchor(native);
+      const posts=pins.map(([,column,row])=>[column,row]);
+      const layout=chipLayout(record,offsets,columns,rows,posts,anchor.row,anchor.column);
+      return {...layout,minScale:50/(record.flags&1?16:32),postAxes:posts.map(([,row])=>row<0||row===rows?layout.across:layout.along)};
+    }
     if(Catalog.counterKind(component.kind)){
       const {columns,rows,pins,anchorRow,anchorColumn}=Catalog.counterLayout(component.kind,component.parameters);
       const posts=pins.map(([,column,row])=>[column,row]);
       const layout=chipLayout(record,offsets,columns,rows,posts,anchorRow,anchorColumn);
-      const minScale=(component.kind==='ringCounter'?50:100)/(record.flags&1?16:32);
+      const minScale=100/(record.flags&1?16:32);
       return {...layout,minScale,postAxes:posts.map(([,row])=>row<0||row>=rows?layout.across:layout.along)};
     }
     if(type==='178'){
@@ -133,7 +142,7 @@
     }
     if(type==='165'){
       const layout=chipLayout(record,offsets,3,5,Catalog.timerPostOffsets.slice(0,pins.length));
-      return {...layout,minScale:Catalog.grid/(record.flags&1?16:32)};
+      return {...layout,minScale:100/(record.flags&1?16:32)};
     }
     if(type==='179'){
       const layout=chipLayout(record,offsets,2,3,Catalog.conveyorPostOffsets);
@@ -150,10 +159,38 @@
       const posts=pins.map(([,column,row])=>[column,row]);
       const layout=chipLayout(record,offsets,columns,rows,posts);
       const smaller=Math.min(columns,rows);
-      const span=type==='157'?50:type==='405'?100*(smaller+2)/(smaller+1):400/3;
+      const span=type==='157'?100:type==='405'?100*(smaller+2)/(smaller+1):400/3;
       const minScale=span/(record.flags&1?16:32);
       return {...layout,minScale,postAxes:posts.map(([,row])=>row===rows?layout.across:layout.along)};
     }
+    if(type==='407'){
+      return chipLayout(record,offsets,2,2,[[-1,0],[-1,1],[2,0],[2,1]]);
+    }
+    if(['400','401','402','409','417'].includes(type)){
+      const along=dx?'x':'y',across=dx?'y':'x';
+      const mirror=((dx||dy)<0)!==(type==='417'&&!!(record.flags&2));
+      const rotation=quarterTurn(Math.atan2(dy,dx)+(mirror?Math.PI:0));
+      const span=Math.abs(end[along]-start[along]);
+      const layout={anchor:midpoint(start,end),offsets,rotation,mirror,originOffset:[0,0],
+        posts:record.posts,along,across,minScale:Math.max(300/span,type==='401'&&(record.flags&2)?100/8:100/16)};
+      if(type==='409')layout.postAxes=[along,along,along,across,across];
+      if(type==='402')layout.postAxes=[along,along,along,across,along];
+      return layout;
+    }
+    if(type==='414'){
+      const layout=chipLayout(record,offsets,2,2,[[-1,1],[2,1],[-1,0],[2,0]]);
+      return {...layout,minScale:100/(record.flags&1?16:32)};
+    }
+    if(type==='428'){
+      const posts=[0,48,96].flatMap(x=>[{x:x1+x,y:y1},{x:x1+x,y:y1+192}]);
+      return {anchor:{x:x1+48,y:y1+96},offsets,rotation:0,mirror:false,originOffset:[0,0],posts,along:'y',across:'x',minScale:100/48};
+    }
+    if(type==='430'){
+      const along=dx?'x':'y',across=dx?'y':'x',[inA,endA,inB,endB]=record.posts;
+      return {anchor:midpoint(midpoint(inA,inB),midpoint(endA,endB)),offsets,rotation:quarterTurn(Math.atan2(dy,dx)),mirror:false,
+        originOffset:[0,0],posts:record.posts,along,across,minScale:Math.max(300/Math.abs(endA[along]-start[along]),100/48)};
+    }
+    if(type==='Gyrator')return rectangularLayout(offsets,record.posts,start,end,record.posts[3],'port1Plus','port2Plus','port1Minus');
     if(type==='171') {
       return rectangularLayout(offsets,record.posts,start,end,record.posts[1],'left','right','leftReturn');
     }
@@ -180,7 +217,7 @@
     let rotation=quarterTurn(angle-axisAngle),mirror=false;
     const sidePin=gate&&pins.length>2?pins[0]:sidePins[type];
     if(sidePin) {
-      const side=type==='a'||gate?start:type==='174'||type==='159'?anchor:end;
+      const side=type==='a'||gate?start:type==='174'||type==='159'||type==='180'?anchor:end;
       const post=posts[pins.indexOf(sidePin)];
       const [sideX,sideY]=Geometry.rotateOffset(...offsets[sidePin],rotation);
       mirror=sideX*(post.x-side.x)+sideY*(post.y-side.y)<0;
@@ -194,6 +231,7 @@
     const needsElbow=(sidePin&&type!=='174'&&type!=='159')||start[across]!==end[across];
     let minScale=(pinSpan+(needsElbow?2*Catalog.grid:0))/span;
     if(gate&&pins.length>3)minScale=Math.max(minScale,Catalog.grid/(record.flags&1?8:16));
+    if(type==='180')minScale=Math.max(minScale,Math.abs(offsets.enable[1])/16);
     if(type==='159'||type==='160')minScale=Math.max(minScale,Math.abs(offsets.control[1])/16);
     if(type==='174')minScale=Math.max(minScale,Math.abs(offsets.wiper[1]/(posts[2][across]-anchor[across])));
     if(type==='177'||type==='206')minScale=Math.max(minScale,Math.abs(offsets.gate[1])/Math.abs(posts[2][across]-end[across]));
@@ -220,6 +258,7 @@
     const diagnostic=(severity,line,code,message)=>diagnostics.push({severity,line,code,message});
     const doc={schemaVersion:1,id:options.id||'falstad-import',title:options.title||'Imported Falstad circuit',electrical:{components:[],junctions:[],wires:[]},layout:{components:{},junctions:{},wires:{}},probes:[],simulation:{timeStep:5e-6}};
     let header=false,legacyGrid=16;
+    const logicModels=new Map();
     const lines=text.replace(/^\uFEFF/,'').split(/\r\n|\r|\n/);
     for(let index=0;index<lines.length;index++) {
       const raw=lines[index].trim(); if(!raw)continue;
@@ -227,6 +266,12 @@
       const number=(i,fallback)=>{const value=tokens[i]===undefined?fallback:Number(tokens[i]);if(!Number.isFinite(value))throw new Error(`Invalid or missing numeric field ${i+1}`);return value;};
       const flagsAllowed=(flags,mask)=>{if((flags&mask)!==flags)throw new Error(`Unsupported flags ${flags} for ${type}`);};
       try {
+        if(type==='!'){
+          const name=unescapeText(tokens[0]??'');
+          if(tokens.length!==6||!name||logicModels.has(name)||number(1)!==0)throw new Error('Invalid or unsupported custom logic model');
+          logicModels.set(name,{modelName:name,inputLabels:unescapeText(tokens[2]),outputLabels:unescapeText(tokens[3]),rules:unescapeText(tokens[5])});
+          continue;
+        }
         if(type==='$') {
           if(header)throw new Error('Multiple circuit headers');header=true;
           const flags=number(0);if(!Number.isSafeInteger(flags)||flags<0||flags>255)throw new Error('Invalid circuit flags');doc.simulation.timeStep=number(1);
@@ -263,6 +308,79 @@
           records.push(record);continue;
         }
         let kind=types[type],parameters={},maxFields=5;
+        if(Catalog.discreteChipKind(kind)){
+          const routing=type==='184'||type==='185'||type==='432',converter=type==='166'||type==='167';
+          const memory=Catalog.memoryChipKind(kind);
+          const optional=type==='184'||type==='197';
+          if(routing&&(flags&8))throw new Error('Bus select pins are not supported');
+          flagsAllowed(flags,1|1024|2048|4096|8192|(optional?6:type==='186'?2:type==='188'?14:memory?6:0));
+          let index=5;
+          const shift=Catalog.shiftChipKind(kind);
+          const bits=converter?number(index++,4):shift?number(index++,8):null;
+          const highVoltage=flags&8192?number(index++):5;
+          const lsbFirst=xml?.bitOrders.get(line)===1;
+          parameters={highVoltage};
+          if(type==='208'){
+            const model=logicModels.get(unescapeText(tokens[index++]??''));
+            if(!model)throw new Error('Unknown custom logic model');
+            const count=model.outputLabels.split(',').filter(pin=>pin.trim()).length;
+            const values=Array.from({length:count},()=>number(index++,0)>highVoltage/2?'1':'0');
+            Object.assign(parameters,model,{initialOutputs:values.join('')});
+          }
+          if(memory){
+            const addressBits=number(index++),dataBits=number(index++),hexDisplay=!!(flags&4);
+            const digits=value=>value.toString(hexDisplay?16:10);
+            let contents=xml?.memoryContents.get(line);
+            if(contents===undefined){
+              const rows=[];
+              while(index<tokens.length){
+                const address=number(index++);
+                if(address===-2)break;
+                if(!Number.isInteger(address)||address<0)throw new Error('Invalid memory address');
+                const values=[];
+                while(index<tokens.length&&number(index)>=0)values.push(digits(number(index++)));
+                if(!values.length||number(index++)!==-1)throw new Error('Invalid memory data block');
+                rows.push(digits(address)+': '+values.join(' '));
+              }
+              contents=rows.join('\n');
+            }
+            Object.assign(parameters,{addressBits,dataBits,contents,hexDisplay,reloadOnReset:!!(flags&2),lsbFirst});
+          }
+          if(kind==='busTransceiver')Object.assign(parameters,{dataBits:number(index++,4),lsbFirst});
+          if(type==='432'){
+            if(flags&8192)throw new Error('Analog multiplexer uses a separate threshold');
+            parameters={};
+          }
+          if(converter)Object.assign(parameters,{bits,lsbFirst});
+          if(shift){
+            Object.assign(parameters,{bits,initialValue:number(index++,0)});
+            if(type==='186')parameters.serialInput=!!(flags&2);
+          }
+          if(type==='188'){
+            const modern=!!(flags&2),length=modern?number(index++):8;
+            if(!Number.isInteger(length)||length<0||length>4096)throw new Error('Invalid sequence length');
+            const sequence=[];
+            for(let i=0;i<length;i+=32){
+              const word=number(index++);
+              if(!Number.isInteger(word)||word<-(2**31)||word>=2**31)throw new Error('Invalid sequence data');
+              for(let j=0;j<Math.min(32,length-i);j++)sequence.push(String((word>>>j)&1));
+            }
+            Object.assign(parameters,{sequence:sequence.join(''),playOnce:!!(flags&4),resetPin:!!(flags&8)});
+          }
+          if(routing){
+            parameters.selectBits=number(index++,2);
+            if(type==='184')Object.assign(parameters,{invertedOutput:!!(flags&2),strobePin:!!(flags&4)});
+            if(type==='432')Object.assign(parameters,{onResistance:number(index++,20),offResistance:number(index++,1e10),threshold:number(index++,2.5)});
+          }
+          if(type==='194'){
+            const value=tokens[index++]??'false';
+            if(!['true','false'].includes(value))throw new Error('Invalid monostable retrigger setting');
+            Object.assign(parameters,{retriggerable:value==='true',delay:number(index++,.01)});
+          }
+          if(type==='197')Object.assign(parameters,{segmentMode:number(index++,0),blankPin:!!(flags&2),blankOnF:!!(flags&4),lsbFirst});
+          maxFields=index;
+          Catalog.validateDiscreteChip(kind,parameters);
+        }
         if(Catalog.counterKind(kind)){
           const ring=kind==='ringCounter',binary=kind==='counter';
           flagsAllowed(flags,1|1024|2048|4096|8192|(ring?6:binary?12:0));
@@ -303,6 +421,139 @@
           if(!name.trim()||/[\r\n]/.test(name))throw new Error('Invalid labeled net name');
           if(flags&9)diagnostic('warning',line,'UNSUPPORTED_PRESENTATION','Wires uses standard labeled-node appearance');
           parameters={name};maxFields=tokens.length;
+        }
+        if(['400','401','402','409','417'].includes(type)){
+          const dx=x2-x1,dy=y2-y1,length=Math.hypot(dx,dy);
+          if(!length||dx&&dy)throw new Error('Expected horizontal or vertical analog component geometry');
+          const side=[dy/length,-dx/length],sign=Math.sign(dx||dy),start={x:x1,y:y1},end={x:x2,y:y2};
+          const point=(fraction,offset)=>{
+            const round=value=>Math.floor(value+.48);
+            return {x:round(x1+dx*fraction+side[0]*offset),y:round(y1+dy*fraction+side[1]*offset)};
+          };
+          const unpack=token=>flags&1?unescapeText(token??''):(token??'').replace(/_/g,' ');
+          if(type==='400'){
+            flagsAllowed(flags,1);
+            const polarity=number(7);
+            if(![1,-1].includes(polarity))throw new Error('Invalid Darlington polarity');
+            kind=polarity===1?'npnDarlington':'pnpDarlington';
+            const stages=[5,6].map(index=>unpack(tokens[index]).trim().split(/\s+/));
+            if(stages.some(fields=>fields.length<5||fields.length>6||Number(fields[0])!==0||
+              Number(fields[1])!==polarity||fields[5]&&fields[5]!=='default'||fields.slice(2,5).some(value=>!Number.isFinite(Number(value)))))
+              throw new Error('Unsupported Darlington transistor settings');
+            parameters={beta1:Number(stages[0][4]),beta2:Number(stages[1][4])};
+            if(stages.some(fields=>Number(fields[2])||Number(fields[3])))diagnostic('warning',line,'RESET_STATE','Darlington junction voltages are recalculated at startup');
+            record.posts=[start,point(1,16*sign*polarity),point(1,-16*sign*polarity)];
+            maxFields=8;
+          }
+          if(type==='401'||type==='409'){
+            const real=type==='409',swapped=!!(flags&(real?2:4)),spacing=real||!(flags&2)?16:8;
+            flagsAllowed(flags,real?3:7);
+            const offset=spacing*sign*(swapped?-1:1);
+            record.posts=[point(0,offset),point(0,-offset),end];
+            parameters={swapInputs:swapped};
+            if(real){
+              Object.assign(parameters,{slewRate:number(5,.6),initialCompensationVoltage:number(6,0),currentLimit:number(7,.0231),modelType:number(8,0)});
+              const fraction=(length/2-(length/2)%legacyGrid)/length;
+              record.posts.push(point(fraction,32*sign),point(fraction,-32*sign));
+              maxFields=9;
+            }else{
+              if(tokens.length!==5&&tokens.length!==8)throw new Error('Invalid comparator record');
+              if(tokens.length===8)diagnostic('warning',line,'RESET_STATE','Comparator starts with its built-in internal circuit');
+              maxFields=8;
+            }
+          }
+          if(type==='417'){
+            flagsAllowed(flags,3);
+            record.posts=[start,point(1,-32*sign*(flags&2?-1:1)),end];
+          }
+          if(type==='402'){
+            flagsAllowed(flags,1);
+            const rails=[5,6].map(index=>unpack(tokens[index]).trim().split(/\s+/).map(Number));
+            if(rails.some(r=>r.length<6||r.some(value=>!Number.isFinite(value))||r[1]!==0))
+              throw new Error('OTA requires DC internal supplies');
+            parameters={negativeSupply:rails[0][3]+rails[0][4],positiveSupply:rails[1][3]+rails[1][4]};
+            if(tokens.length>7)diagnostic('warning',line,'RESET_STATE','OTA transistor junction voltages are recalculated at startup');
+            const width=Math.max(94,length),bodyEnd=width/length;
+            record.posts=[point(0,32*sign),point(0,-32*sign),start,point((width-16)/length,32),point(bodyEnd,0)];
+            maxFields=23;
+          }
+        }
+        if(type==='407'){
+          flagsAllowed(flags,1|1024|2048);
+          parameters=xml?.optocouplers.get(line)??{ctr:1,diodeModel:'default'};
+          if(tokens.length>5&&tokens.length!==8)throw new Error('Invalid optocoupler record');
+          if(tokens.length===8)diagnostic('warning',line,'RESET_STATE','Optocoupler starts with its built-in internal circuit');
+          maxFields=8;
+        }
+        if(type==='425'){
+          flagsAllowed(flags,0);
+          parameters={label:unescapeText(tokens[5]??''),inductance:number(6),initialCoilCurrent:number(7),
+            onCurrent:number(8),coilResistance:number(9),offCurrent:number(10),switchingTime:number(11),
+            mode:number(12),initialState:number(13,0),initialPosition:number(14,0)};
+          maxFields=15;
+        }
+        if(type==='426'){
+          flagsAllowed(flags,6);
+          parameters={label:unescapeText(tokens[5]??''),onResistance:number(6),offResistance:number(7),
+            initialPosition:number(8,0),normallyClosed:!!(flags&2),iecSymbol:!!(flags&4)};
+          maxFields=9;
+        }
+        if(type==='414'){
+          flagsAllowed(flags,1|1024|2048|4096);
+          parameters={onDelay:number(5),offDelay:number(6),onResistance:number(7),offResistance:number(8)};
+          maxFields=9;
+        }
+        if(type==='428'){
+          flagsAllowed(flags,0);
+          if(!['false','true'].includes(tokens[7]))throw new Error('Invalid motor protection state');
+          parameters={resistance:number(5),i2t:number(6),initiallyTripped:tokens[7]==='true',label:unescapeText(tokens[8]??'')};
+          maxFields=9;
+        }
+        if(type==='412'){
+          flagsAllowed(flags,3);
+          if(xml?.crystals.has(line)){
+            parameters={parallelCapacitance:number(5),seriesCapacitance:number(6),inductance:number(7),resistance:number(8),showFrequency:!!(flags&2)};
+          }else{
+            const child=index=>(flags&1?unescapeText(tokens[index]??''):(tokens[index]??'').replace(/_/g,' ')).trim().split(/\s+/).map(Number);
+            const [parallel,series,inductor,resistor]=[5,6,7,8].map(child);
+            const valid=(fields,min,max)=>fields.length>=min&&fields.length<=max&&fields.every(Number.isFinite);
+            if(![parallel,series].every(fields=>valid(fields,3,5)&&[0,4].includes(fields[0])&&(fields[3]??.001)===.001&&(fields[4]??0)===0)||
+              !valid(inductor,3,5)||inductor[0]!==0||(inductor[3]??0)!==0||(inductor[4]??0)!==0||
+              !valid(resistor,2,2)||resistor[0]!==0)throw new Error('Unsupported crystal equivalent-circuit settings');
+            parameters={parallelCapacitance:parallel[1],seriesCapacitance:series[1],inductance:inductor[1],resistance:resistor[1],showFrequency:!!(flags&2)};
+            if(parallel[2]||series[2]||inductor[2])diagnostic('warning',line,'RESET_STATE','Crystal internal voltage and current restart at their defaults');
+          }
+          maxFields=9;
+        }
+        if(type==='422'){
+          flagsAllowed(flags,0);
+          parameters={delay:number(5),threshold:number(6,2.5),highVoltage:number(7,5)};
+          maxFields=8;
+        }
+        if(type==='180'){
+          flagsAllowed(flags,7);
+          const dx=x2-x1,dy=y2-y1,horizontal=dy===0;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Tristate buffer requires horizontal or vertical terminals');
+          const snap=value=>legacyGrid*Math.floor((value+legacyGrid/2-1)/legacyGrid);
+          const cx=snap(Math.trunc((x1+x2)/2)+(flags&2?1:-1));
+          const cy=snap(Math.trunc((y1+y2)/2)+(flags&4?1:-1));
+          const sign=flags&1?-1:1;
+          record.posts=[{x:x1,y:y1},{x:x2,y:y2},{x:cx-(horizontal?0:16*sign*Math.sign(dy)),y:cy+(horizontal?16*sign*Math.sign(dx):0)}];
+          parameters={onResistance:number(5,.1),offResistance:number(6,1e10),pulldownResistance:number(7,0),highVoltage:number(8,5)};
+          maxFields=9;
+        }
+        if(type==='Gyrator'){
+          flagsAllowed(flags,24);
+          const vertical=!!(flags&8),direction=flags&16?-1:1;
+          const dx=x2-x1,dy=y2-y1,length=Math.hypot(dx,dy);
+          const width=number(6,vertical?-32:32);
+          if(!(vertical?dy:dx)||!width)throw new Error('Invalid gyrator geometry');
+          const offset=-Math.sign(vertical?dy:dx)*width*direction/length;
+          const start={x:x1,y:y1},end=vertical?{x:x1,y:y2}:{x:x2,y:y1};
+          const post=({x,y})=>({x:Math.floor(x+(end.y-start.y)*offset+.48),y:Math.floor(y-(end.x-start.x)*offset+.48)});
+          record.posts=[start,end,post(start),post(end)];
+          parameters={resistance:number(5,1000)};
+          maxFields=7;
         }
         if(type==='r'){flagsAllowed(flags,1);parameters={resistance:number(5)};maxFields=6;}
         if(type==='m'){
@@ -352,7 +603,8 @@
           flagsAllowed(flags,7);parameters={capacitance:number(5),initialVoltage:number(7,1e-3),integration:flags&2?'backwardEuler':'trapezoidal'};
           number(6);
           const hasResistance=type==='c'||!!(flags&4);
-          if(hasResistance&&number(8,0)!==0)throw new Error('Capacitor series resistance is not supported');
+          const seriesResistance=hasResistance?number(8,0):0;
+          if(seriesResistance!==0)parameters.seriesResistance=seriesResistance;
           maxFields=hasResistance?9:8;
           if(type==='209')parameters.maxReverseVoltage=number(maxFields++);
           diagnostic('warning',line,'RESET_STATE','Capacitor starts at its initial voltage, rather than the saved running voltage');
@@ -557,6 +809,20 @@
           const length=Math.hypot(end.x-x1,end.y-y1);if(!length)throw new Error('Zero-length potentiometer');
           record.posts=[{x:x1,y:y1},end,{x:(x1+end.x)/2+offset*(end.y-y1)/length,y:(y1+end.y)/2-offset*(end.x-x1)/length}];
         }
+        if(type==='430'){
+          flagsAllowed(flags,6);
+          if(!['true','false'].includes(tokens[6]))throw new Error('Invalid crossover switch momentary state');
+          const position=tokens[5]==='true'?1:tokens[5]==='false'?0:number(5);
+          const xmlSwitch=xml?.switchProperties.get(line);
+          parameters=Catalog.validateSwitchParameters(kind,{position,momentary:tokens[6]==='true',iecSymbol:!!(flags&2),
+            onResistance:xmlSwitch?.resistance??0,linkLabel:xmlSwitch?.label??(flags&4?unescapeText(tokens[7]??''):'')});
+          maxFields=flags&4?8:7;
+          const dx=x2-x1,dy=y2-y1;
+          if((!dx&&!dy)||(dx&&dy))throw new Error('Crossover switch requires horizontal or vertical terminals');
+          const ux=Math.sign(dx),uy=Math.sign(dy);
+          record.posts=[{x:x1,y:y1},{x:x2+48*ux+16*uy,y:y2+48*uy-16*ux},
+            {x:x1-48*uy,y:y1+48*ux},{x:x2+48*ux-64*uy,y:y2+48*uy+64*ux}];
+        }
         if(type==='S') {
           flagsAllowed(flags,3);if(!['true','false'].includes(tokens[6]))throw new Error('Invalid SPDT momentary state');
           const oldFormat=tokens.length===10&&tokens[8]==='false'&&tokens[9]==='0';
@@ -638,9 +904,12 @@
         }
         if(type==='g'){flagsAllowed(flags,1);number(5,0);maxFields=6;}
         if(type==='s') {
-          flagsAllowed(flags,3);const position=tokens[5]==='true'?1:tokens[5]==='false'?0:number(5);
+          flagsAllowed(flags,7);const position=tokens[5]==='true'?1:tokens[5]==='false'?0:number(5);
           if(![0,1].includes(position)||!['true','false'].includes(tokens[6]))throw new Error('Unsupported switch state');
-          kind=tokens[6]==='true'?'pushSwitch':'switch';parameters=kind==='pushSwitch'?{normallyClosed:position===0}:{closed:position===0};maxFields=7;
+          kind=tokens[6]==='true'?'pushSwitch':'switch';parameters=kind==='pushSwitch'?{normallyClosed:position===0}:{closed:position===0};
+          if(flags&2)parameters.iecSymbol=true;
+          if(flags&4)parameters.linkLabel=unescapeText(tokens[7]??'');
+          maxFields=flags&4?8:7;
         }
         if(['v','R','n','A'].includes(type)) {
           flagsAllowed(flags,31|64);
@@ -727,7 +996,7 @@
         const [rx,ry]=Geometry.rotateOffset(mirror?-x:x,y,rotation);
         const pin={x:pose.x+rx,y:pose.y+ry},post=doc.layout.junctions[to.junctionId];
         const bends=[];
-        const branch=pinId==='control'&&(r.type==='159'||r.type==='160')||pinId==='gate'&&(r.type==='177'||r.type==='206');
+        const branch=pinId==='control'&&(r.type==='159'||r.type==='160')||pinId==='enable'&&r.type==='180'||pinId==='gate'&&(r.type==='177'||r.type==='206');
         const axis=postAxes?.[index]??(branch?across:along),cross=axis===along?across:along;
         if(axis&&pin[axis]!==post[axis]&&pin[cross]!==post[cross]) {
           const turn=r.pins.length===2?post[axis]:Geometry.snap(midpoint(pin,post)[axis]);

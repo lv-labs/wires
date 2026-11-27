@@ -75,6 +75,10 @@ final class EngineOutputSupport {
             put(result,"position",relay.i_position);
             put(result,"travel",relay.d_position);
         }
+        else if(elm instanceof RelayCoilElm)flag(result,"energized",((RelayCoilElm)elm).switchPosition==1);
+        else if(elm instanceof RelayContactElm)flag(result,"closed",((RelayContactElm)elm).i_position==0);
+        else if(elm instanceof TimeDelayRelayElm)flag(result,"closed",((TimeDelayRelayElm)elm).onState);
+        else if(elm instanceof MotorProtectionSwitchElm)flag(result,"blown",((MotorProtectionSwitchElm)elm).blown);
         else if(elm instanceof LampElm){LampElm e=(LampElm)elm;put(result,"temperature",e.temp);put(result,"resistance",e.resistance);put(result,"power",e.getPower());}
         else if(elm instanceof ProbeElm){ProbeElm e=(ProbeElm)elm;put(result,"value",meter(e.meter,e.getVoltageDiff(),e.rmsV,e.lastMaxV,e.lastMinV,e.binaryLevel));}
         else if(elm instanceof TestPointElm){TestPointElm e=(TestPointElm)elm;put(result,"value",meter(e.meter,e.volts[0],e.rmsV,e.lastMaxV,e.lastMinV,e.binaryLevel));}

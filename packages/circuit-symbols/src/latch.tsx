@@ -3,20 +3,18 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "latch";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "U",
   name: "Latch / register (4 bit)",
   pins: {
-    I0: [-48, 32],
-    I1: [-48, 0],
-    I2: [-48, -32],
-    I3: [-48, -64],
-    O0: [48, 32],
-    O1: [48, 0],
-    O2: [48, -32],
-    O3: [48, -64],
-    load: [-48, 64],
+    I0: [-150, 100],
+    I1: [-150, 0],
+    I2: [-150, -100],
+    I3: [-150, -200],
+    O0: [150, 100],
+    O1: [150, 0],
+    O2: [150, -100],
+    O3: [150, -200],
+    load: [-150, 200],
   },
   parameters: {
     highVoltage: 5,
@@ -32,7 +30,8 @@ export function Symbol({
   return (
     <Chip
       pins={metadata.pins}
-      labels={{ load: parameters.edgeTriggered ? "▷" : "Ld" }}
+      labels={{ load: "Ld" }}
+      clocks={parameters.edgeTriggered ? ["load"] : []}
       pose={pose}
     />
   );

@@ -23,6 +23,7 @@ public class EngineEntryPoint implements EntryPoint {
         app.random = new Random(0);
         app.elmList = new Vector<CircuitElm>();
         CircuitElm.initSimulationClass(app, app.sim);
+        EnginePrimitiveFactory.install();
         publish();
     }
 
@@ -46,6 +47,14 @@ public class EngineEntryPoint implements EntryPoint {
                 int flags = Integer.parseInt(fields[5]);
                 if (x1 == x2 && y1 == y2)
                     throw new IllegalArgumentException("Zero-length elements are unsupported");
+                ChipElm memory = EngineLogicMemorySupport.construct(fields, x1, y1, x2, y2, flags);
+                if (memory != null) { memory.setPoints(); elements.add(memory); continue; }
+                CircuitElm analogPart = EngineAnalogCompositeSupport.construct(fields, x1, y1, x2, y2, flags);
+                if (analogPart != null) { analogPart.setPoints(); elements.add(analogPart); continue; }
+                CircuitElm relayPart = EngineLinkedRelaySupport.construct(fields, x1, y1, x2, y2, flags, timeStep);
+                if (relayPart != null) { relayPart.setPoints(); elements.add(relayPart); continue; }
+                CircuitElm block = EngineBuildingBlockSupport.construct(fields, x1, y1, x2, y2, flags, timeStep);
+                if (block != null) { block.setPoints(); elements.add(block); continue; }
                 CircuitElm switchModel=EngineSwitchSupport.construct(fields,x1,y1,x2,y2,flags);
                 if(switchModel!=null){switchModel.setPoints();elements.add(switchModel);continue;}
                 CircuitElm transistorModel=EngineTransistorSupport.construct(fields,x1,y1,x2,y2,flags);
@@ -66,6 +75,8 @@ public class EngineEntryPoint implements EntryPoint {
                 if (controlled != null) { controlled.setPoints(); elements.add(controlled); continue; }
                 ChipElm counter = EngineCounterSupport.construct(fields,x1,y1,x2,y2,flags);
                 if (counter != null) { counter.setPoints(); elements.add(counter); continue; }
+                ChipElm discrete = EngineDiscreteChipSupport.construct(fields, x1, y1, x2, y2, flags);
+                if (discrete != null) { discrete.setPoints(); elements.add(discrete); continue; }
                 if (type.equals("178")) {
                     RelayElm relay = EngineRelaySupport.construct(fields,x1,y1,x2,y2,flags,timeStep);
                     relay.setPoints();
@@ -93,13 +104,14 @@ public class EngineEntryPoint implements EntryPoint {
                 boolean voltage = type.equals("v") || type.equals("R");
                 boolean analog = type.equals("159") || type.equals("160");
                 boolean capacitor = type.equals("c") || type.equals("209");
+                boolean capacitorSeries = capacitor && (flags & 4) != 0 && fields.length == (type.equals("209") ? 11 : 10);
                 boolean gate = type.equals("150") || type.equals("151") || type.equals("152") || type.equals("153") || type.equals("154") || type.equals("431");
                 boolean fet = type.equals("f") || type.equals("j");
                 // Display-only markers (O, M) and the ground-referenced logic source (L)
                 // have optional trailing parameters in the legacy text format.
                 boolean display = type.equals("O") || type.equals("L") || type.equals("M");
                 boolean chip = type.equals("155") || type.equals("156") || type.equals("193");
-                int expected = analog ? 9 : type.equals("209") ? 10 : type.equals("T") ? 12 : type.equals("S") ? 10 : type.equals("429") ? 9 : type.equals("162") ? 11 : type.equals("z") ? 8 : gate ? 10 : type.equals("t") ? 10 : fet || type.equals("I") ? 8 : type.equals("r") ? 7 : type.equals("c") ? 9 :
+                int expected = analog ? 9 : type.equals("209") ? (capacitorSeries ? 11 : 10) : type.equals("T") ? 12 : type.equals("S") ? 10 : type.equals("429") ? 9 : type.equals("162") ? 11 : type.equals("z") ? 8 : gate ? 10 : type.equals("t") ? 10 : fet || type.equals("I") ? 8 : type.equals("r") ? 7 : type.equals("c") ? (capacitorSeries ? 10 : 9) :
                     type.equals("174") ? 9 : type.equals("i") ? 8 : type.equals("l") ? 10 : type.equals("s") ? 8 :
                     voltage || type.equals("a") ? 12 : type.equals("w") || type.equals("g") || type.equals("d") ? 6 : -1;
                 boolean passive = type.equals("169") || type.equals("406") || type.equals("171") || type.equals("416");
@@ -114,14 +126,19 @@ public class EngineEntryPoint implements EntryPoint {
                 boolean nextChipFlags = type.equals("168") ? chipFlags == 2 || chipFlags == 6 : type.equals("196") ? chipFlags == 2 : chipFlags == 0;
                 if (nextChip && !nextChipFlags)
                     throw new IllegalArgumentException("Unsupported chip flags");
-                if (flags != 0 && !(gate && (flags == 2 || flags == 4 || flags == 6)) && !(passive && (type.equals("169") || type.equals("406")) && flags == 2) && !(nextChip && nextChipFlags) && !(chip && (type.equals("156") ? (flags == 4 || flags == 8192 || flags == 8196) : flags == 8192)) && !(analog && flags >= 0 && flags <= 3) && !(display && flags >= 0 && flags <= (type.equals("M") ? 7 : 3)) && !((type.equals("S") || type.equals("162") || type.equals("z")) && flags == 1) && !(type.equals("T") && flags == 2) && !(fet && (type.equals("f") ? flags >= 0 && flags <= 255 : flags == 1)) && !((capacitor || type.equals("l")) && flags == 2) && !(type.equals("a") && flags == 8) && !(voltage && flags == 4 && fields[6].equals("5")))
+                if (flags != 0 && !(gate && (flags == 2 || flags == 4 || flags == 6)) && !(passive && (type.equals("169") || type.equals("406")) && flags == 2) && !(nextChip && nextChipFlags) && !(chip && (type.equals("156") ? (flags == 4 || flags == 8192 || flags == 8196) : flags == 8192)) && !(analog && flags >= 0 && flags <= 3) && !(display && flags >= 0 && flags <= (type.equals("M") ? 7 : 3)) && !((type.equals("S") || type.equals("162") || type.equals("z")) && flags == 1) && !(type.equals("T") && flags == 2) && !(fet && (type.equals("f") ? flags >= 0 && flags <= 255 : flags == 1)) && !(capacitor && (flags & ~(capacitorSeries ? 6 : 2)) == 0) && !(type.equals("l") && flags == 2) && !(type.equals("a") && flags == 8) && !(voltage && flags == 4 && fields[6].equals("5")))
                     throw new IllegalArgumentException("Unsupported flags");
                 for (int i = 6; i < fields.length; i++)
                     if (!(type.equals("406") && i == 8) && !(type.equals("416") && i == 7) && !((type.equals("s") || type.equals("S") || type.equals("429")) && i == 7) && !(type.equals("L") && i == 7) && !(type.equals("174") && i == 8) && !finite(Double.parseDouble(fields[i])))
                         throw new IllegalArgumentException("Non-finite parameter");
                 if ((type.equals("r") || capacitor || type.equals("l")) && Double.parseDouble(fields[6]) <= 0)
                     throw new IllegalArgumentException("Resistance/capacitance must be positive");
-                if (type.equals("209") && Double.parseDouble(fields[9]) < 0)
+                if (capacitorSeries) {
+                    double esr = Double.parseDouble(fields[9]);
+                    if (esr <= 0 || !finite(1 / esr))
+                        throw new IllegalArgumentException("Capacitor series resistance must be positive and finite");
+                }
+                if (type.equals("209") && Double.parseDouble(fields[capacitorSeries ? 10 : 9]) < 0)
                     throw new IllegalArgumentException("Maximum reverse voltage must be nonnegative");
                 if (passive) {
                     if (y1 != 32 || y2 != 32 || x2-x1 != 64)
@@ -351,6 +368,7 @@ public class EngineEntryPoint implements EntryPoint {
         }
         for(int i=0;i<next.size();i++)if(!seenNew[i])initializeElement(next.get(i));
         app.elmList=next;
+        EngineLinkedRelaySupport.resetContactPositions(next);
         app.sim.maxTimeStep=app.sim.minTimeStep=app.sim.timeStep=timeStep;
         if(timeStep!=loadedTimeStep)for(CircuitElm elm:next)if(elm instanceof TransLineElm)elm.reset();
         app.sim.analyzeCircuit();app.sim.preStampAndStampCircuit();
@@ -372,6 +390,12 @@ public class EngineEntryPoint implements EntryPoint {
         if (loadedText == null)
             throw new IllegalStateException("Load a circuit first");
         load(loadedText, loadedTimeStep);
+    }
+
+    void resetKeepingMemory(String text, double timeStep) {
+        Vector<CircuitElm> previous=app.elmList;
+        load(text,timeStep);
+        EngineLogicMemorySupport.restoreRam(previous,app.elmList);
     }
 
     void setSwitch(int id, boolean closed) {
@@ -610,6 +634,9 @@ public class EngineEntryPoint implements EntryPoint {
                 return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::stepSampled(ILcom/google/gwt/core/client/JavaScriptObject;Lcom/google/gwt/core/client/JavaScriptObject;)(count, targets, ramp || null);
             }),
             supportsVoltageRamp: true,
+            resetKeepingMemory: $entry(function(text, dt) {
+                that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::resetKeepingMemory(Ljava/lang/String;D)(text, dt);
+            }),
             reset: $entry(function() {
                 that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::reset()();
                 return that.@com.lushprojects.circuitjs1.client.EngineEntryPoint::snapshot()();

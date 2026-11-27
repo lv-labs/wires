@@ -144,3 +144,21 @@
     @apply font-sans;
     }
 }
+
+@layer components {
+  .circuit-cursor-pan {
+    cursor: url("./editor/cursors/hand.svg") 15 15, grab;
+  }
+
+  .circuit-cursor-pan:active {
+    cursor: url("./editor/cursors/hand-grab.svg") 15 15, grabbing;
+  }
+
+  .circuit-cursor-wire {
+    cursor: url("./editor/cursors/pencil.svg") 5 25, crosshair;
+  }
+
+  .circuit-cursor-probe {
+    cursor: url("./editor/cursors/laser.svg") 12 15, cell;
+  }
+}

@@ -1,8 +1,9 @@
-import { Lead, UprightText } from "../svg";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "njfet";
 export const metadata = {
+  drawingScale: 0.5,
   prefix: "Q",
   name: "NJFET",
   pins: {
@@ -16,7 +17,7 @@ export const metadata = {
   },
 } as const;
 
-export function Symbol({ pose }: SymbolProps) {
+export function Symbol(_: SymbolProps) {
   return (
     <>
       <circle cx={50} r={111} strokeWidth={10} />

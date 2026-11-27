@@ -5,6 +5,7 @@ import {
   MenubarItem,
   MenubarMenu,
   MenubarSeparator,
+  MenubarShortcut,
   MenubarSub,
   MenubarSubContent,
   MenubarSubTrigger,
@@ -93,6 +94,7 @@ function ComponentEntries({
         </MenubarSub>
       )
     const { tool } = entry
+    const shortcut = tool === "wire" ? "W" : tool === "select" ? "1" : undefined
     return (
       <MenubarItem
         key={entry.legacyClass}
@@ -101,11 +103,13 @@ function ComponentEntries({
         }
         disabled={!tool}
         aria-label={tool ? undefined : `${entry.label}. ${entry.reason}`}
+        aria-keyshortcuts={shortcut}
         onClick={() => {
           if (tool) onChoose(tool)
         }}
       >
         {entry.label}
+        {shortcut && <MenubarShortcut>{shortcut}</MenubarShortcut>}
       </MenubarItem>
     )
   })
@@ -211,6 +215,7 @@ export function ComponentMenu({
           <>
             <MenubarSeparator />
             <MenubarItem
+              aria-keyshortcuts="P"
               className={
                 searchFocused && firstTool === "probe"
                   ? "bg-accent text-accent-foreground"
@@ -219,6 +224,7 @@ export function ComponentMenu({
               onClick={() => onChoose("probe")}
             >
               Voltage probe
+              <MenubarShortcut>P</MenubarShortcut>
             </MenubarItem>
           </>
         )}

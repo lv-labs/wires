@@ -6,6 +6,7 @@
     "02-headless.patch",
     "03-correctness.patch",
     "04-batched-sampling.patch",
-    "05-dense-factorization-locality.patch"
+    "05-dense-factorization-locality.patch",
+    "06-headless-composite-constructors.patch"
   ]
 }

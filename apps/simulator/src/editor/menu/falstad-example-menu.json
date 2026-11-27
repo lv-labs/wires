@@ -222,7 +222,7 @@
           {
             "title": "Caps in Parallel",
             "file": "cappar.txt",
-            "enabled": false
+            "enabled": true
           }
         ]
       },
@@ -923,7 +923,8 @@
           {
             "title": "Crystal Oscillator",
             "file": "crystalosc2.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           }
         ]
       },
@@ -1063,7 +1064,8 @@
       {
         "title": "CMOS Crystal Oscillator",
         "file": "crystalosc.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       }
     ]
   },
@@ -1499,7 +1501,7 @@
           {
             "title": "Parallel-In Serial-Out",
             "file": "piso-sr.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "Universal",
@@ -1588,7 +1590,7 @@
       {
         "title": "Half-Flash (Subranging) ADC",
         "file": "hfadc.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Binary-Weighted DAC",
@@ -1663,12 +1665,13 @@
       {
         "title": "Type I PLL",
         "file": "pll.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Phase Comparator (Type II)",
         "file": "phasecomp.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Phase Comparator Internals",
@@ -1678,17 +1681,20 @@
       {
         "title": "Type II PLL",
         "file": "pll2.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Type II PLL (fast)",
         "file": "pll2a.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       },
       {
         "title": "Frequency Doubler",
         "file": "freqdouble.txt",
-        "enabled": false
+        "enabled": true,
+        "scopeWarning": true
       }
     ]
   },
@@ -2059,22 +2065,25 @@
           {
             "title": "OTA Voltage Controlled Amplifier (VCA)",
             "file": "ota-vca.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           },
           {
             "title": "OTA Single Stage VCF (low pass)",
             "file": "ota-vcf-single.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           },
           {
             "title": "OTA Ring Modulator",
             "file": "ota-ringmod.txt",
-            "enabled": false
+            "enabled": true
           },
           {
             "title": "LM137000 Gain Oddity",
             "file": "ota-gain.txt",
-            "enabled": false
+            "enabled": true,
+            "scopeWarning": true
           }
         ]
       },
@@ -2134,7 +2143,7 @@
       {
         "title": "LED Array",
         "file": "ledarray.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "DIAC/TRIAC Dimmer",
@@ -2155,12 +2164,12 @@
       {
         "title": "Latching Relay",
         "file": "latchingrelay.txt",
-        "enabled": false
+        "enabled": true
       },
       {
         "title": "Gyrator",
         "file": "gyratorelm.txt",
-        "enabled": false
+        "enabled": true
       }
     ]
   },

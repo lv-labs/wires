@@ -99,12 +99,17 @@ type Placement =
 type WireDraft = {
   from: Target
   points: Point[]
+  automatic?: boolean
   firstAxis?: "x" | "y"
   lastClick?: Point & { time: number }
 }
 
-function routeLeg(route: WireDraft, end: Point): Point[] {
+function routeLeg(document: CircuitDocument, route: WireDraft, end: Point): Point[] {
   const start = route.points.at(-1)!
+  if (route.automatic) {
+    const result = core.geometry.routedWireLeg(document, start, end)
+    if (result) return result
+  }
   if (start.x === end.x && start.y === end.y) return []
   if (start.x === end.x || start.y === end.y) return [end]
   const corner =
@@ -174,18 +179,11 @@ export const CircuitSheet = memo(function CircuitSheet({
   gridMode,
   simulationRunning = false,
   onGridModeChange,
-  scopeOpen,
   scopeRendering,
   onScopeRenderingChange,
   hoveredTrace = null,
-  onToggleScope,
-  sliderPanelOpen,
-  sliderPanelRequired,
-  onSliderPanelChange,
   onPlaceSlider,
   sliderPreview,
-  onStepSimulation,
-  canStep,
   onNotice,
   frame,
   fitRequest,
@@ -230,18 +228,11 @@ export const CircuitSheet = memo(function CircuitSheet({
   simulationRunning?: boolean
   gridMode: "dots" | "lines" | "off"
   onGridModeChange: (mode: "dots" | "lines" | "off") => void
-  scopeOpen: boolean
   scopeRendering: ScopeRendering
   onScopeRenderingChange: (rendering: ScopeRendering) => void
   hoveredTrace?: string | null
-  onToggleScope: () => void
-  sliderPanelOpen: boolean
-  sliderPanelRequired: boolean
-  onSliderPanelChange: (open: boolean) => void
   onPlaceSlider: () => void
   sliderPreview: SliderAdjustment | null
-  onStepSimulation: () => void
-  canStep: boolean
   onNotice: (message: string) => void
   frame?: Frame | null
   fitRequest: number
@@ -264,9 +255,9 @@ export const CircuitSheet = memo(function CircuitSheet({
     () => {
       try {
         const saved = localStorage.getItem("circuit-editor.crosshairs.v1")
-        return saved === "small" || saved === "full" ? saved : "off"
+        return saved === "off" || saved === "full" ? saved : "small"
       } catch {
-        return "off"
+        return "small"
       }
     }
   )
@@ -859,7 +850,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       const endpoint = targetAt(point, true)
       if (route) connect(endpoint, true)
       else {
-        changeTool("wire")
+        changeTool(tool === "routedWire" ? "routedWire" : "wire")
         startRoute(endpoint)
       }
       sheet.focus()
@@ -1017,7 +1008,11 @@ export const CircuitSheet = memo(function CircuitSheet({
     if (["+", "=", "-"].includes(key)) zoom(key === "-" ? 1 / 1.2 : 1.2)
     if (key === "h") changeTool("pan")
     if (key === "1") cancel()
-    if (key === "p") beginPlacement("ground")
+    if (key === "p") {
+      event.preventDefault()
+      changeTool("probe")
+      sheet.focus({ preventScroll: true })
+    }
   })
   useEffect(() => {
     const listener = (event: globalThis.KeyboardEvent) => shortcut(event)
@@ -1239,12 +1234,12 @@ export const CircuitSheet = memo(function CircuitSheet({
     const start = targetPoint(from)
     setCursor(start)
     setHover(start)
-    setRoute({ from, points: [start] })
+    setRoute({ from, points: [start], automatic: tool === "routedWire" })
   }
   function connect(to: Target, continueRouting = false) {
     if (!route) return
     const end = targetPoint(to)
-    const points = [...route.points, ...routeLeg(route, end)]
+    const points = [...route.points, ...routeLeg(document, route, end)]
     const placed = execute({
       type: "connect",
       from: route.from,
@@ -1412,13 +1407,14 @@ export const CircuitSheet = memo(function CircuitSheet({
         setHover(null)
         setRoute({
           from: route.from,
-          points: [...route.points, ...routeLeg(route, endpoint.point)],
+          automatic: route.automatic,
+          points: [...route.points, ...routeLeg(document, route, endpoint.point)],
           lastClick: { ...screen, time },
         })
       }
       return
     }
-    if (tool === "wire") {
+    if (tool === "wire" || tool === "routedWire") {
       const endpoint = targetAt(p, true)
       if (endpoint.kind !== "point") startRoute(endpoint)
       else onNotice("Start a wire on a pin, junction or existing wire.")
@@ -1523,7 +1519,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           return firstAxis === draft.firstAxis ? draft : { ...draft, firstAxis }
         })
       }
-      const endpoint = targetAt(p, !!route || tool === "wire")
+      const endpoint = targetAt(p, !!route || tool === "wire" || tool === "routedWire")
       setHover(endpoint.kind === "point" ? null : targetPoint(endpoint))
     } else setHover(null)
   }
@@ -1620,7 +1616,7 @@ export const CircuitSheet = memo(function CircuitSheet({
       })
   }
   const routePoints = route
-    ? [...route.points, ...routeLeg(route, hover ?? cursor)]
+    ? [...route.points, ...routeLeg(document, route, hover ?? cursor)]
     : []
   const crossing = box !== null && box.b.x < box.a.x
   const componentDefinition =
@@ -1655,6 +1651,14 @@ export const CircuitSheet = memo(function CircuitSheet({
         y: crosshairWorld.y * camera.scale + camera.y,
       }
     : null
+  const sheetCursor =
+    tool === "pan"
+      ? "circuit-cursor-pan"
+      : tool === "probe" || placement?.kind === "probe"
+        ? "circuit-cursor-probe"
+        : tool === "wire" || tool === "routedWire" || route
+          ? "circuit-cursor-wire"
+          : ""
   const selectedDrawing =
     selection.length === 1 && selection[0].kind === "drawing"
       ? shown.layout.drawings?.find((item) => item.id === selection[0].id)
@@ -1715,10 +1719,14 @@ export const CircuitSheet = memo(function CircuitSheet({
         <Menubar className="h-8 rounded-none border-0 p-0">
           <MenubarMenu>
             <MenubarTrigger>File</MenubarTrigger>
-            <MenubarContent>
+            <MenubarContent className="w-max">
               <MenubarItem onClick={onNewDocument}>New circuit</MenubarItem>
-              <MenubarItem onClick={onOpenDocument}>
+              <MenubarItem
+                aria-keyshortcuts="Control+O Meta+O"
+                onClick={onOpenDocument}
+              >
                 Open from file…
+                <MenubarShortcut>Ctrl/⌘ O</MenubarShortcut>
               </MenubarItem>
               <MenubarItem onClick={onOpenLink}>Open from link…</MenubarItem>
               {onImportFalstad && (
@@ -1727,7 +1735,13 @@ export const CircuitSheet = memo(function CircuitSheet({
                 </MenubarItem>
               )}
               <MenubarSeparator />
-              <MenubarItem onClick={onSaveDocument}>Save to file…</MenubarItem>
+              <MenubarItem
+                aria-keyshortcuts="Control+S Meta+S"
+                onClick={onSaveDocument}
+              >
+                Save to file…
+                <MenubarShortcut>Ctrl/⌘ S</MenubarShortcut>
+              </MenubarItem>
               <MenubarItem onClick={onShareDocument}>Save to link…</MenubarItem>
               <MenubarItem onClick={() => void saveImage("svg")}>
                 Save to SVG…
@@ -1754,18 +1768,22 @@ export const CircuitSheet = memo(function CircuitSheet({
           </MenubarMenu>
           <MenubarMenu>
             <MenubarTrigger>Edit</MenubarTrigger>
-            <MenubarContent>
+            <MenubarContent className="w-max">
               <MenubarItem
+                aria-keyshortcuts="Control+Z Meta+Z"
                 disabled={!canUndo}
                 onClick={() => changeHistory(undo)}
               >
                 Undo
+                <MenubarShortcut>Ctrl/⌘ Z</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z"
                 disabled={!canRedo}
                 onClick={() => changeHistory(redo)}
               >
                 Redo
+                <MenubarShortcut>Ctrl/⌘ ⇧ Z</MenubarShortcut>
               </MenubarItem>
               <MenubarSeparator />
               <MenubarItem
@@ -1781,104 +1799,138 @@ export const CircuitSheet = memo(function CircuitSheet({
                 Expand Selection
                 <MenubarShortcut>U</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem disabled={!selection.length} onClick={copyItems}>
+              <MenubarItem
+                aria-keyshortcuts="Control+C Meta+C"
+                disabled={!selection.length}
+                onClick={copyItems}
+              >
                 Copy
+                <MenubarShortcut>Ctrl/⌘ C</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="Control+V Meta+V"
                 disabled={!hasClipboard || !!placement || !!route}
                 onClick={pasteItems}
               >
                 Paste
+                <MenubarShortcut>Ctrl/⌘ V</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="Control+D Meta+D"
                 disabled={!selection.length}
                 onClick={() => {
                   if (copyItems()) pasteItems()
                 }}
               >
                 Duplicate
+                <MenubarShortcut>Ctrl/⌘ D</MenubarShortcut>
               </MenubarItem>
               <MenubarSeparator />
               <MenubarItem
+                aria-keyshortcuts="M"
                 disabled={!selection.length}
                 onClick={() => beginTransform(true)}
               >
                 Move
+                <MenubarShortcut>M</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="G"
                 disabled={!selection.length}
                 onClick={() => beginTransform(false)}
               >
                 Drag connected
+                <MenubarShortcut>G</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="R"
                 disabled={!selection.length}
                 onClick={() => orient({ rotate: -90 })}
               >
                 Rotate
+                <MenubarShortcut>R</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="X"
                 disabled={!selection.length}
                 onClick={() => orient({ axis: "x" })}
               >
                 Flip X
+                <MenubarShortcut>X</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="Y"
                 disabled={!selection.length}
                 onClick={() => orient({ axis: "y" })}
               >
                 Flip Y
+                <MenubarShortcut>Y</MenubarShortcut>
               </MenubarItem>
               <MenubarItem
+                aria-keyshortcuts="Delete Backspace"
                 disabled={!selection.length}
                 onClick={removeSelection}
               >
                 Delete
+                <MenubarShortcut>Delete</MenubarShortcut>
               </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
           <MenubarMenu>
             <MenubarTrigger>View</MenubarTrigger>
-            <MenubarContent>
-              <MenubarItem
-                onClick={() => {
-                  changeTool("select")
-                  svg.current?.focus()
-                }}
-              >
-                Select tool
+            <MenubarContent className="w-max">
+              <MenubarItem aria-keyshortcuts="Plus =" onClick={() => zoom(1.2)}>
+                Zoom in
+                <MenubarShortcut>+</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem
-                onClick={() => {
-                  changeTool("wire")
-                  svg.current?.focus()
-                }}
-              >
-                Wire tool
+              <MenubarItem aria-keyshortcuts="-" onClick={() => zoom(1 / 1.2)}>
+                Zoom out
+                <MenubarShortcut>−</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem
-                onClick={() => {
-                  changeTool("pan")
-                  svg.current?.focus()
-                }}
-              >
-                Pan tool
-              </MenubarItem>
-              <MenubarItem
-                onClick={() => {
-                  changeTool("probe")
-                  svg.current?.focus()
-                }}
-              >
-                Probe tool
+              <MenubarItem aria-keyshortcuts="0" onClick={fit}>
+                Fit circuit
+                <MenubarShortcut>0</MenubarShortcut>
               </MenubarItem>
               <MenubarSeparator />
-              <MenubarItem onClick={() => zoom(1.2)}>Zoom in</MenubarItem>
-              <MenubarItem onClick={() => zoom(1 / 1.2)}>Zoom out</MenubarItem>
-              <MenubarItem onClick={fit}>Fit circuit</MenubarItem>
-              <MenubarItem onClick={onToggleScope}>
-                {scopeOpen ? "Hide oscilloscope" : "Show oscilloscope"}
-              </MenubarItem>
+              <MenubarSub>
+                <MenubarSubTrigger>Grid</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarRadioGroup
+                    value={gridMode}
+                    onValueChange={onGridModeChange}
+                  >
+                    <MenubarRadioItem value="off" closeOnClick>
+                      Off
+                    </MenubarRadioItem>
+                    <MenubarRadioItem value="dots" closeOnClick>
+                      Dots
+                    </MenubarRadioItem>
+                    <MenubarRadioItem value="lines" closeOnClick>
+                      Lines
+                    </MenubarRadioItem>
+                  </MenubarRadioGroup>
+                </MenubarSubContent>
+              </MenubarSub>
+              <MenubarSub>
+                <MenubarSubTrigger>Cursor crosshairs</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarRadioGroup
+                    value={crosshairMode}
+                    onValueChange={setCrosshairMode}
+                  >
+                    <MenubarRadioItem value="off" closeOnClick>
+                      Off
+                    </MenubarRadioItem>
+                    <MenubarRadioItem value="small" closeOnClick>
+                      Small
+                    </MenubarRadioItem>
+                    <MenubarRadioItem value="full" closeOnClick>
+                      Full sheet
+                    </MenubarRadioItem>
+                  </MenubarRadioGroup>
+                </MenubarSubContent>
+              </MenubarSub>
+              <MenubarSeparator />
               <MenubarSub>
                 <MenubarSubTrigger>Scope rendering</MenubarSubTrigger>
                 <MenubarSubContent>
@@ -1893,34 +1945,6 @@ export const CircuitSheet = memo(function CircuitSheet({
                       Smooth lines
                     </MenubarRadioItem>
                   </MenubarRadioGroup>
-                </MenubarSubContent>
-              </MenubarSub>
-              <MenubarCheckboxItem
-                checked={sliderPanelOpen}
-                disabled={sliderPanelRequired}
-                onCheckedChange={onSliderPanelChange}
-                closeOnClick
-              >
-                Sliders
-              </MenubarCheckboxItem>
-              <MenubarSeparator />
-              <MenubarSub>
-                <MenubarSubTrigger>Cursor crosshairs</MenubarSubTrigger>
-                <MenubarSubContent>
-                  {(["off", "small", "full"] as const).map((mode) => (
-                    <MenubarCheckboxItem
-                      key={mode}
-                      checked={crosshairMode === mode}
-                      onCheckedChange={() => setCrosshairMode(mode)}
-                      closeOnClick
-                    >
-                      {mode === "off"
-                        ? "Off"
-                        : mode === "small"
-                          ? "Small"
-                          : "Full sheet"}
-                    </MenubarCheckboxItem>
-                  ))}
                 </MenubarSubContent>
               </MenubarSub>
               <MenubarSeparator />
@@ -1943,16 +1967,6 @@ export const CircuitSheet = memo(function CircuitSheet({
                 Show current dots
               </MenubarCheckboxItem>
               <MenubarSeparator />
-              <MenubarItem onClick={() => onGridModeChange("dots")}>
-                Grid: dots {gridMode === "dots" ? "✓" : ""}
-              </MenubarItem>
-              <MenubarItem onClick={() => onGridModeChange("lines")}>
-                Grid: lines {gridMode === "lines" ? "✓" : ""}
-              </MenubarItem>
-              <MenubarItem onClick={() => onGridModeChange("off")}>
-                Grid: off {gridMode === "off" ? "✓" : ""}
-              </MenubarItem>
-              <MenubarSeparator />
               <MenubarSub>
                 <MenubarSubTrigger>Developer</MenubarSubTrigger>
                 <MenubarSubContent>
@@ -1964,10 +1978,29 @@ export const CircuitSheet = memo(function CircuitSheet({
                   </MenubarCheckboxItem>
                 </MenubarSubContent>
               </MenubarSub>
-              <MenubarSeparator />
-              <MenubarItem disabled={!canStep} onClick={onStepSimulation}>
-                Step simulation (10)
-              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger>Tools</MenubarTrigger>
+            <MenubarContent>
+              {[
+                { id: "select", label: "Select", shortcut: "1" },
+                { id: "wire", label: "Wire", shortcut: "W" },
+                { id: "pan", label: "Pan", shortcut: "H" },
+                { id: "probe", label: "Probe", shortcut: "P" },
+              ].map(({ id, label, shortcut }) => (
+                <MenubarItem
+                  key={id}
+                  aria-keyshortcuts={shortcut}
+                  onClick={() => {
+                    changeTool(id)
+                    svg.current?.focus()
+                  }}
+                >
+                  {label}
+                  {shortcut && <MenubarShortcut>{shortcut}</MenubarShortcut>}
+                </MenubarItem>
+              ))}
             </MenubarContent>
           </MenubarMenu>
           <MenubarMenu>
@@ -2019,6 +2052,7 @@ export const CircuitSheet = memo(function CircuitSheet({
             onChoose={(choice) => {
               if (
                 choice === "wire" ||
+                choice === "routedWire" ||
                 choice === "select" ||
                 choice === "probe"
               )
@@ -2039,7 +2073,7 @@ export const CircuitSheet = memo(function CircuitSheet({
                 : "Drag to draw · Esc cancels"}
           </span>
         )}
-        {(tool === "wire" || route) && (
+        {(tool === "wire" || tool === "routedWire" || route) && (
           <span role="status" className="text-xs">
             {route
               ? "W places the wire and continues · click to add a bend or attach · Enter or double-click to finish · Esc cancels"
@@ -2061,6 +2095,7 @@ export const CircuitSheet = memo(function CircuitSheet({
         }}
       >
         <MenubarContent
+          className="w-max"
           anchor={
             itemMenu
               ? {
@@ -2077,6 +2112,7 @@ export const CircuitSheet = memo(function CircuitSheet({
           }}
         >
           <MenubarItem
+            aria-keyshortcuts="E"
             disabled={
               itemMenu?.entity.kind !== "component" &&
               itemMenu?.entity.kind !== "probe"
@@ -2084,12 +2120,18 @@ export const CircuitSheet = memo(function CircuitSheet({
             onClick={() => itemMenu && onEdit(itemMenu.entity)}
           >
             Edit
+            <MenubarShortcut>E</MenubarShortcut>
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem onClick={() => beginTransform(false)}>
-            Drag (G)
+          <MenubarItem
+            aria-keyshortcuts="G"
+            onClick={() => beginTransform(false)}
+          >
+            Drag
+            <MenubarShortcut>G</MenubarShortcut>
           </MenubarItem>
           <MenubarItem
+            aria-keyshortcuts="M"
             onClick={() => {
               if (itemMenu?.entity.kind === "probe")
                 beginProbeMove(
@@ -2099,26 +2141,46 @@ export const CircuitSheet = memo(function CircuitSheet({
               else beginTransform(true)
             }}
           >
-            Move (M)
+            Move
+            <MenubarShortcut>M</MenubarShortcut>
           </MenubarItem>
           {itemMenu?.entity.kind !== "probe" && (
             <>
-              <MenubarItem onClick={() => orient({ rotate: 90 })}>
+              <MenubarItem
+                aria-keyshortcuts="Shift+R"
+                onClick={() => orient({ rotate: 90 })}
+              >
                 Rotate clockwise
+                <MenubarShortcut>⇧ R</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem onClick={() => orient({ rotate: -90 })}>
+              <MenubarItem
+                aria-keyshortcuts="R"
+                onClick={() => orient({ rotate: -90 })}
+              >
                 Rotate counterclockwise
+                <MenubarShortcut>R</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem onClick={() => orient({ axis: "x" })}>
+              <MenubarItem
+                aria-keyshortcuts="X"
+                onClick={() => orient({ axis: "x" })}
+              >
                 Flip X
+                <MenubarShortcut>X</MenubarShortcut>
               </MenubarItem>
-              <MenubarItem onClick={() => orient({ axis: "y" })}>
+              <MenubarItem
+                aria-keyshortcuts="Y"
+                onClick={() => orient({ axis: "y" })}
+              >
                 Flip Y
+                <MenubarShortcut>Y</MenubarShortcut>
               </MenubarItem>
             </>
           )}
           <MenubarSeparator />
-          <MenubarItem onClick={copyItems}>Copy</MenubarItem>
+          <MenubarItem aria-keyshortcuts="Control+C Meta+C" onClick={copyItems}>
+            Copy
+            <MenubarShortcut>Ctrl/⌘ C</MenubarShortcut>
+          </MenubarItem>
           <MenubarItem
             onClick={() => {
               if (copyItems()) removeSelection()
@@ -2127,20 +2189,30 @@ export const CircuitSheet = memo(function CircuitSheet({
             Cut
           </MenubarItem>
           <MenubarItem
+            aria-keyshortcuts="Control+D Meta+D"
             onClick={() => {
               if (copyItems()) pasteItems()
             }}
           >
             Duplicate
+            <MenubarShortcut>Ctrl/⌘ D</MenubarShortcut>
           </MenubarItem>
-          <MenubarItem onClick={removeSelection}>Delete</MenubarItem>
+          <MenubarItem
+            aria-keyshortcuts="Delete Backspace"
+            onClick={removeSelection}
+          >
+            Delete
+            <MenubarShortcut>Delete</MenubarShortcut>
+          </MenubarItem>
           {itemMenu?.entity.kind === "drawing" && (
             <MenubarItem
+              aria-keyshortcuts="E"
               onClick={() => {
                 if (itemMenu) onEdit(itemMenu.entity)
               }}
             >
               Drawing appearance…
+              <MenubarShortcut>E</MenubarShortcut>
             </MenubarItem>
           )}
           {itemMenu?.entity.kind === "component" &&
@@ -2238,8 +2310,8 @@ export const CircuitSheet = memo(function CircuitSheet({
       <svg
         ref={svg}
         tabIndex={0}
-        aria-label="Circuit sheet. Select and drag. U expands selection. G moves connected, M moves detached, R rotates, X/Y flips, W starts or places a wire, and Escape cancels and clears selection."
-        className={`min-h-[450px] w-full flex-1 touch-none outline-none ${tool === "wire" || route || placement?.kind === "probe" ? "cursor-crosshair" : ""}`}
+        aria-label="Circuit sheet. Select and drag. U expands selection. G moves connected, M moves detached, R rotates, X/Y flips, W starts or places a wire, P activates the voltage probe, and Escape cancels and clears selection."
+        className={`min-h-[450px] w-full flex-1 touch-none outline-none ${sheetCursor}`}
         onContextMenu={(e) => {
           e.preventDefault()
           cancel()
@@ -2403,7 +2475,7 @@ export const CircuitSheet = memo(function CircuitSheet({
                 opacity={0.16}
               />
             ) : (
-              <circle cx={0} cy={0} r={1} fill="currentColor" opacity={0.18} />
+              <circle cx={0} cy={0} r={1} fill="currentColor" opacity={0.21} />
             )}
           </pattern>
         </defs>

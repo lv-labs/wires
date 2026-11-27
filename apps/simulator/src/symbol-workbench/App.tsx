@@ -77,14 +77,19 @@ function Artwork({
   glow?: boolean | number
 }) {
   const scale = entry.metadata.drawingScale ?? 1
-  const pinPositions = bitDisplays.has(entry.kind)
-    ? Object.fromEntries(
-        Object.entries(previewPins(entry, parameters)).map(([id, [x, y]]) => [
-          id,
-          [x / scale, y / scale] as const,
-        ])
-      )
-    : undefined
+  const pinPositions =
+    bitDisplays.has(entry.kind) ||
+    entry.kind === "sevenSegment" ||
+    core.catalog.counterKind(entry.kind) ||
+    core.catalog.discreteChipKind(entry.kind) ||
+    core.catalog.gateKind(entry.kind)
+      ? Object.fromEntries(
+          Object.entries(previewPins(entry, parameters)).map(([id, [x, y]]) => [
+            id,
+            [x / scale, y / scale] as const,
+          ])
+        )
+      : undefined
   return (
     <g
       transform={`rotate(${rotation}) scale(${mirror ? -1 : 1} 1)`}

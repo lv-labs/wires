@@ -1821,36 +1821,36 @@
       "drawingScale": 1,
       "pins": {
         "discharge": [
-          -100,
-          -50
+          -150,
+          -100
         ],
         "trigger": [
-          -100,
-          50
+          -150,
+          0
         ],
         "threshold": [
-          -100,
+          -150,
           100
         ],
         "supply": [
           0,
-          -150
+          -200
         ],
         "control": [
-          0,
-          150
+          -50,
+          200
         ],
         "out": [
-          100,
+          150,
           0
         ],
         "reset": [
-          100,
-          -50
+          150,
+          -100
         ],
         "ground": [
           50,
-          150
+          200
         ]
       },
       "type": "165",
@@ -2101,32 +2101,32 @@
       "drawingScale": 1,
       "pins": {
         "a": [
-          -125,
-          -75
+          -250,
+          -150
         ],
         "b": [
-          -125,
-          -25
+          -250,
+          -50
         ],
         "c": [
-          -125,
-          25
+          -250,
+          50
         ],
         "d": [
-          -125,
-          75
+          -250,
+          150
         ],
         "e": [
-          -25,
-          125
+          -50,
+          250
         ],
         "f": [
-          25,
-          125
+          50,
+          250
         ],
         "g": [
-          75,
-          125
+          150,
+          250
         ]
       },
       "type": "157",
@@ -2175,24 +2175,782 @@
         "highVoltage": 5
       },
       "sign": null
-    }
-  };
-  const basicDefinitions = {
-    "npn": {
+    },
+    "gyrator": {
+      "name": "Gyrator",
+      "prefix": "GY",
+      "drawingScale": 1,
+      "pins": {
+        "port1Plus": [
+          -150,
+          -50
+        ],
+        "port2Plus": [
+          150,
+          -50
+        ],
+        "port1Minus": [
+          -150,
+          50
+        ],
+        "port2Minus": [
+          150,
+          50
+        ]
+      },
+      "type": "Gyrator",
+      "fields": {
+        "resistance": {
+          "label": "Gyration resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1000
+        }
+      },
+      "parameters": {
+        "resistance": 1000
+      },
+      "sign": 1
+    },
+    "delayBuffer": {
+      "name": "Delay buffer",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "input": [
+          -100,
+          0
+        ],
+        "out": [
+          100,
+          0
+        ]
+      },
+      "type": "422",
+      "fields": {
+        "delay": {
+          "label": "Delay · s",
+          "type": "number",
+          "min": 0,
+          "default": 0
+        },
+        "threshold": {
+          "label": "Threshold · V",
+          "type": "number",
+          "default": 2.5
+        },
+        "highVoltage": {
+          "label": "High level · V",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 5
+        }
+      },
+      "parameters": {
+        "delay": 0,
+        "threshold": 2.5,
+        "highVoltage": 5
+      },
+      "sign": -1
+    },
+    "tristateBuffer": {
+      "name": "Tristate buffer",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "input": [
+          -100,
+          0
+        ],
+        "out": [
+          100,
+          0
+        ],
+        "enable": [
+          0,
+          100
+        ]
+      },
+      "type": "180",
+      "fields": {
+        "onResistance": {
+          "label": "On resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.1
+        },
+        "offResistance": {
+          "label": "Off resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 10000000000
+        },
+        "pulldownResistance": {
+          "label": "Output pulldown · Ω (0 disables)",
+          "type": "number",
+          "min": 0,
+          "default": 100000000
+        },
+        "highVoltage": {
+          "label": "High level · V",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 5
+        }
+      },
+      "parameters": {
+        "onResistance": 0.1,
+        "offResistance": 10000000000,
+        "pulldownResistance": 100000000,
+        "highVoltage": 5
+      },
+      "sign": 1
+    },
+    "crystal": {
+      "name": "Crystal",
+      "prefix": "XTAL",
+      "drawingScale": 1,
+      "pins": {
+        "a": [
+          -100,
+          0
+        ],
+        "b": [
+          100,
+          0
+        ]
+      },
+      "type": "412",
+      "fields": {
+        "parallelCapacitance": {
+          "label": "Parallel capacitance · F",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 2.87e-11
+        },
+        "seriesCapacitance": {
+          "label": "Series capacitance · F",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1e-13
+        },
+        "inductance": {
+          "label": "Series inductance · H",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.0025
+        },
+        "resistance": {
+          "label": "Series resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 6.4
+        },
+        "showFrequency": {
+          "label": "Show frequency",
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "parameters": {
+        "parallelCapacitance": 2.87e-11,
+        "seriesCapacitance": 1e-13,
+        "inductance": 0.0025,
+        "resistance": 6.4,
+        "showFrequency": true
+      },
+      "sign": 1
+    },
+    "relayCoil": {
+      "name": "Relay coil",
+      "prefix": "K",
+      "drawingScale": 1,
+      "pins": {
+        "a": [
+          -100,
+          0
+        ],
+        "b": [
+          100,
+          0
+        ]
+      },
+      "type": "425",
+      "fields": {
+        "label": {
+          "label": "Label for linking relays",
+          "type": "string",
+          "maxLength": 80,
+          "default": "label"
+        },
+        "inductance": {
+          "label": "Coil inductance · H",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.2
+        },
+        "coilResistance": {
+          "label": "Coil resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 20
+        },
+        "onCurrent": {
+          "label": "Pickup current · A",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.02
+        },
+        "offCurrent": {
+          "label": "Release current · A",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.015
+        },
+        "switchingTime": {
+          "label": "Switching time · s",
+          "type": "number",
+          "min": 0,
+          "default": 0.005
+        },
+        "mode": {
+          "label": "Type",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        "initialCoilCurrent": {
+          "label": "Initial coil current · A",
+          "type": "number",
+          "default": 0
+        },
+        "initialState": {
+          "label": "Initial relay state",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 3,
+          "default": 0
+        },
+        "initialPosition": {
+          "label": "Initial position",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "parameters": {
+        "label": "label",
+        "inductance": 0.2,
+        "coilResistance": 20,
+        "onCurrent": 0.02,
+        "offCurrent": 0.015,
+        "switchingTime": 0.005,
+        "mode": 0,
+        "initialCoilCurrent": 0,
+        "initialState": 0,
+        "initialPosition": 0
+      },
+      "sign": 1
+    },
+    "relayContact": {
+      "name": "Relay contact",
+      "prefix": "K",
+      "drawingScale": 1,
+      "pins": {
+        "a": [
+          -100,
+          0
+        ],
+        "b": [
+          100,
+          0
+        ]
+      },
+      "type": "426",
+      "fields": {
+        "label": {
+          "label": "Label for linking relays",
+          "type": "string",
+          "maxLength": 80,
+          "default": "label"
+        },
+        "onResistance": {
+          "label": "On resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.05
+        },
+        "offResistance": {
+          "label": "Off resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1000000
+        },
+        "normallyClosed": {
+          "label": "Normally closed",
+          "type": "boolean",
+          "default": false
+        },
+        "iecSymbol": {
+          "label": "IEC symbol",
+          "type": "boolean",
+          "default": true
+        },
+        "initialPosition": {
+          "label": "Initial position",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 1,
+          "default": 1
+        }
+      },
+      "parameters": {
+        "label": "label",
+        "onResistance": 0.05,
+        "offResistance": 1000000,
+        "normallyClosed": false,
+        "iecSymbol": true,
+        "initialPosition": 1
+      },
+      "sign": 1
+    },
+    "timeDelayRelay": {
+      "name": "Time delay relay",
+      "prefix": "K",
+      "drawingScale": 1,
+      "pins": {
+        "supply": [
+          -150,
+          50
+        ],
+        "return": [
+          150,
+          50
+        ],
+        "input": [
+          -150,
+          -50
+        ],
+        "out": [
+          150,
+          -50
+        ]
+      },
+      "type": "414",
+      "fields": {
+        "onDelay": {
+          "label": "On delay · s",
+          "type": "number",
+          "min": 0,
+          "default": 1
+        },
+        "offDelay": {
+          "label": "Off delay · s",
+          "type": "number",
+          "min": 0,
+          "default": 0
+        },
+        "onResistance": {
+          "label": "On resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1
+        },
+        "offResistance": {
+          "label": "Off resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 10000000
+        }
+      },
+      "parameters": {
+        "onDelay": 1,
+        "offDelay": 0,
+        "onResistance": 1,
+        "offResistance": 10000000
+      },
+      "sign": null
+    },
+    "motorProtectionSwitch": {
+      "name": "Motor protection switch",
       "prefix": "Q",
-      "name": "NPN transistor",
+      "drawingScale": 1,
+      "pins": {
+        "in1": [
+          -100,
+          -200
+        ],
+        "out1": [
+          -100,
+          200
+        ],
+        "in2": [
+          0,
+          -200
+        ],
+        "out2": [
+          0,
+          200
+        ],
+        "in3": [
+          100,
+          -200
+        ],
+        "out3": [
+          100,
+          200
+        ]
+      },
+      "type": "428",
+      "fields": {
+        "resistance": {
+          "label": "On resistance · Ω",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.0613
+        },
+        "i2t": {
+          "label": "Trip energy · A²s",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 6.73
+        },
+        "label": {
+          "label": "Label for linking relays",
+          "type": "string",
+          "maxLength": 80,
+          "default": ""
+        },
+        "initiallyTripped": {
+          "label": "Initially tripped",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "parameters": {
+        "resistance": 0.0613,
+        "i2t": 6.73,
+        "label": "",
+        "initiallyTripped": false
+      },
+      "sign": null
+    },
+    "npnDarlington": {
+      "name": "Darlington pair (NPN)",
+      "prefix": "Q",
+      "drawingScale": 1,
       "pins": {
         "base": [
-          -200,
+          -100,
           0
         ],
         "collector": [
           100,
-          -200
+          -50
         ],
         "emitter": [
           100,
-          200
+          50
+        ]
+      },
+      "type": "400",
+      "fields": {
+        "beta1": {
+          "label": "First transistor gain (β)",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 100
+        },
+        "beta2": {
+          "label": "Second transistor gain (β)",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 100
+        }
+      },
+      "parameters": {
+        "beta1": 100,
+        "beta2": 100
+      },
+      "sign": null
+    },
+    "pnpDarlington": {
+      "name": "Darlington pair (PNP)",
+      "prefix": "Q",
+      "drawingScale": 1,
+      "pins": {
+        "base": [
+          -100,
+          0
+        ],
+        "collector": [
+          100,
+          50
+        ],
+        "emitter": [
+          100,
+          -50
+        ]
+      },
+      "type": "400",
+      "fields": {
+        "beta1": {
+          "label": "First transistor gain (β)",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 100
+        },
+        "beta2": {
+          "label": "Second transistor gain (β)",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 100
+        }
+      },
+      "parameters": {
+        "beta1": 100,
+        "beta2": 100
+      },
+      "sign": null
+    },
+    "comparator": {
+      "name": "Comparator (Hi-Z/GND output)",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "minus": [
+          -150,
+          -50
+        ],
+        "plus": [
+          -150,
+          50
+        ],
+        "out": [
+          150,
+          0
+        ]
+      },
+      "type": "401",
+      "fields": {
+        "swapInputs": {
+          "label": "Swap inputs",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "parameters": {
+        "swapInputs": false
+      },
+      "sign": null
+    },
+    "opampReal": {
+      "name": "Op amp (real)",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "minus": [
+          -150,
+          -50
+        ],
+        "plus": [
+          -150,
+          50
+        ],
+        "out": [
+          150,
+          0
+        ],
+        "positiveSupply": [
+          0,
+          -150
+        ],
+        "negativeSupply": [
+          0,
+          150
+        ]
+      },
+      "type": "409",
+      "fields": {
+        "swapInputs": {
+          "label": "Swap inputs",
+          "type": "boolean",
+          "default": false
+        },
+        "slewRate": {
+          "label": "Slew rate · V/µs",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.6
+        },
+        "initialCompensationVoltage": {
+          "label": "Initial compensation voltage · V",
+          "type": "number",
+          "default": 0
+        },
+        "currentLimit": {
+          "label": "Output current limit · A",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 0.0231
+        },
+        "modelType": {
+          "label": "Model",
+          "type": "number",
+          "integer": true,
+          "min": 0,
+          "max": 2,
+          "default": 0
+        }
+      },
+      "parameters": {
+        "swapInputs": false,
+        "slewRate": 0.6,
+        "initialCompensationVoltage": 0,
+        "currentLimit": 0.0231,
+        "modelType": 0
+      },
+      "sign": null
+    },
+    "unijunction": {
+      "name": "Unijunction transistor",
+      "prefix": "Q",
+      "drawingScale": 1,
+      "pins": {
+        "emitter": [
+          -150,
+          0
+        ],
+        "base1": [
+          150,
+          100
+        ],
+        "base2": [
+          150,
+          0
+        ]
+      },
+      "type": "417",
+      "fields": {},
+      "parameters": {},
+      "sign": null
+    },
+    "ota": {
+      "name": "OTA (LM13700 style)",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "plus": [
+          -150,
+          -100
+        ],
+        "minus": [
+          -150,
+          100
+        ],
+        "linearization": [
+          -150,
+          0
+        ],
+        "bias": [
+          100,
+          -100
+        ],
+        "out": [
+          150,
+          0
+        ]
+      },
+      "type": "402",
+      "fields": {
+        "negativeSupply": {
+          "label": "Negative internal supply · V",
+          "type": "number",
+          "default": -9
+        },
+        "positiveSupply": {
+          "label": "Positive internal supply · V",
+          "type": "number",
+          "default": 9
+        }
+      },
+      "parameters": {
+        "negativeSupply": -9,
+        "positiveSupply": 9
+      },
+      "sign": null
+    },
+    "optocoupler": {
+      "name": "Optocoupler",
+      "prefix": "U",
+      "drawingScale": 1,
+      "pins": {
+        "anode": [
+          -150,
+          -50
+        ],
+        "cathode": [
+          -150,
+          50
+        ],
+        "collector": [
+          150,
+          -50
+        ],
+        "emitter": [
+          150,
+          50
+        ]
+      },
+      "type": "407",
+      "fields": {
+        "ctr": {
+          "label": "Current transfer ratio scale",
+          "type": "number",
+          "exclusiveMin": 0,
+          "default": 1
+        },
+        "diodeModel": {
+          "label": "LED model",
+          "type": "string",
+          "maxLength": 32,
+          "choices": [
+            "default-optocoupler-led",
+            "default"
+          ],
+          "default": "default-optocoupler-led"
+        }
+      },
+      "parameters": {
+        "ctr": 1,
+        "diodeModel": "default-optocoupler-led"
+      },
+      "sign": null
+    }
+  };
+  const basicDefinitions = {
+    "npn": {
+      "drawingScale": 0.5,
+      "prefix": "Q",
+      "name": "NPN transistor",
+      "pins": {
+        "base": [
+          -100,
+          0
+        ],
+        "collector": [
+          50,
+          -100
+        ],
+        "emitter": [
+          50,
+          100
         ]
       },
       "parameters": {
@@ -2203,20 +2961,21 @@
       }
     },
     "pnp": {
+      "drawingScale": 0.5,
       "prefix": "Q",
       "name": "PNP transistor",
       "pins": {
         "base": [
-          -200,
+          -100,
           0
         ],
         "collector": [
-          100,
-          -200
+          50,
+          -100
         ],
         "emitter": [
-          100,
-          200
+          50,
+          100
         ]
       },
       "parameters": {
@@ -2227,20 +2986,21 @@
       }
     },
     "nmos": {
+      "drawingScale": 0.5,
       "prefix": "Q",
       "name": "NMOS",
       "pins": {
         "gate": [
-          -200,
+          -100,
           0
         ],
         "source": [
-          100,
-          200
+          50,
+          100
         ],
         "drain": [
-          100,
-          -200
+          50,
+          -100
         ]
       },
       "parameters": {
@@ -2255,20 +3015,21 @@
       }
     },
     "pmos": {
+      "drawingScale": 0.5,
       "prefix": "Q",
       "name": "PMOS",
       "pins": {
         "gate": [
-          -200,
+          -100,
           0
         ],
         "source": [
-          100,
-          200
+          50,
+          100
         ],
         "drain": [
-          100,
-          -200
+          50,
+          -100
         ]
       },
       "parameters": {
@@ -2283,20 +3044,21 @@
       }
     },
     "njfet": {
+      "drawingScale": 0.5,
       "prefix": "Q",
       "name": "NJFET",
       "pins": {
         "gate": [
-          -200,
+          -100,
           0
         ],
         "source": [
-          100,
-          200
+          50,
+          100
         ],
         "drain": [
-          100,
-          -200
+          50,
+          -100
         ]
       },
       "parameters": {
@@ -2305,20 +3067,21 @@
       }
     },
     "pjfet": {
+      "drawingScale": 0.5,
       "prefix": "Q",
       "name": "PJFET",
       "pins": {
         "gate": [
-          -200,
+          -100,
           0
         ],
         "source": [
-          100,
-          200
+          50,
+          100
         ],
         "drain": [
-          100,
-          -200
+          50,
+          -100
         ]
       },
       "parameters": {
@@ -2327,7 +3090,6 @@
       }
     },
     "andGate": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "AND gate",
       "pins": {
@@ -2378,7 +3140,6 @@
       }
     },
     "orGate": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "OR gate",
       "pins": {
@@ -2404,7 +3165,6 @@
       }
     },
     "norGate": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "NOR gate",
       "pins": {
@@ -2430,7 +3190,6 @@
       }
     },
     "xorGate": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "XOR gate",
       "pins": {
@@ -2805,12 +3564,11 @@
       }
     },
     "logicInput": {
-      "drawingScale": 3.125,
       "prefix": "L",
       "name": "Logic input",
       "pins": {
         "out": [
-          150,
+          0,
           0
         ]
       },
@@ -2968,7 +3726,6 @@
       }
     },
     "counter": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "Counter",
       "pins": {
@@ -3009,7 +3766,6 @@
       }
     },
     "latch": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "Latch / register (4 bit)",
       "pins": {
@@ -3057,7 +3813,6 @@
       }
     },
     "halfAdder": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "Half adder",
       "pins": {
@@ -3083,7 +3838,6 @@
       }
     },
     "fullAdder": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "Adder (4 bit)",
       "pins": {
@@ -3149,25 +3903,24 @@
       }
     },
     "dFlipFlop": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "D flip-flop",
       "pins": {
         "D": [
           -150,
-          -50
+          -100
         ],
         "clock": [
           -150,
-          50
+          0
         ],
         "Q": [
           150,
-          -50
+          -100
         ],
         "Qn": [
           150,
-          50
+          100
         ]
       },
       "parameters": {
@@ -3176,7 +3929,6 @@
       }
     },
     "jkFlipFlop": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "JK flip-flop",
       "pins": {
@@ -3208,25 +3960,24 @@
       }
     },
     "tFlipFlop": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "T flip-flop",
       "pins": {
         "T": [
           -150,
-          -50
+          -100
         ],
         "clock": [
           -150,
-          50
+          0
         ],
         "Q": [
           150,
-          -50
+          -100
         ],
         "Qn": [
           150,
-          50
+          100
         ]
       },
       "parameters": {
@@ -3311,19 +4062,20 @@
       }
     },
     "opamp": {
+      "drawingScale": 0.5,
       "prefix": "U",
       "name": "Op-amp",
       "pins": {
         "plus": [
-          -300,
-          -100
+          -150,
+          -50
         ],
         "minus": [
-          -300,
-          100
+          -150,
+          50
         ],
         "out": [
-          300,
+          150,
           0
         ]
       },
@@ -3345,7 +4097,6 @@
       "parameters": {}
     },
     "xnorGate": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "XNOR gate",
       "pins": {
@@ -3375,56 +4126,56 @@
       "name": "Ring counter",
       "pins": {
         "clock": [
-          -250,
-          50
-        ],
-        "reset": [
-          250,
+          -500,
           100
         ],
+        "reset": [
+          500,
+          200
+        ],
         "Q0": [
-          -200,
-          -50
+          -400,
+          -100
         ],
         "Q1": [
-          -150,
-          -50
+          -300,
+          -100
         ],
         "Q2": [
-          -100,
-          -50
+          -200,
+          -100
         ],
         "Q3": [
-          -50,
-          -50
+          -100,
+          -100
         ],
         "Q4": [
           0,
-          -50
+          -100
         ],
         "Q5": [
-          50,
-          -50
+          100,
+          -100
         ],
         "Q6": [
-          100,
-          -50
+          200,
+          -100
         ],
         "Q7": [
-          150,
-          -50
+          300,
+          -100
         ],
         "Q8": [
-          200,
-          -50
+          400,
+          -100
         ],
         "Q9": [
-          250,
-          -50
+          500,
+          -100
         ],
         "inhibit": [
-          -150,
-          100
+          -300,
+          200
         ]
       },
       "parameters": {
@@ -3436,7 +4187,6 @@
       }
     },
     "loadCounter": {
-      "drawingScale": 3.125,
       "prefix": "U",
       "name": "Counter with load",
       "pins": {
@@ -3502,6 +4252,675 @@
         "bits": 4,
         "initialValue": 0,
         "modulus": 0,
+        "lsbFirst": false
+      }
+    },
+    "multiplexer": {
+      "prefix": "U",
+      "name": "Multiplexer",
+      "pins": {
+        "I0": [
+          -100,
+          -100
+        ],
+        "I1": [
+          -100,
+          -50
+        ],
+        "I2": [
+          -100,
+          0
+        ],
+        "I3": [
+          -100,
+          50
+        ],
+        "S0": [
+          0,
+          150
+        ],
+        "S1": [
+          50,
+          150
+        ],
+        "Q": [
+          100,
+          -100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "selectBits": 2,
+        "invertedOutput": false,
+        "strobePin": false
+      }
+    },
+    "demultiplexer": {
+      "prefix": "U",
+      "name": "Demultiplexer",
+      "pins": {
+        "Q0": [
+          100,
+          -100
+        ],
+        "Q1": [
+          100,
+          -50
+        ],
+        "Q2": [
+          100,
+          0
+        ],
+        "Q3": [
+          100,
+          50
+        ],
+        "S0": [
+          -50,
+          150
+        ],
+        "S1": [
+          0,
+          150
+        ],
+        "input": [
+          -100,
+          -100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "selectBits": 2
+      }
+    },
+    "adc": {
+      "prefix": "U",
+      "name": "Analog-to-digital converter",
+      "pins": {
+        "D0": [
+          100,
+          100
+        ],
+        "D1": [
+          100,
+          50
+        ],
+        "D2": [
+          100,
+          0
+        ],
+        "D3": [
+          100,
+          -50
+        ],
+        "input": [
+          -50,
+          -50
+        ],
+        "reference": [
+          -50,
+          100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "bits": 4,
+        "lsbFirst": false
+      }
+    },
+    "dac": {
+      "prefix": "U",
+      "name": "Digital-to-analog converter",
+      "pins": {
+        "D0": [
+          -50,
+          100
+        ],
+        "D1": [
+          -50,
+          50
+        ],
+        "D2": [
+          -50,
+          0
+        ],
+        "D3": [
+          -50,
+          -50
+        ],
+        "out": [
+          100,
+          -50
+        ],
+        "reference": [
+          100,
+          100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "bits": 4,
+        "lsbFirst": false
+      }
+    },
+    "sevenSegmentDecoder": {
+      "prefix": "U",
+      "name": "7-Segment decoder",
+      "pins": {
+        "a": [
+          100,
+          -150
+        ],
+        "b": [
+          100,
+          -100
+        ],
+        "c": [
+          100,
+          -50
+        ],
+        "d": [
+          100,
+          0
+        ],
+        "e": [
+          100,
+          50
+        ],
+        "f": [
+          100,
+          100
+        ],
+        "g": [
+          100,
+          150
+        ],
+        "I3": [
+          -100,
+          -150
+        ],
+        "I2": [
+          -100,
+          -100
+        ],
+        "I1": [
+          -100,
+          -50
+        ],
+        "I0": [
+          -100,
+          0
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "segmentMode": 0,
+        "blankPin": false,
+        "blankOnF": false,
+        "lsbFirst": false
+      }
+    },
+    "phaseComparator": {
+      "prefix": "U",
+      "name": "Phase comparator",
+      "pins": {
+        "I1": [
+          -50,
+          0
+        ],
+        "I2": [
+          -50,
+          50
+        ],
+        "out": [
+          100,
+          0
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5
+      }
+    },
+    "analogMultiplexer": {
+      "prefix": "U",
+      "name": "Analog multiplexer",
+      "pins": {
+        "I0": [
+          -100,
+          -100
+        ],
+        "I1": [
+          -100,
+          -50
+        ],
+        "I2": [
+          -100,
+          0
+        ],
+        "I3": [
+          -100,
+          50
+        ],
+        "S0": [
+          0,
+          150
+        ],
+        "S1": [
+          50,
+          150
+        ],
+        "out": [
+          100,
+          -100
+        ]
+      },
+      "parameters": {
+        "selectBits": 2,
+        "onResistance": 20,
+        "offResistance": 10000000000,
+        "threshold": 2.5
+      }
+    },
+    "voltageControlledOscillator": {
+      "prefix": "U",
+      "name": "Voltage-controlled oscillator",
+      "pins": {
+        "input": [
+          -50,
+          -50
+        ],
+        "out": [
+          -50,
+          100
+        ],
+        "capA": [
+          100,
+          -50
+        ],
+        "capB": [
+          100,
+          0
+        ],
+        "resistor1": [
+          100,
+          50
+        ],
+        "resistor2": [
+          100,
+          100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5
+      }
+    },
+    "monostable": {
+      "prefix": "U",
+      "name": "Monostable",
+      "pins": {
+        "trigger": [
+          -50,
+          0
+        ],
+        "Q": [
+          100,
+          0
+        ],
+        "Qn": [
+          100,
+          50
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "retriggerable": false,
+        "delay": 0.01
+      }
+    },
+    "sipoShift": {
+      "prefix": "U",
+      "name": "Serial-in parallel-out shift register",
+      "pins": {
+        "data": [
+          -250,
+          0
+        ],
+        "clock": [
+          -250,
+          50
+        ],
+        "Q0": [
+          -150,
+          -100
+        ],
+        "Q1": [
+          -100,
+          -100
+        ],
+        "Q2": [
+          -50,
+          -100
+        ],
+        "Q3": [
+          0,
+          -100
+        ],
+        "Q4": [
+          50,
+          -100
+        ],
+        "Q5": [
+          100,
+          -100
+        ],
+        "Q6": [
+          150,
+          -100
+        ],
+        "Q7": [
+          200,
+          -100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "bits": 8,
+        "initialValue": 0
+      }
+    },
+    "pisoShift": {
+      "prefix": "U",
+      "name": "Parallel-in serial-out shift register",
+      "pins": {
+        "load": [
+          -250,
+          0
+        ],
+        "clock": [
+          -250,
+          50
+        ],
+        "out": [
+          300,
+          0
+        ],
+        "serial": [
+          -250,
+          -50
+        ],
+        "D7": [
+          200,
+          -100
+        ],
+        "D6": [
+          150,
+          -100
+        ],
+        "D5": [
+          100,
+          -100
+        ],
+        "D4": [
+          50,
+          -100
+        ],
+        "D3": [
+          0,
+          -100
+        ],
+        "D2": [
+          -50,
+          -100
+        ],
+        "D1": [
+          -100,
+          -100
+        ],
+        "D0": [
+          -150,
+          -100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "bits": 8,
+        "initialValue": 0,
+        "serialInput": true
+      }
+    },
+    "sequenceGenerator": {
+      "prefix": "U",
+      "name": "Sequence generator",
+      "pins": {
+        "clock": [
+          -50,
+          0
+        ],
+        "Q": [
+          100,
+          50
+        ],
+        "reset": [
+          -50,
+          50
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "sequence": "00000000",
+        "playOnce": false,
+        "resetPin": true
+      }
+    },
+    "crossSwitch": {
+      "name": "Crossover switch",
+      "prefix": "S",
+      "pins": {
+        "inA": [
+          -150,
+          -50
+        ],
+        "outA": [
+          150,
+          -100
+        ],
+        "inB": [
+          -150,
+          50
+        ],
+        "outB": [
+          150,
+          100
+        ]
+      },
+      "parameters": {
+        "position": 0,
+        "onResistance": 0,
+        "momentary": false,
+        "linkLabel": "",
+        "iecSymbol": false
+      }
+    },
+    "customLogic": {
+      "name": "Custom logic",
+      "prefix": "U",
+      "pins": {
+        "I0": [
+          -50,
+          0
+        ],
+        "I1": [
+          -50,
+          50
+        ],
+        "Q0": [
+          100,
+          0
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "modelName": "Custom logic",
+        "inputLabels": "A,B",
+        "outputLabels": "Q",
+        "rules": "11=1\n??=0",
+        "initialOutputs": ""
+      }
+    },
+    "sram": {
+      "name": "Static RAM",
+      "prefix": "U",
+      "pins": {
+        "write": [
+          -50,
+          -100
+        ],
+        "enable": [
+          100,
+          -100
+        ],
+        "A3": [
+          -50,
+          -50
+        ],
+        "A2": [
+          -50,
+          0
+        ],
+        "A1": [
+          -50,
+          50
+        ],
+        "A0": [
+          -50,
+          100
+        ],
+        "D3": [
+          100,
+          -50
+        ],
+        "D2": [
+          100,
+          0
+        ],
+        "D1": [
+          100,
+          50
+        ],
+        "D0": [
+          100,
+          100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "dataBits": 4,
+        "lsbFirst": false,
+        "addressBits": 4,
+        "contents": "",
+        "hexDisplay": false,
+        "reloadOnReset": true
+      }
+    },
+    "rom": {
+      "name": "ROM",
+      "prefix": "U",
+      "pins": {
+        "enable": [
+          -50,
+          -100
+        ],
+        "A3": [
+          -50,
+          -50
+        ],
+        "A2": [
+          -50,
+          0
+        ],
+        "A1": [
+          -50,
+          50
+        ],
+        "A0": [
+          -50,
+          100
+        ],
+        "D3": [
+          100,
+          -50
+        ],
+        "D2": [
+          100,
+          0
+        ],
+        "D1": [
+          100,
+          50
+        ],
+        "D0": [
+          100,
+          100
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "dataBits": 4,
+        "lsbFirst": false,
+        "addressBits": 4,
+        "contents": "",
+        "hexDisplay": false,
+        "reloadOnReset": true
+      }
+    },
+    "busTransceiver": {
+      "name": "Bus transceiver",
+      "prefix": "U",
+      "pins": {
+        "enable": [
+          -50,
+          -100
+        ],
+        "direction": [
+          100,
+          -100
+        ],
+        "A3": [
+          -50,
+          0
+        ],
+        "A2": [
+          -50,
+          50
+        ],
+        "A1": [
+          -50,
+          100
+        ],
+        "A0": [
+          -50,
+          150
+        ],
+        "B3": [
+          100,
+          0
+        ],
+        "B2": [
+          100,
+          50
+        ],
+        "B1": [
+          100,
+          100
+        ],
+        "B0": [
+          100,
+          150
+        ]
+      },
+      "parameters": {
+        "highVoltage": 5,
+        "dataBits": 4,
         "lsbFirst": false
       }
     }
@@ -3753,6 +5172,133 @@
     if(diodeDirection)pins.push(activeCount===7?['common',columns,activeCount-left]:['common',-1,left]);
     return {columns,rows,pins};
   }
+  const discreteChips = {multiplexer:'184',demultiplexer:'185',adc:'167',dac:'166',sevenSegmentDecoder:'197',phaseComparator:'161',voltageControlledOscillator:'158',analogMultiplexer:'432',monostable:'194',sipoShift:'189',pisoShift:'186',sequenceGenerator:'188',customLogic:'208',sram:'413',rom:'436',busTransceiver:'BusTransceiver'};
+  const discreteChipKind=kind=>Object.hasOwn(discreteChips,kind);
+  const shiftChipKind=kind=>kind==='sipoShift'||kind==='pisoShift';
+  const memoryChipKind=kind=>kind==='sram'||kind==='rom';
+  const logicLabels=text=>text.split(',').map(pin=>pin.trim()).filter(Boolean);
+  function logicRules(p){
+    const inputs=logicLabels(p.inputLabels),outputs=logicLabels(p.outputLabels);
+    if(inputs.length>16||outputs.length<1||outputs.length>16||[...inputs,...outputs].some(pin=>pin.length>24)||
+      [p.inputLabels,p.outputLabels,p.modelName].some(s=>s.length>400||/[\x00-\x1f]/.test(s))||
+      !p.modelName.trim()||p.rules.length>8192||p.rules.includes('\0')||
+      p.initialOutputs&&(!/^[01]+$/.test(p.initialOutputs)||p.initialOutputs.length!==outputs.length))
+      throw new Error('Invalid custom logic pins, name or initial outputs');
+    const states=[];
+    for(const row of p.rules.split(/\r?\n/)){
+      const text=row.trim().replace(/ /g,'').toLowerCase();
+      if(!text||text.startsWith('#'))continue;
+      const [lhs,rhs,...rest]=text.split('=');
+      if(rest.length||rhs===undefined||lhs.length<inputs.length||lhs.length>inputs.length+outputs.length||
+        !/^[01?+a-z-]*$/.test(lhs)||rhs.length!==outputs.length||!/^[01_a-z]+$/.test(rhs))
+        throw new Error('Invalid custom logic rule: '+row);
+      states.push(rhs);
+    }
+    return states;
+  }
+  function memoryWords(p){
+    if(p.contents.length>65536)throw new Error('Memory contents exceed 65536 characters');
+    const words=new Map();
+    const parse=text=>{
+      if(/^0x[0-9a-f]+$/i.test(text))return Number.parseInt(text.slice(2),16);
+      if(/^0b[01]+$/i.test(text))return Number.parseInt(text.slice(2),2);
+      if(p.hexDisplay&&/^[0-9a-f]+$/i.test(text))return Number.parseInt(text,16);
+      return !p.hexDisplay&&/^\d+$/.test(text)?Number(text):NaN;
+    };
+    for(const row of p.contents.split(/\r?\n/)){
+      if(!row.trim())continue;
+      const match=/^\s*([^\s:]+)\s*:\s*(\S.*?)\s*$/.exec(row);
+      if(!match)throw new Error('Expected a memory address followed by its data');
+      let address=parse(match[1]);
+      for(const token of match[2].split(/\s+/)){
+        const word=parse(token);
+        if(!Number.isInteger(address)||address<0||address>=2**p.addressBits||!Number.isInteger(word)||word<0||word>=2**p.dataBits)
+          throw new Error('Memory address or word is outside the configured width');
+        words.set(address++,word);
+      }
+    }
+    return words;
+  }
+  function validateDiscreteChip(kind,p){
+    const defaults=definitions[kind].parameters;
+    if(!p||Object.keys(p).length!==Object.keys(defaults).length||Object.entries(defaults).some(([key,value])=>typeof p[key]!==typeof value)||
+      (Object.hasOwn(defaults,'highVoltage')&&(!Number.isFinite(p.highVoltage)||p.highVoltage<=0))||
+      (kind==='analogMultiplexer'&&(![p.onResistance,p.offResistance].every(r=>r>0&&Number.isFinite(r)&&Number.isFinite(1/r))||!Number.isFinite(p.threshold)))||
+      (kind==='monostable'&&(!Number.isFinite(p.delay)||p.delay<=0))||
+      (Object.hasOwn(p,'selectBits')&&(!Number.isInteger(p.selectBits)||p.selectBits<1||p.selectBits>6))||
+      (Object.hasOwn(p,'bits')&&(!Number.isInteger(p.bits)||p.bits<(shiftChipKind(kind)?1:2)||p.bits>30))||
+      (shiftChipKind(kind)&&(!Number.isInteger(p.initialValue)||p.initialValue<0||p.initialValue>=2**p.bits))||
+      (kind==='sequenceGenerator'&&(p.sequence.length>4096||/[^01]/.test(p.sequence)))||
+      (kind==='sevenSegmentDecoder'&&![0,1,2].includes(p.segmentMode)))throw new Error('Invalid '+definitions[kind].name+' settings');
+    if(kind==='customLogic')logicRules(p);
+    if(memoryChipKind(kind)||kind==='busTransceiver'){
+      const widths=memoryChipKind(kind)?[p.addressBits,p.dataBits]:[p.dataBits];
+      if(widths.some(bits=>!Number.isInteger(bits)||bits<2||bits>16))throw new Error('Chip width must be 2 to 16 bits');
+      if(memoryChipKind(kind))memoryWords(p);
+    }
+    return {...p};
+  }
+  // Pin order follows the native ChipElm model. Column -1 and column count
+  // are the west/east posts, and row count is the south post.
+  function discreteChipLayout(kind,p){
+    if(kind==='multiplexer'||kind==='demultiplexer'||kind==='analogMultiplexer'){
+      const analog=kind==='analogMultiplexer',mux=kind!=='demultiplexer',count=2**p.selectBits,columns=p.selectBits+1,rows=count+1;
+      const data=Array.from({length:count},(_,i)=>mux?['I'+i,-1,i]:['Q'+i,columns,i,true]);
+      const select=Array.from({length:p.selectBits},(_,i)=>['S'+i,i+(mux?1:0),rows]);
+      const extra=mux?[
+        [analog?'out':'Q',columns,0,!analog],
+        ...(p.invertedOutput?[['Qn',columns,1,true]]:[]),
+        ...(p.strobePin?[['strobe',0,rows]]:[]),
+      ]:[['input',-1,0]];
+      return {columns,rows,pins:[...data,...select,...extra]};
+    }
+    if(kind==='adc'||kind==='dac'){
+      const adc=kind==='adc',side=adc?2:-1,other=adc?-1:2;
+      const pins=Array.from({length:p.bits},(_,i)=>['D'+i,side,p.lsbFirst?i:p.bits-1-i,adc]);
+      return {columns:2,rows:p.bits,pins:[...pins,[adc?'input':'out',other,0,!adc],['reference',other,p.bits-1]]};
+    }
+    if(kind==='sevenSegmentDecoder'){
+      const count=[7,14,16][p.segmentMode];
+      const outputs=Array.from({length:count},(_,i)=>[String.fromCharCode(97+i),3,i,true]);
+      const inputs=Array.from({length:4},(_,i)=>['I'+(3-i),-1,p.lsbFirst?3-i:i]);
+      return {columns:3,rows:count,pins:[...outputs,...inputs,...(p.blankPin?[['blank',-1,4]]:[])]};
+    }
+    if(kind==='customLogic'){
+      const inputs=logicLabels(p.inputLabels),outputs=logicLabels(p.outputLabels);
+      const triState=logicRules(p).some(word=>word.includes('_'));
+      return {columns:2,rows:Math.max(inputs.length,outputs.length),pins:[
+        ...inputs.map((_,i)=>['I'+i,-1,i]),...outputs.map((_,i)=>['Q'+i,2,i,!triState]),
+      ]};
+    }
+    if(memoryChipKind(kind)||kind==='busTransceiver'){
+      const transceiver=kind==='busTransceiver',ram=kind==='sram';
+      const rows=transceiver?p.dataBits+2:Math.max(p.addressBits,p.dataBits)+1;
+      const posts=(name,bits,col)=>Array.from({length:bits},(_,i)=>[name+(bits-1-i),col,rows-bits+(p.lsbFirst?bits-1-i:i)]);
+      const pins=transceiver?[['enable',-1,0],['direction',2,0]]:ram?[['write',-1,0],['enable',2,0]]:[['enable',-1,0]];
+      return {columns:2,rows,pins:[...pins,...posts('A',transceiver?p.dataBits:p.addressBits,-1),...posts(transceiver?'B':'D',p.dataBits,2)]};
+    }
+    if(shiftChipKind(kind)){
+      if(kind==='sipoShift')return {columns:p.bits+1,rows:3,pins:[
+        ['data',-1,1],['clock',-1,2],
+        ...Array.from({length:p.bits},(_,i)=>['Q'+i,i+1,-1,true]),
+      ]};
+      return {columns:p.bits+2,rows:3,pins:[
+        ['load',-1,1],['clock',-1,2],['out',p.bits+2,1,true],...(p.serialInput?[['serial',-1,0]]:[]),
+        ...Array.from({length:p.bits},(_,i)=>['D'+(p.bits-1-i),p.bits-i,-1]),
+      ]};
+    }
+    if(kind==='sequenceGenerator')return {columns:2,rows:2,pins:[
+      ['clock',-1,0],['Q',2,1,true],...(p.resetPin?[['reset',-1,1]]:[]),
+    ]};
+    if(kind==='voltageControlledOscillator')return {columns:2,rows:4,pins:[
+      ['input',-1,0],['out',-1,3,true],['capA',2,0],['capB',2,1],['resistor1',2,2],['resistor2',2,3,true],
+    ]};
+    if(kind==='monostable')return {columns:2,rows:2,pins:[['trigger',-1,0],['Q',2,0,true],['Qn',2,1,true]]};
+    return {columns:2,rows:2,pins:[['I1',-1,0],['I2',-1,1],['out',2,0,true]]};
+  }
+  function discreteChipAnchor({columns,rows}){
+    return {column:Math.floor((columns-1)/2),row:Math.floor((rows-1)/2)};
+  }
   const counterKind=kind=>['counter','ringCounter','loadCounter'].includes(kind);
   function counterWidth(kind,p){
     const bits=Object.hasOwn(p,'bits')?p.bits:4;
@@ -3902,14 +5448,19 @@
           column<0?-50*(columns+2):100*(column-(columns-1)/2),
           row===rows?50*(rows+2):100*(row-(rows-1)/2),
         ]];
-        return [name,[50*(column-(columns-1)/2),50*(row-(rows-1)/2)]];
+        return [name,[100*(column-(columns-1)/2),100*(row-(rows-1)/2)]];
       }));
+    }
+    if(discreteChipKind(kind)){
+      const layout=discreteChipLayout(kind,validateDiscreteChip(kind,p));
+      const {column,row}=discreteChipAnchor(layout);
+      return Object.fromEntries(layout.pins.map(([name,x,y])=>[name,[50*(x-column),50*(y-row)]]));
     }
     if(counterKind(kind)){
       const {anchorColumn,anchorRow,pins}=counterLayout(kind,p);
       return Object.fromEntries(pins.map(([name,column,row])=>[name,[
-        kind==='ringCounter'?(column-anchorColumn)*50:column===-1?-150:150,
-        (row-anchorRow)*(kind==='counter'?100:50),
+        kind==='ringCounter'?(column-anchorColumn)*100:column===-1?-150:150,
+        (row-anchorRow)*(kind==='loadCounter'?50:100),
       ]]));
     }
     if(controlledSourceKind(kind)){
@@ -3933,7 +5484,10 @@
     if(gateKind(kind)) {
       if(!Number.isInteger(p.inputCount??2)||(p.inputCount??2)<1||(p.inputCount??2)>8)throw new Error('Gate input count must be 1 to 8');
       if((p.inputCount??2)===2)return definition.pins;
-      return {...Object.fromEntries(gateOffsets(p.inputCount??2).map((y,i)=>[String.fromCharCode(97+i),[-150,y*3.125]])),out:[150,0]};
+      const count=p.inputCount??2,{a,b,out}=definition.pins;
+      const pitch=b[1]-a[1];
+      const inputs=Array.from({length:count},(_,i)=>[String.fromCharCode(97+i),[a[0],out[1]+(i-(count-1)/2)*pitch]]);
+      return {...Object.fromEntries(inputs),out};
     }
     if(kind==='spdtSwitch'&&(p.throwCount??2)!==2){
       const count=p.throwCount;
@@ -3948,6 +5502,8 @@
         return [name+(i+1),pin];
       })).flat());
     }
+    if((kind==='opampReal'||kind==='comparator')&&p.swapInputs)
+      return {...definition.pins,minus:definition.pins.plus,plus:definition.pins.minus};
     if(transistorKind(kind)&&p.swapTerminals){const pins=definition.pins;return {...pins,collector:pins.emitter,emitter:pins.collector};}
     if(kind==='transformer'&&p.reverseSecondary){const pins=definition.pins;return {...pins,s1:pins.s2,s2:pins.s1};}
     if(mosfetKind(kind)) {
@@ -3960,7 +5516,7 @@
   }
   function componentModel(component) {
     const model=simulationModels[component.kind];
-    if(displayChipKind(component.kind)||counterKind(component.kind)||controlledSourceKind(component.kind)||gateKind(component.kind)||mosfetKind(component.kind)||['spdtSwitch','dpdtSwitch','timer555','relay'].includes(component.kind)){const pins=Object.keys(componentPins(component));return {...model,pins,postOrder:pins};}
+    if(discreteChipKind(component.kind)||displayChipKind(component.kind)||counterKind(component.kind)||controlledSourceKind(component.kind)||gateKind(component.kind)||mosfetKind(component.kind)||['spdtSwitch','dpdtSwitch','timer555','relay'].includes(component.kind)){const pins=Object.keys(componentPins(component));return {...model,pins,postOrder:pins};}
     return model;
   }
   const mosfetKind=kind=>['nmos','pmos'].includes(kind);
@@ -3972,7 +5528,7 @@
       Object.keys(mosfetOptions).some(k=>Object.hasOwn(p,k)&&typeof p[k]!=='boolean'))throw new Error('Invalid MOSFET parameters');
     return structuredClone(p);
   }
-  const switchKind=kind=>['switch','pushSwitch','spdtSwitch','dpdtSwitch','mbbSwitch'].includes(kind);
+  const switchKind=kind=>['switch','pushSwitch','spdtSwitch','dpdtSwitch','mbbSwitch','crossSwitch'].includes(kind);
   function switchDefaults(kind){return {onResistance:0,momentary:kind==='pushSwitch',linkLabel:'',iecSymbol:false,
     ...(kind==='spdtSwitch'?{group:0,throwCount:2,centerOff:false}:kind==='mbbSwitch'?{group:0}:kind==='dpdtSwitch'?{poleCount:2}:{})};}
   const switchPositionCount=c=>c.kind==='spdtSwitch'?((c.parameters.centerOff??false)&&(c.parameters.throwCount??2)===2?3:c.parameters.throwCount??2):c.kind==='mbbSwitch'?4:c.kind==='logicInput'&&c.parameters.mode==='ternary'?3:2;
@@ -3993,6 +5549,7 @@
     const p=c.pins,v=c.parameters;
     if(c.kind==='spdtSwitch')return (v.centerOff??false)&&(v.throwCount??2)===2&&v.position===2?[]:[[p.common,p[v.position<2?['a','b'][v.position]:'throw'+(v.position+1)]]];
     if(c.kind==='dpdtSwitch')return Array.from({length:v.poleCount??2},(_,i)=>[p['common'+(i+1)],p[(v.position===0?'a':'b')+(i+1)]]);
+    if(c.kind==='crossSwitch')return v.position===0?[[p.inA,p.outA],[p.inB,p.outB]]:[[p.inA,p.outB],[p.inB,p.outA]];
     if(c.kind==='mbbSwitch')return v.position%2?[[p.common,p.a],[p.common,p.b]]:[[p.common,v.position===0?p.a:p.b]];
     return [];
   }
@@ -4003,6 +5560,7 @@
       return [[x,32],...Array.from({length:count},(_,i)=>[x+64,count===2?(i===0?16:48):32+16*(i-Math.floor((count-1)/2))])];
     }
     if(c.kind==='dpdtSwitch')return Array.from({length:v.poleCount??2},(_,i)=>[[x,32+i*48],[x+64,48+i*48],[x+64,16+i*48]]).flat();
+    if(c.kind==='crossSwitch')return [[x,32],[x+112,16],[x,80],[x+112,96]];
     if(c.kind==='mbbSwitch')return [[x,32],[x+64,16],[x+64,48]];
     return null;
   }
@@ -4019,9 +5577,26 @@
       else if(f.type==='boolean'){if(typeof v!=='boolean')throw new Error('Invalid '+f.label);}
       else if(!Number.isFinite(v)||(f.integer&&!Number.isInteger(v))||(f.min!==undefined&&v<f.min)||(f.max!==undefined&&v>f.max)||(f.exclusiveMin!==undefined&&v<=f.exclusiveMin))throw new Error('Invalid '+f.label);
     }
+    if(component.kind==='gyrator'&&!Number.isFinite(1/p.resistance))throw new Error('Invalid gyration resistance');
+    if(component.kind==='crystal'&&(![p.parallelCapacitance,p.seriesCapacitance,p.inductance,p.resistance].every(x=>Number.isFinite(1/x))||
+      !Number.isFinite(timeStep/p.inductance)||[p.parallelCapacitance,p.seriesCapacitance].some(x=>!Number.isFinite(x*2/timeStep)||!Number.isFinite(timeStep/(2*x)))))
+      throw new Error('Invalid crystal equivalent-circuit values');
+    if(component.kind==='tristateBuffer'&&(![p.onResistance,p.offResistance].every(r=>Number.isFinite(1/r))||
+      p.pulldownResistance>0&&!Number.isFinite(1/p.pulldownResistance)))throw new Error('Invalid tristate buffer resistance');
     if(controlledSourceKind(component.kind)){
       validateControlledInputCount(component.kind,p.inputCount);
       validateControlledExpression(p.expression);
+    }
+    if(component.kind==='ota'&&(!(p.positiveSupply>p.negativeSupply)||!Number.isFinite(p.positiveSupply-p.negativeSupply)))
+      throw new Error('Invalid OTA supply range');
+    if(component.kind==='opampReal'&&(!Number.isFinite(1/p.slewRate)||!Number.isFinite(1/p.currentLimit)||
+      !Number.isFinite(p.currentLimit/.0231*100)||!Number.isFinite(30e-12*.6/p.slewRate)))
+      throw new Error('Invalid real op amp settings');
+    if(['relayCoil','relayContact','timeDelayRelay','motorProtectionSwitch'].includes(component.kind)){
+      if(['coilResistance','onResistance','offResistance','resistance','inductance','i2t'].some(key=>Object.hasOwn(p,key)&&!Number.isFinite(1/p[key]))||
+        (Object.hasOwn(p,'label')&&/[\x00-\x1f]/.test(p.label))||
+        (component.kind==='relayCoil'&&(!Number.isFinite(timeStep/p.inductance)||!Number.isFinite(timeStep*p.initialCoilCurrent/p.inductance))))
+        throw new Error('Invalid relay or motor protection parameters');
     }
     if(component.kind==='relay'&&(['inductance','onResistance','offResistance','coilResistance','onCurrent','offCurrent'].some(key=>!Number.isFinite(1/p[key]))||
       !Number.isFinite(timeStep/p.inductance)||(p.switchingTime>0&&!Number.isFinite(timeStep/p.switchingTime))))
@@ -4154,6 +5729,7 @@
     "type": "S",
     "sign": 1
   },
+  "crossSwitch": { "type": "430", "sign": null },
   "dpdtSwitch": {
     "type": "429",
     "sign": null
@@ -4214,6 +5790,7 @@
     "type": "164",
     "sign": null
   },
+  ...Object.fromEntries(Object.entries(discreteChips).map(([kind,type])=>[kind,{type,sign:null}])),
   "ringCounter": { "type": "163", "sign": null },
   "loadCounter": { "type": "421", "sign": null },
   "latch": {
@@ -4311,7 +5888,7 @@
     return [kind,{type:metadata.type,sign:metadata.sign,pins,postOrder}];
   }));
   // Placement grid: five 10-unit symbol design steps per interval.
-  const api=Object.freeze({grid:50,relayPostOffsets,timerPostOffsets,conveyorPostOffsets,displayChipKind,displayChipLayout,counterKind,counterLayout,validateCounterParameters,controlledSourcePosts,controlledSourceKind,currentControlled,controlledVoltageOutput,switchKind,switchDefaults,switchPositionCount,momentary,validateSwitchParameters,switchPairs,switchPostPoints,mosfetKind,mosfetOptions,activeBody,validateMosfetParameters,gateKind,gateOffsets,validateGateParameters,componentPins,componentModel,transistorModels,transistorModelFields,transistorKind,resolveTransistorModel,validateTransistorParameters,validateSharedTransistorModels,diodeModels,diodeModelSpecs,diodeKind,resolveDiodeModel,validateDiodeParameters,diodeEditorParameters,validateSharedDiodeModels,definitions,placementDefinitions,outputSpecs,graphic,validateOutput,validWaveform,waveformNames,simulationModels});
+  const api=Object.freeze({grid:50,relayPostOffsets,timerPostOffsets,conveyorPostOffsets,displayChipKind,displayChipLayout,discreteChipKind,discreteChipLayout,discreteChipAnchor,validateDiscreteChip,memoryChipKind,shiftChipKind,counterKind,counterLayout,validateCounterParameters,controlledSourcePosts,controlledSourceKind,currentControlled,controlledVoltageOutput,switchKind,switchDefaults,switchPositionCount,momentary,validateSwitchParameters,switchPairs,switchPostPoints,mosfetKind,mosfetOptions,activeBody,validateMosfetParameters,gateKind,gateOffsets,validateGateParameters,componentPins,componentModel,transistorModels,transistorModelFields,transistorKind,resolveTransistorModel,validateTransistorParameters,validateSharedTransistorModels,diodeModels,diodeModelSpecs,diodeKind,resolveDiodeModel,validateDiodeParameters,diodeEditorParameters,validateSharedDiodeModels,definitions,placementDefinitions,outputSpecs,graphic,validateOutput,validWaveform,waveformNames,simulationModels});
 
   registry.catalog=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

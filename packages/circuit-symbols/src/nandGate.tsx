@@ -3,7 +3,6 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "nandGate";
 export const metadata = {
-
   prefix: "U",
   name: "NAND gate",
   pins: {
@@ -21,15 +20,15 @@ export const metadata = {
 } as const;
 
 export function Symbol({
-  pose,
+  pinPositions = metadata.pins,
   parameters = metadata.parameters,
 }: SymbolProps) {
   return (
     <Gate
-      pins={metadata.pins}
+      pins={pinPositions}
       parameters={parameters}
-      label="NAND"
-      pose={pose}
+      shape="and"
+      invertedOutput
     />
   );
 }

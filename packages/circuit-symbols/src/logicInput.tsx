@@ -3,12 +3,10 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "logicInput";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "L",
   name: "Logic input",
   pins: {
-    out: [48, 0],
+    out: [0, 0],
   },
   parameters: {
     state: 1,
@@ -30,9 +28,15 @@ export function Symbol({
       : String(parameters.state);
   return (
     <>
-      <circle r={20} />
-      <Lead from={metadata.pins.out} to={[20, 0]} />
-      <UprightText pose={pose} y={7} textAnchor="middle" fontSize={14}>
+      <circle r={50} cx={-100} />
+      <Lead from={metadata.pins.out} to={[-50, 0]} />
+      <UprightText
+        pose={pose}
+        x={-100}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize="90"
+      >
         {state}
       </UprightText>
     </>

@@ -195,6 +195,18 @@
     return inside;
   }
   function componentHitBox(c) {
+    if(c.kind==='npnDarlington'||c.kind==='pnpDarlington'||c.kind==='unijunction')return {x:75,y:100};
+    if(['comparator','opampReal','ota','optocoupler'].includes(c.kind))return {x:115,y:96};
+    if(c.kind==='relayCoil'||c.kind==='timeDelayRelay')return {x:65,y:63};
+    if(c.kind==='motorProtectionSwitch')return {x:125,y:85};
+    if(c.kind==='crossSwitch')return {x:80,y:80};
+    if(c.kind==='gyrator')return {x:76,y:54};
+    if(c.kind==='tristateBuffer'||c.kind==='delayBuffer')return {x:52,y:52};
+    if(Catalog.discreteChipKind(c.kind)){
+      const layout=Catalog.discreteChipLayout(c.kind,c.parameters),anchor=Catalog.discreteChipAnchor(layout);
+      return {x:25*layout.columns,y:25*layout.rows,
+        centerX:25*(layout.columns-1)-50*anchor.column,centerY:25*(layout.rows-1)-50*anchor.row};
+    }
     if(bitDisplays.has(c.kind))return {x:112.5,y:Math.max(75,50*Catalog.displayChipLayout(c.kind,c.parameters).rows),centerX:37.5};
     if(pinCenteredSources.has(c.kind))return {x:50,y:50,centerY:-100};
     if(c.kind==='currentSource')return {x:50,y:50};
@@ -264,7 +276,54 @@
     const scale = Math.max(.064, Math.min(1.28, camera.scale * factor));
     return { scale, x: point.x - (point.x - camera.x) * scale / camera.scale, y: point.y - (point.y - camera.y) * scale / camera.scale };
   }
-  const api=Object.freeze({componentHitBox,drawingBounds,drawingHit,clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeBounds,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
+  // Search the sheet grid for an orthogonal path clear of component bodies.
+  // The editor uses the same result for the preview and saved wire bends.
+  function routedWireLeg(document,start,end) {
+    const directions=[[grid,0],[0,grid],[-grid,0],[0,-grid]];
+    const obstacles=document.electrical.components.filter(c=>!graphic(c.kind)).map(c=>{
+      const box=componentHitBox(c),pose=document.layout.components[c.id];
+      const [cx,cy]=rotateOffset((box.centerX??0)*(pose.mirror?-1:1),box.centerY??0,pose.rotation);
+      const horizontal=pose.rotation%180===0;
+      const x=(horizontal?box.x:box.y)+grid/4,y=(horizontal?box.y:box.x)+grid/4;
+      return {left:pose.x+cx-x,right:pose.x+cx+x,top:pose.y+cy-y,bottom:pose.y+cy+y};
+    });
+    const inside=(p,b)=>p.x>=b.left&&p.x<=b.right&&p.y>=b.top&&p.y<=b.bottom;
+    let blocking=obstacles.filter(b=>!inside(start,b)&&!inside(end,b));
+    const clear=(a,b)=>!blocking.some(o=>Math.min(a.x,b.x)<=o.right&&Math.max(a.x,b.x)>=o.left&&
+      Math.min(a.y,b.y)<=o.bottom&&Math.max(a.y,b.y)>=o.top);
+    if(start.x===end.x&&start.y===end.y)return [];
+    for(const corner of [{x:end.x,y:start.y},{x:start.x,y:end.y}])
+      if(clear(start,corner)&&clear(corner,end))
+        return same(corner,start)||same(corner,end)?[end]:[corner,end];
+
+    // Keep search bounded for large sheets. Off-grid endpoints use the ordinary
+    // routing fallback so their exact terminal coordinates survive.
+    if([start.x,start.y,end.x,end.y].some(value=>value%grid!==0))return null;
+    const queue=[{...start,parent:null}],seen=new Set([`${start.x},${start.y}`]);
+    const margin=grid*12,minX=Math.min(start.x,end.x)-margin,maxX=Math.max(start.x,end.x)+margin;
+    const minY=Math.min(start.y,end.y)-margin,maxY=Math.max(start.y,end.y)+margin;
+    blocking=blocking.filter(box=>box.right>=minX&&box.left<=maxX&&box.bottom>=minY&&box.top<=maxY);
+    for(let i=0;i<queue.length&&i<4096;i++){
+      const at=queue[i];
+      if(at.x===end.x&&at.y===end.y){
+        const route=[];
+        for(let node=at;node.parent;node=node.parent){
+          const next=route.at(-1),parent=node.parent;
+          if(!next||!(next.x===node.x&&node.x===parent.x||next.y===node.y&&node.y===parent.y))
+            route.push({x:node.x,y:node.y});
+        }
+        return route.reverse();
+      }
+      for(const [dx,dy] of directions){
+        const x=at.x+dx,y=at.y+dy,key=`${x},${y}`;
+        if(x<minX||x>maxX||y<minY||y>maxY||seen.has(key)||!clear(at,{x,y}))continue;
+        seen.add(key);
+        queue.push({x,y,parent:at});
+      }
+    }
+    return null;
+  }
+  const api=Object.freeze({routedWireLeg,componentHitBox,drawingBounds,drawingHit,clone,grid,snap,token,referenceKey,same,distance,pin,rotateOffset,placementPose,flipPose,probePoint,probeBounds,probeVoltage,scopeChannels,alignGrid,clean,route,closest,graphicSize,bounds,hit,boxSelection,zoom});
 
   registry.geometry=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

@@ -1,0 +1,11 @@
+--- a/src/com/lushprojects/circuitjs1/client/CircuitElm.java
++++ b/src/com/lushprojects/circuitjs1/client/CircuitElm.java
+@@ -1305,7 +1305,7 @@
+     boolean showValues() { return app.menus.showValuesCheckItem.getState(); }
+     boolean showPower() { return app.menus.powerCheckItem.getState(); }
+     boolean showEuroResistors() { return app.menus.euroResistorCheckItem.getState(); }
+-    boolean useSmallGrid() { return app.menus.smallGridCheckItem.getState(); }
++    boolean useSmallGrid() { return app.menus == null ? app.gridSize == 8 : app.menus.smallGridCheckItem.getState(); }
+     boolean doDcAnalysis() { return app.dcAnalysisFlag; }
+     boolean isPrintable() { return app.isPrintable(); }
+ 

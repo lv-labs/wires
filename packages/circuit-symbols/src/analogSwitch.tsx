@@ -1,4 +1,4 @@
-import { Lead, UprightText } from "../svg";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "analogSwitch";
@@ -20,7 +20,7 @@ export const metadata = {
   },
 } as const;
 
-export function Symbol({ pose, parameters = metadata.parameters, measured }: SymbolProps) {
+export function Symbol({ parameters = metadata.parameters, measured }: SymbolProps) {
   const controlVoltage = measured?.controlVoltage;
   const closed =
     typeof controlVoltage === "number" &&

@@ -3,16 +3,14 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "jkFlipFlop";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "U",
   name: "JK flip-flop",
   pins: {
-    J: [-48, -32],
-    clock: [-48, 0],
-    K: [-48, 32],
-    Q: [48, -32],
-    Qn: [48, 32],
+    J: [-150, -100],
+    clock: [-150, 0],
+    K: [-150, 100],
+    Q: [150, -100],
+    Qn: [150, 100],
   },
   parameters: {
     highVoltage: 5,
@@ -28,7 +26,10 @@ export function Symbol({
   return (
     <Chip
       pins={metadata.pins}
-      labels={{ clock: parameters.positiveEdge ? "▷" : "○▷", Qn: "Q̅" }}
+      labels={{ Qn: "Q" }}
+      overlined={["Qn"]}
+      bubbles={parameters.positiveEdge ? [] : ["clock"]}
+      clocks={["clock"]}
       pose={pose}
     />
   );

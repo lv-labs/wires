@@ -118,7 +118,7 @@ export function CircuitEditor({
   const [tool, setTool] = useState("select")
   const [importFalstad, setImportFalstad] = useState(false)
   const [simulationSettingsOpen, setSimulationSettingsOpen] = useState(false)
-  const [gridMode, setGridMode] = useState<"dots" | "lines" | "off">("lines")
+  const [gridMode, setGridMode] = useState<"dots" | "lines" | "off">("dots")
   const [scopeViewport] = useState(createScopeViewport)
   const [scopeRendering, setScopeRendering] = useState<ScopeRendering>(() => {
     try {
@@ -283,10 +283,6 @@ export function CircuitEditor({
   const fileInput = useRef<HTMLInputElement>(null)
   const documentRequest = useRef(0)
   const frame = core.simulation.presentationFrame(editor.simulation)
-  const canStep =
-    !!editor.simulation.accepted &&
-    !editor.simulation.runRequested &&
-    editor.simulation.status === "paused"
 
   useEffect(() => {
     const { electrical, probes } = editor.document
@@ -634,10 +630,16 @@ export function CircuitEditor({
     setSelection([{ kind: "probe", id }])
     setScopeOpen(true)
   }
+  function renameCircuit(title: string) {
+    if (title === editor.document.title) return
+    editor.session.transaction("Rename circuit", (draft) => {
+      draft.title = title
+    })
+  }
   function saveDocument() {
-    const data = JSON.stringify(editor.document, null, 2) + "\n"
-    const name =
-      editor.document.title.replace(/[^\w -]/g, "").trim() || "circuit"
+    const document = editor.session.document
+    const data = JSON.stringify(document, null, 2) + "\n"
+    const name = document.title.replace(/[^\w -]/g, "").trim() || "circuit"
     download(data, `${name}.json`, "application/json")
     setNotice("Circuit saved")
   }
@@ -995,7 +997,39 @@ export function CircuitEditor({
             event.currentTarget.value = ""
           }}
         />
-        <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
+        <input
+          key={`${editor.draftId}:${title}`}
+          aria-label="Circuit title"
+          type="text"
+          className="min-w-0 flex-1 bg-transparent font-medium underline-offset-4 outline-none not-focus:truncate focus-visible:underline"
+          defaultValue={title}
+          placeholder="Untitled circuit"
+          onBlur={(event) => {
+            const input = event.currentTarget
+            input.value = input.value.trim() || title
+            renameCircuit(input.value)
+          }}
+          onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing) return
+            const input = event.currentTarget
+            if (event.key === "Escape") {
+              event.preventDefault()
+              input.value = title
+              input.blur()
+            } else if (event.key === "Enter") {
+              event.preventDefault()
+              input.blur()
+            } else if (
+              (event.metaKey || event.ctrlKey) &&
+              event.key.toLowerCase() === "s"
+            ) {
+              event.preventDefault()
+              if (event.repeat) return
+              input.blur()
+              saveDocument()
+            }
+          }}
+        />
         {autosave && editor.savedLocally !== null && (
           <span className="text-xs text-muted-foreground">
             {editor.savedLocally
@@ -1142,25 +1176,14 @@ export function CircuitEditor({
           gridMode={gridMode}
           simulationRunning={!!editor.simulation.runRequested}
           onGridModeChange={setGridMode}
-          scopeOpen={scopeOpen}
           scopeRendering={scopeRendering}
           onScopeRenderingChange={setScopeRendering}
           hoveredTrace={hoveredTrace}
-          onToggleScope={() => setScopeOpen((open) => !open)}
-          sliderPanelOpen={sliderPanelOpen}
-          sliderPanelRequired={sliderPanelRequired}
-          onSliderPanelChange={setSliderPanelVisibility}
           onPlaceSlider={() =>
             setSliderPanel((current) => current ?? "placement")
           }
           sliderPreview={activeSliderAdjustment}
-          canStep={canStep}
           onNotice={setNotice}
-          onStepSimulation={() =>
-            void editor.run.current
-              ?.step(10)
-              .catch((cause) => setNotice(String(cause)))
-          }
           frame={frame}
           fitRequest={fitRequest}
           onViewportChange={scopeViewport.publish}

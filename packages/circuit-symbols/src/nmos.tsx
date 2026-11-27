@@ -1,8 +1,9 @@
-import { Lead, UprightText } from "../svg";
+import { Lead } from "../svg";
 import type { SymbolProps } from "../svg";
 
 export const kind = "nmos";
 export const metadata = {
+  drawingScale: 0.5,
   prefix: "Q",
   name: "NMOS",
   pins: {
@@ -23,7 +24,6 @@ export const metadata = {
 } as const;
 
 export function Symbol({
-  pose,
   parameters = metadata.parameters,
 }: SymbolProps) {
   const { gate, source, drain } = metadata.pins;

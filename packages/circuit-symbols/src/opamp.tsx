@@ -2,6 +2,7 @@ import { Lead } from "../svg";
 
 export const kind = "opamp";
 export const metadata = {
+  drawingScale: 0.5,
   prefix: "U",
   name: "Op-amp",
   pins: {

@@ -54,7 +54,7 @@
     return root;
   }
   function toLegacy(text) {
-    const diagnostics=[],lines=[],sourceLines=[],scopes=new Map(),routes=new Map(),adjustables=new Map(),bitOrders=new Map();
+    const diagnostics=[],lines=[],sourceLines=[],scopes=new Map(),switchProperties=new Map(),optocouplers=new Map(),memoryContents=new Map(),crystals=new Set(),routes=new Map(),adjustables=new Map(),bitOrders=new Map();
     const error=(line,message)=>diagnostics.push({severity:'error',line,code:'UNSUPPORTED_XML_RECORD',message});
     let root;
     try{root=read(text.replace(/^\uFEFF/,''));}catch(cause){return {diagnostics:[{severity:'error',line:cause.line||1,code:'INVALID_XML',message:cause.message}]};}
@@ -80,24 +80,45 @@
         relayModels.set(name,node.attrs);
       }catch(cause){error(node.line,cause.message);}
     }
+    const logicModels=new Map();
+    for(const node of root.children){
+      if(node.name!=='clm')continue;
+      try{
+        check(node,['nm','f','in','o','if']);
+        const a=node.attrs;
+        if(!a.nm||logicModels.has(a.nm)||numeric(a,'f',0)!==0||node.children.length)
+          throw new Error('Invalid or unsupported custom logic model');
+        const inputs=a.in??'',outputs=a.o??'';
+        logicModels.set(a.nm,{inputs:inputs.split(',').filter(pin=>pin.trim()).length,outputs:outputs.split(',').filter(pin=>pin.trim()).length});
+        emit(node.line,'! '+[a.nm,'0',inputs,outputs,a.if??a.nm,node.text?.trim()??''].map(escapeText).join(' '));
+      }catch(cause){error(node.line,cause.message);}
+    }
     for(const node of root.children){
       const {name,attrs:a,line}=node;
-      if(name==='rlm')continue;
+      if(name==='rlm'||name==='clm')continue;
       if(name==='o'||name==='Scope'){
         emit(line,name==='Scope'?'403':'o');scopes.set(lines.length,node);continue;
       }
       if(name==='adj'){emit(line,'&');adjustables.set(lines.length,node);continue;}
       if(name==='h'){emit(line,name);continue;}
       try{
-        if(node.children.length||(name!=='rw'&&node.text?.trim()))throw new Error(`Unsupported nested XML record <${name}>`);
+        if((node.children.length&&!['cr','dar','OTA','Comparator','Optocoupler'].includes(name))||(!['rw','SRAM','ROM'].includes(name)&&node.text?.trim()))throw new Error(`Unsupported nested XML record <${name}>`);
         const voltage=['wf','fr','maxv','bias','phaseShift','dutyCycle','riseTime','ir'];
         const gate=Object.hasOwn(gateTypes,name);
         const counterType={RingCounter:'163',Decade:'163',ctr:'164',Counter:'164',ctr2:'421',Counter2:'421'}[name];
+        const discreteType={mux:'184',dmux:'185',ADC:'167',DAC:'166',SevenSegDecoder:'197',PhaseComp:'161',VCO:'158',Monostable:'194',AnalogMux:'432',SipoShift:'189',PisoShift:'186',SeqGen:'188',cl:'208',SRAM:'413',ROM:'436',BusTransceiver:'BusTransceiver'}[name];
+        const routing=discreteType==='184'||discreteType==='185',converter=discreteType==='166'||discreteType==='167';
         const controlledType={VCVS:'212',VCCS:'213',CCVS:'214',CCCS:'215'}[name];
         const flipFlopType={DFlipFlop:'155',JKFlipFlop:'156',TFlipFlop:'193'}[name];
         const flipFlopState=flipFlopType==='156'?'v3':'v1';
-        const allowed=gate?['in','o','hi','pd']:controlledType?['hv','ic','ex']:flipFlopType?['hv',flipFlopState]:counterType?
+        const memory=name==='SRAM'||name==='ROM';
+        const shift=discreteType==='189'||discreteType==='186';
+        const allowed=discreteType?['hv','bi','bo',...(routing?['se',name==='mux'?'im':'om','dw']:name==='SevenSegDecoder'?['sgt']:name==='AnalogMux'?['sb','ron','rof','thr']:name==='Monostable'?['rt','dl']:shift?['dt']:name==='SeqGen'?['bc','dt']:memory?['ab','db']:name==='BusTransceiver'?['db']:name==='cl'?['mo',...Array.from({length:32},(_,i)=>'v'+i)]:[])]:gate?['in','o','hi','pd']:controlledType?['hv','ic','ex']:flipFlopType?['hv',flipFlopState]:counterType?
           ['bi','bo','hv',...(counterType==='163'?[]:counterType==='164'?['in','mo']:['mo']),...Array.from({length:32},(_,i)=>'v'+i)]:{
+          dar:['pnp'],Unijunction:[],OpAmpReal:['slr','vd','cl','mt'],Comparator:[],OTA:['pv','nv'],Optocoupler:['ctr','dmo'],
+          RelayCoil:['lb','in','oc','cr','ofc','swt','tp','ci','st','sp'],RelayContact:['lb','ron','roff','ip'],
+          TimeDelayRelay:['ond','ofd','onr','ofr'],MotorProtectionSwitch:['re','i2','bl','la'],
+          cr:['pc','sc','in','r'],CrossSwitch:['p','mm','lab','key','r'],Gyrator:[],DelayBuffer:['dl','th','hv'],ts:['ron','roff','rog','hi','bw'],
           w:[],rw:[],ln:['te'],x:['si','te'],b:[],Line:[],t:['pn','be','mo','vbe','vbc'],f:['vt','be'],j:['vt','be'],r:['r'],c:['c','iv','sr','vd'],pc:['c','iv','sr','vd','mv'],l:['l','ic','isat','i'],
           v:voltage,R:voltage,A:voltage,VarRail:[...voltage,'st'],sw:['mi','ma','mv','sw'],tl:['de','im','wi'],
           AM:['cf','sf','mv'],FM:['cf','sf','mv','dv'],aout:['du','sa','la'],
@@ -114,9 +135,37 @@
         if(!allowed)throw new Error(`Unsupported Falstad XML component <${name}>`);
         check(node,['x','f',...allowed]);
         if(!a.x||a.x.trim().split(/\s+/).length!==4)throw new Error(`Expected four coordinates on <${name}>`);
-        const defaultFlags={sw:2,as:2,as2:2,Ammeter:3,Triode:2,SCR:1};
+        const defaultFlags={RelayContact:4,sw:2,as:2,as2:2,Ammeter:3,Triode:2,SCR:1};
         const conveyor=name==='CC2'||name==='CC2Neg';
-        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(flipFlopType||conveyor||controlledType||counterType||['Timer','dd','ssd','LEDArray'].includes(name)?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
+        let flags=numeric(a,'f',defaultFlags[name]??0);if(!Number.isSafeInteger(flags)||flags<0||flags>(discreteType||flipFlopType||conveyor||controlledType||counterType||['Timer','dd','ssd','LEDArray','TimeDelayRelay','Optocoupler'].includes(name)?16383:255))throw new Error('Invalid XML component flags');const num=(key,fallback)=>numeric(a,key,fallback);let fields=[];
+        if(discreteType){
+          const order=num('bo',0),voltage=num('hv',5);
+          if(![0,1].includes(order)||routing&&num(name==='mux'?'im':'om',0)!==0)throw new Error('Bus chip pins are not supported');
+          if(voltage!==5||flags&8192)flags|=8192;
+          fields=[...(converter||shift?[num('bi',shift?8:4)]:[]),...(flags&8192?[voltage]:[])];
+          if(shift)fields.push(...(a.dt?.trim()||'0').split(/\s+/));
+          if(name==='SeqGen'){
+            flags|=2;
+            const length=num('bc',8);
+            fields.push(length);
+            if(length)fields.push(...(a.dt?.trim()||'0').split(/\s+/));
+          }
+          if(memory){
+            fields.push(num('ab',4),num('db',4));
+            memoryContents.set(lines.length+1,node.text?.trim()??'');
+          }
+          if(name==='BusTransceiver')fields.push(num('db',4));
+          if(name==='cl'){
+            const name=a.mo??'default',model=logicModels.get(name);
+            if(!model)throw new Error('Unknown custom logic model');
+            fields.push(escapeText(name),...Array.from({length:model.outputs},(_,i)=>num('v'+(model.inputs+i),0)));
+          }
+          if(routing)fields.push(num('se',2));
+          if(name==='AnalogMux')fields.push(num('sb',2),num('ron',20),num('rof',1e10),num('thr',2.5));
+          if(name==='Monostable')fields.push(a.rt??'false',num('dl',.01));
+          if(name==='SevenSegDecoder')fields.push(num('sgt',0));
+          bitOrders.set(lines.length+1,order);
+        }
         if(counterType){
           const ring=counterType==='163',binary=counterType==='164';
           const bits=num('bi',ring?10:4),order=num('bo',0),voltage=num('hv',5);
@@ -133,6 +182,57 @@
           if(a.hv!==undefined)flags|=8192;
           const expression=a.ex??(name.startsWith('CC')?'2*a':'.1*(a-b)');
           fields=[...(flags&8192?[num('hv',5)]:[]),num('ic',2),escapeText(expression)];
+        }
+        if(['dar','OTA','Comparator','Optocoupler'].includes(name)){
+          const types={dar:['t','t'],OTA:['R','R',...Array(16).fill('t')],Comparator:['a','as','g'],Optocoupler:['d','CCCS','t']}[name];
+          const saved=new Set();
+          for(const child of node.children){
+            const index=numeric(child.attrs,'ix',-1);
+            if(types[index]!==child.name||saved.has(index)||child.children.length||child.text?.trim())
+              throw new Error('Invalid analog component internal state');
+            const keys={t:['vbe','vbc'],a:['vd'],d:['vd'],CCCS:[],as:[],g:[],R:[]}[child.name];
+            check(child,['ix',...keys]);
+            for(const key of keys)numeric(child.attrs,key,0);
+            saved.add(index);
+          }
+          if(saved.size)diagnostics.push({severity:'warning',line,code:'RESET_STATE',message:'Analog component internal voltages are recalculated at startup'});
+        }
+        if(name==='dar'){
+          const polarity=num('pnp',1);
+          fields=[0,1].map(()=>flags&1?escapeText(`0 ${polarity} 0 0 100`):`0_${polarity}_0_0_100`);
+          fields.push(polarity);
+        }
+        if(name==='OpAmpReal')fields=[num('slr',.6),num('vd',0),num('cl',.0231),num('mt',0)];
+        if(name==='OTA')fields=[num('nv',-9),num('pv',9)].map(v=>flags&1?escapeText(`0 0 40 ${v} 0 0 .5`):`0_0_40_${v}_0_0_.5`);
+        if(name==='Optocoupler')optocouplers.set(lines.length+1,{ctr:num('ctr',1),diodeModel:a.dmo??'default'});
+        if(name==='RelayCoil')fields=[escapeText(a.lb??'label'),num('in',.2),num('ci',0),num('oc',.02),num('cr',20),num('ofc',.015),num('swt',.005),num('tp',0),num('st',0),num('sp',0)];
+        if(name==='RelayContact')fields=[escapeText(a.lb??'label'),num('ron',.05),num('roff',1e6),num('ip',0)];
+        if(name==='TimeDelayRelay')fields=[num('ond',1),num('ofd',0),num('onr',1),num('ofr',1e7)];
+        if(name==='MotorProtectionSwitch')fields=[num('re',.0613),num('i2',6.73),a.bl??'false',escapeText(a.la??'')];
+        if(name==='cr'){
+          const saved=new Map();
+          for(const child of node.children){
+            const index=numeric(child.attrs,'ix',-1),key=index===2?'i':'vd';
+            if(![0,1,2].includes(index)||child.name!==(index===2?'l':'c')||saved.has(index)||child.children.length||child.text?.trim())
+              throw new Error('Invalid crystal internal state');
+            check(child,['ix',key]);
+            saved.set(index,numeric(child.attrs,key,0));
+          }
+          if([...saved.values()].some(value=>value!==0))diagnostics.push({severity:'warning',line,code:'RESET_STATE',message:'Crystal internal voltage and current restart at their defaults'});
+          fields=[num('pc',28.7e-12),num('sc',.1e-12),num('in',2.5e-3),num('r',6.4)];
+          crystals.add(lines.length+1);
+        }
+        if(name==='CrossSwitch'){
+          const label=a.lab??'';
+          fields=[num('p',0),a.mm??'false'];
+          if(flags&4)fields.push(escapeText(label));
+          if(a.key)diagnostics.push({severity:'warning',line,code:'UNSUPPORTED_PRESENTATION',message:'Switch keyboard shortcut is unavailable'});
+          switchProperties.set(lines.length+1,{label,resistance:num('r',0)});
+        }
+        if(name==='DelayBuffer')fields=[num('dl',0),num('th',2.5),num('hv',5)];
+        if(name==='ts'){
+          if(num('bw',1)!==1)throw new Error('Bus tristate buffer pins are not supported');
+          fields=[num('ron',.1),num('roff',1e10),num('rog',1e8),num('hi',5)];
         }
         if(name==='ln'){
           flags|=4;fields=[escapeText(a.te??'label')];
@@ -275,8 +375,8 @@
             routes.set(lines.length+1,points.slice(1,-1));
           }else diagnostics.push({severity:'warning',line,code:'UNSUPPORTED_PRESENTATION',message:'Saved wire route endpoints differ from the circuit. The wire will use an orthogonal route.'});
         }
-        const type=gate?gateTypes[name]:counterType||controlledType||flipFlopType||{
-          pt:'174',VarRail:'172',sw:'170',tl:'171',tt:'169',ln:'207',rw:'w',AM:'200',FM:'201',aout:'211',
+        const type=gate?gateTypes[name]:discreteType||counterType||controlledType||flipFlopType||{
+          dar:'400',Comparator:'401',OTA:'402',Optocoupler:'407',OpAmpReal:'409',Unijunction:'417',RelayCoil:'425',RelayContact:'426',TimeDelayRelay:'414',MotorProtectionSwitch:'428',cr:'412',CrossSwitch:'430',DelayBuffer:'422',ts:'180',pt:'174',VarRail:'172',sw:'170',tl:'171',tt:'169',ln:'207',rw:'w',AM:'200',FM:'201',aout:'211',
           LED:'162',as:'159',as2:'160',Schmitt:'182',InvertingSchmitt:'183',pc:'209',Ammeter:'370',TestPoint:'368',dd:'419',
           ssd:'157',LEDArray:'405',
           SparkGap:'187',TunnelDiode:'175',Lamp:'181',Varactor:'176',Triode:'173',Line:'423',
@@ -285,7 +385,7 @@
         emit(line,`${type} ${coordinates.join(' ')} ${flags} ${fields.join(' ')}`.trim());
       }catch(cause){error(line,cause.message);}
     }
-    return {text:lines.join('\n'),sourceLines,diagnostics,scopes,routes,adjustables,bitOrders};
+    return {text:lines.join('\n'),sourceLines,diagnostics,scopes,routes,adjustables,bitOrders,switchProperties,optocouplers,memoryContents,crystals};
   }
   const api=Object.freeze({toLegacy});registry.falstad_xml=api;
   if(typeof module==='object'&&module.exports)module.exports=api;

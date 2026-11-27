@@ -48,6 +48,7 @@ const labels: Record<string, string> = {
   showValues: "Show values",
   resistance: "Resistance · Ω",
   capacitance: "Capacitance · F",
+  seriesResistance: "Series resistance · Ω (0 = ideal)",
   initialVoltage: "Initial voltage on reset · V",
   maxReverseVoltage: "Maximum reverse voltage · V",
   inductance: "Inductance · H",
@@ -133,6 +134,8 @@ function choices(component: Component, key: string): string[] | undefined {
     return ["Low / 0", "High / 1", "Ternary 2"]
   if (key === "boxStyle" && component.kind === "labeledNode")
     return Object.values(labeledNodeBoxStyles)
+  if (key === "diodeModel" && component.kind === "optocoupler")
+    return ["Optocoupler LED", "Default diode"]
   if (component.kind === "relay") {
     if (key === "coilStyle") return ["Both sides", "Left", "Right"]
     if (key === "initialPosition") return ["Off", "On", "Between contacts"]
@@ -143,6 +146,7 @@ function choices(component: Component, key: string): string[] | undefined {
       return spdtPositionLabels(component.parameters)
     }
     if (component.kind === "dpdtSwitch") return ["A", "B"]
+    if (component.kind === "crossSwitch") return ["Straight", "Crossed"]
   }
 }
 
@@ -155,6 +159,8 @@ function optionValue(component: Component, key: string, index: number) {
     return ["logic", "numeric", "ternary"][index]
   if (key === "boxStyle" && component.kind === "labeledNode")
     return Object.keys(labeledNodeBoxStyles)[index]
+  if (key === "diodeModel" && component.kind === "optocoupler")
+    return ["default-optocoupler-led", "default"][index]
   return String(index)
 }
 
@@ -287,7 +293,12 @@ export function ComponentProperties({
                           ...component.parameters,
                         }
                       : component.parameters))
-  const fields = Object.entries(editableParameters)
+  const fields = Object.entries<unknown>({
+    ...(["capacitor", "polarizedCapacitor"].includes(component.kind)
+      ? { seriesResistance: 0 }
+      : {}),
+    ...editableParameters,
+  })
     .sort(
       ([a], [b]) =>
         propertyOrder(component.kind, a) - propertyOrder(component.kind, b)
@@ -401,6 +412,11 @@ export function ComponentProperties({
         } else if (typeof value === "string")
           parameters[key] = String(data.get(key))
       }
+      if (
+        parameters.seriesResistance === 0 &&
+        !Object.hasOwn(component.parameters, "seriesResistance")
+      )
+        delete parameters.seriesResistance
       if (component.kind === "threePhaseMotor") {
         const coupling = parseNumber(
           String(data.get("mutualInductance")),
@@ -756,7 +772,7 @@ export function ComponentProperties({
                   data-primary={primary}
                 />
               ) : typeof value === "string" &&
-                ["text", "lookup"].includes(key) ? (
+                ["text", "lookup", "rules", "contents"].includes(key) ? (
                 <Textarea
                   name={key}
                   defaultValue={value}

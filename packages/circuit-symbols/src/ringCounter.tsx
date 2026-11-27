@@ -1,4 +1,4 @@
-import { Lead, UprightText } from "../svg";
+import { ClockTriangle, Lead, UprightText } from "../svg";
 import type { Pin, SymbolProps } from "../svg";
 
 export const kind = "ringCounter";
@@ -6,19 +6,19 @@ export const metadata = {
   prefix: "U",
   name: "Ring counter",
   pins: {
-    clock: [-250, 50],
-    reset: [250, 100],
-    Q0: [-200, -50],
-    Q1: [-150, -50],
-    Q2: [-100, -50],
-    Q3: [-50, -50],
-    Q4: [0, -50],
-    Q5: [50, -50],
-    Q6: [100, -50],
-    Q7: [150, -50],
-    Q8: [200, -50],
-    Q9: [250, -50],
-    inhibit: [-150, 100],
+    clock: [-500, 100],
+    reset: [500, 200],
+    Q0: [-400, -100],
+    Q1: [-300, -100],
+    Q2: [-200, -100],
+    Q3: [-100, -100],
+    Q4: [0, -100],
+    Q5: [100, -100],
+    Q6: [200, -100],
+    Q7: [300, -100],
+    Q8: [400, -100],
+    Q9: [500, -100],
+    inhibit: [-300, 200],
   },
   parameters: {
     highVoltage: 5,
@@ -34,29 +34,36 @@ export function Symbol({
   pinPositions = metadata.pins,
   pose,
 }: SymbolProps) {
-  const left = pinPositions.clock[0] + 25;
-  const right = pinPositions.reset[0] + 25;
+  const left = pinPositions.clock[0] + 50;
+  const right = pinPositions.reset[0] + 50;
   const labels: Record<string, string> = {
-    clock: "▷",
-    reset: parameters.invertReset ? "R̅" : "R",
-    inhibit: "CE̅",
+    reset: "R",
+    inhibit: "CE",
   };
   return (
     <>
-      <rect x={left} y={-25} width={right - left} height={100} rx={4} />
+      <rect x={left} y={-50} width={right - left} height={200} rx={12} />
       {Object.entries(pinPositions).map(([name, point]) => {
         const [x, y] = point;
-        const end: Pin = name === "clock" ? [left, y] : [x, y < 0 ? -25 : 75];
-        const textX = name === "clock" ? left + 13 : x;
-        const textY = name === "clock" ? y : y < 0 ? -10 : 62;
+        if (name === "clock") {
+          const edge: Pin = [left, y];
+          return (
+            <g key={name}>
+              <Lead from={point} to={edge} />
+              <ClockTriangle at={edge} />
+            </g>
+          );
+        }
+        const end: Pin = [x, y < 0 ? -50 : 150];
         return (
           <g key={name}>
             <Lead from={point} to={end} />
             <UprightText
               pose={pose}
-              x={textX}
-              y={textY}
-              fontSize={16}
+              x={x}
+              y={y < 0 ? -25 : 125}
+              fontSize={32}
+              overline={name === "inhibit" || (name === "reset" && parameters.invertReset === true)}
               textAnchor="middle"
               dominantBaseline="central"
             >
@@ -68,8 +75,8 @@ export function Symbol({
       <UprightText
         pose={pose}
         x={(left + right) / 2}
-        y={28}
-        fontSize={16}
+        y={50}
+        fontSize={Math.min(32, (right - left - 30) / 7.5)}
         textAnchor="middle"
         dominantBaseline="central"
       >

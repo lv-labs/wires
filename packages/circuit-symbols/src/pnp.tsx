@@ -3,7 +3,7 @@ import { Lead } from "../svg";
 
 export const kind = "pnp";
 export const metadata = {
-
+  drawingScale: 0.5,
   prefix: "Q",
   name: "PNP transistor",
   pins: {

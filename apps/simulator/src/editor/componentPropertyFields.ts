@@ -39,12 +39,13 @@ export function normaliseSpdtSettings(
 const propertyOrders: Record<string, string[]> = {
   voltmeter: ["mode", "scale", "showVoltage", "circleSymbol", "resistance"],
   ammeter: ["mode", "scale", "circleSymbol"],
-  capacitor: ["capacitance", "integration", "initialVoltage"],
+  capacitor: ["capacitance", "integration", "initialVoltage", "seriesResistance"],
   polarizedCapacitor: [
     "maxReverseVoltage",
     "capacitance",
     "integration",
     "initialVoltage",
+    "seriesResistance",
   ],
   inductor: ["inductance", "integration", "initialCurrent"],
   transformer: ["inductance", "ratio", "coupling", "integration"],
@@ -104,6 +105,24 @@ export function propertyCaption(
     return component.kind === "counter" ? "Bits · 3 to 30" : "Bits · 2 to 30"
   if (component.kind === "ringCounter" && key === "initialValue")
     return "Initial outputs · bit mask (Q0 = 1)"
+  if (component.kind === "relayCoil" && key === "mode") return "Relay type"
+  if (key === "inputLabels") return "Input labels (comma-separated)"
+  if (key === "outputLabels") return "Output labels (comma-separated)"
+  if (key === "rules") return "Rules · input pattern = output pattern"
+  if (key === "contents") return "Contents · address: value value"
+  if (key === "reloadOnReset") return "Restore contents on reset"
+  if (key === "hexDisplay") return "Use hexadecimal contents"
+  if (key === "addressBits") return "Address bits · 2 to 16"
+  if (key === "dataBits") return "Data bits · 2 to 16"
+  if (key === "selectBits") return "Select bits · 1 to 6"
+  if (key === "bits" && ["adc", "dac"].includes(component.kind))
+    return "Bits · 2 to 30"
+  if (key === "bits" && ["sipoShift", "pisoShift"].includes(component.kind))
+    return "Bits · 1 to 30"
+  if (key === "initialValue" && ["sipoShift", "pisoShift"].includes(component.kind))
+    return "Initial register contents · bit mask"
+  if (key === "sequence") return "Sequence · 0s and 1s in playback order"
+  if (key === "segmentMode") return "Segments"
   if (key === "mode") {
     if (
       ["voltmeter", "testPoint", "ammeter", "wattmeter"].includes(
@@ -155,6 +174,10 @@ export function propertyChoices(
   component: Component,
   key: string
 ): string[] | undefined {
+  if (component.kind === "opampReal" && key === "modelType")
+    return ["LM741", "LM324 (legacy)", "LM324"]
+  if (component.kind === "relayCoil" && key === "mode")
+    return ["Normal", "On delay", "Off delay", "Latching"]
   if (key === "scale" && ["voltmeter", "ammeter"].includes(component.kind)) {
     const unit = component.kind === "ammeter" ? "A" : "V"
     return ["Auto", unit, `m${unit}`, `µ${unit}`]
@@ -174,6 +197,8 @@ export function propertyChoices(
     if (component.kind === "decimalDisplay")
       return ["Decimal", "Hexadecimal", "Octal"]
   }
+  if (key === "segmentMode" && component.kind === "sevenSegmentDecoder")
+    return ["7 segments", "14 segments", "16 segments"]
   if (component.kind === "sevenSegment") {
     if (key === "segments") return ["7 segments", "14 segments", "16 segments"]
     if (key === "extra") return ["None", "Decimal point", "Colon"]

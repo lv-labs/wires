@@ -6,14 +6,14 @@ export const metadata = {
   name: "555 Timer",
   prefix: "U",
   pins: {
-    discharge: [-100, -50],
-    trigger: [-100, 50],
-    threshold: [-100, 100],
-    supply: [0, -150],
-    control: [0, 150],
-    out: [100, 0],
-    reset: [100, -50],
-    ground: [50, 150],
+    discharge: [-150, -100],
+    trigger: [-150, 0],
+    threshold: [-150, 100],
+    supply: [0, -200],
+    control: [-50, 200],
+    out: [150, 0],
+    reset: [150, -100],
+    ground: [50, 200],
   },
   parameters: {
     resetPin: true,
@@ -35,20 +35,20 @@ export const output = {
 } as const;
 
 const leads = [
-  ["discharge", [-75, -50], "DIS", "7", -67, -50, "start"],
-  ["trigger", [-75, 50], "TRG", "2", -67, 50, "start"],
-  ["threshold", [-75, 100], "THR", "6", -67, 100, "start"],
-  ["supply", [0, -120], "VCC", "8", 0, -107, "middle"],
-  ["control", [0, 120], "CTL", "5", 0, 105, "middle"],
-  ["out", [75, 0], "OUT", "3", 67, 0, "end"],
-  ["reset", [75, -50], "RST", "4", 67, -50, "end"],
-  ["ground", [50, 120], "GND", "1", 50, 105, "middle"],
+  ["discharge", [-125, -100], "DIS", "7", -110, -100, "start"],
+  ["trigger", [-125, 0], "TRG", "2", -110, 0, "start"],
+  ["threshold", [-125, 100], "THR", "6", -110, 100, "start"],
+  ["supply", [0, -150], "VCC", "8", 0, -125, "middle"],
+  ["control", [-50, 150], "CTL", "5", -50, 125, "middle"],
+  ["out", [125, 0], "OUT", "3", 110, 0, "end"],
+  ["reset", [125, -100], "RST", "4", 110, -100, "end"],
+  ["ground", [50, 150], "GND", "1", 50, 125, "middle"],
 ] as const;
 
 export function Symbol({ parameters = metadata.parameters, pose }: SymbolProps) {
   return (
     <>
-      <rect x={-75} y={-120} width={150} height={240} rx={4} />
+      <rect x={-125} y={-150} width={250} height={300} rx={12} />
       {leads.map(([pin, end, name, number, x, y, align]) => {
         if (pin === "ground" && !parameters.groundPin) return null;
         if (pin === "reset" && !parameters.resetPin && !parameters.groundPin) return null;
@@ -59,17 +59,17 @@ export function Symbol({ parameters = metadata.parameters, pose }: SymbolProps) 
               pose={pose}
               x={x}
               y={y}
-              fontSize={15}
+              fontSize={30}
               textAnchor={align}
               dominantBaseline="central"
-              textDecoration={!parameters.pinNumbers && (pin === "trigger" || pin === "reset") ? "overline" : undefined}
+              overline={!parameters.pinNumbers && (pin === "trigger" || pin === "reset")}
             >
               {parameters.pinNumbers ? number : name}
             </UprightText>
           </g>
         );
       })}
-      <UprightText pose={pose} x={0} y={0} fontSize={24} textAnchor="middle" dominantBaseline="central">
+      <UprightText pose={pose} x={0} y={-53} fontSize={38} textAnchor="middle" dominantBaseline="central">
         555
       </UprightText>
     </>

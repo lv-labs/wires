@@ -3,17 +3,15 @@ import type { SymbolProps } from "../svg";
 
 export const kind = "counter";
 export const metadata = {
-  // Original 16-unit artwork, scaled to the 50-unit sheet grid.
-  drawingScale: 3.125,
   prefix: "U",
   name: "Counter",
   pins: {
-    clock: [-48, -48],
-    reset: [-48, 48],
-    Q3: [48, -48],
-    Q2: [48, -16],
-    Q1: [48, 16],
-    Q0: [48, 48],
+    clock: [-150, -150],
+    reset: [-150, 150],
+    Q3: [150, -150],
+    Q2: [150, -50],
+    Q1: [150, 50],
+    Q0: [150, 150],
   },
   parameters: {
     highVoltage: 5,
@@ -36,10 +34,14 @@ export function Symbol({
     <Chip
       pins={pinPositions}
       labels={{
-        clock: parameters.negativeEdge ? "○▷" : "▷",
-        reset: parameters.invertReset ? "R̅" : "R",
+        reset: "R",
         direction: "U/D",
       }}
+      bubbles={[
+        ...(parameters.negativeEdge ? ["clock"] : []),
+        ...(parameters.invertReset ? ["reset"] : []),
+      ]}
+      clocks={["clock"]}
       pose={pose}
     />
   );
